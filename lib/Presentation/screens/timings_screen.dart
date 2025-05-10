@@ -373,12 +373,12 @@ class _TimingsScreenState extends State<TimingsScreen>
                                                   children: [
                                                     const AppText(
                                                       'السلام عليكم',
-                                                      fontSize: 24,
+                                                      fontSize: 18,
                                                       fontWeight:
                                                           FontWeight.bold,
                                                       color: Colors.white,
                                                     ),
-                                                    const SizedBox(height: 4),
+                                                    const SizedBox(height: 2),
                                                     if (_isLoading)
                                                       Container(
                                                         width: 200,
