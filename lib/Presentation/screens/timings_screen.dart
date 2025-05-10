@@ -88,22 +88,7 @@ class _TimingsScreenState extends State<TimingsScreen>
   }
 
   void requestPermission() async {
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
-    NotificationSettings settings = await messaging.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {}
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (mounted) {
-        navigateTo(context, const TimingsScreen());
-      }
-    });
+    // Removed notification permission request
   }
 
   Widget _buildSkeletonCard() {
@@ -1076,21 +1061,6 @@ class _TimingsScreenState extends State<TimingsScreen>
                   value:
                       "${selectedTimeMorning!.hour}:${selectedTimeMorning!.minute}",
                 );
-
-                await NotificationService.showNotification(
-                  title: "التنبية بأذكار الصباح",
-                  payload: {"navigate": "true"},
-                  actionButtons: [
-                    NotificationActionButton(
-                      key: 'check',
-                      label: 'الدخول إلى التطبيق الآن',
-                      color: AppColors.primaryColor,
-                    ),
-                  ],
-                  scheduled: true,
-                  selectedTimeMorning: selectedTimeMorning,
-                  interval: 0,
-                );
               }
             },
             isDarkMode: isDarkMode,
@@ -1126,21 +1096,6 @@ class _TimingsScreenState extends State<TimingsScreen>
                   key: 'Evening',
                   value:
                       "${selectedTimeEvening!.hour}:${selectedTimeEvening!.minute}",
-                );
-
-                await NotificationService.showNotification(
-                  title: "التنبية بأذكار المساء",
-                  payload: {"navigate": "true"},
-                  actionButtons: [
-                    NotificationActionButton(
-                      key: 'check',
-                      label: 'الدخول إلى التطبيق الآن',
-                      color: AppColors.primaryColor,
-                    ),
-                  ],
-                  scheduled: true,
-                  selectedTimeEvening: selectedTimeEvening,
-                  interval: 0,
                 );
               }
             },

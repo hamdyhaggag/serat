@@ -15,21 +15,22 @@ class SettingsScreensState extends State<SettingsScreens> {
     // TODO: Implement donation functionality
     showDialog(
       context: context,
-      builder: (BuildContext context) => AppDialog(
-        content: 'سيتم إضافة خاصية التبرع قريباً',
-        okAction: AppDialogAction(
-          title: 'حسناً',
-          onTap: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        cancelAction: AppDialogAction(
-          title: 'إلغاء',
-          onTap: () {
-            Navigator.of(context).pop();
-          },
-        ),
-      ),
+      builder:
+          (BuildContext context) => AppDialog(
+            content: 'سيتم إضافة خاصية التبرع قريباً',
+            okAction: AppDialogAction(
+              title: 'حسناً',
+              onTap: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            cancelAction: AppDialogAction(
+              title: 'إلغاء',
+              onTap: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ),
     );
   }
 
@@ -74,28 +75,10 @@ class SettingsScreensState extends State<SettingsScreens> {
                 setState(() {
                   selectedTimeMorning = pickedTime;
                 });
-
                 CacheHelper.saveData(
                   key: 'Morning',
                   value:
                       "${selectedTimeMorning!.hour}:${selectedTimeMorning!.minute}",
-                );
-
-                await NotificationService.showNotification(
-                  title: "التنبية بأذكار الصباح",
-                  payload: {
-                    "navigate": "true",
-                  },
-                  actionButtons: [
-                    NotificationActionButton(
-                      key: 'check',
-                      label: 'الدخول إلى التطبيق الآن',
-                      color: AppColors.primaryColor,
-                    ),
-                  ],
-                  scheduled: true,
-                  selectedTimeMorning: selectedTimeMorning,
-                  interval: 0,
                 );
               }
             },
@@ -107,20 +90,21 @@ class SettingsScreensState extends State<SettingsScreens> {
                   child: AppText(
                     selectedTimeMorning != null
                         ? DateFormat('hh:mma').format(
-                            DateTime(
-                              0,
-                              1,
-                              1,
-                              selectedTimeMorning!.hour,
-                              selectedTimeMorning!.minute,
-                            ),
-                          )
+                          DateTime(
+                            0,
+                            1,
+                            1,
+                            selectedTimeMorning!.hour,
+                            selectedTimeMorning!.minute,
+                          ),
+                        )
                         : 'اختر التوقيت',
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: isDarkModee
-                        ? const Color(0xff0c8ee1)
-                        : AppColors.primaryColor,
+                    color:
+                        isDarkModee
+                            ? const Color(0xff0c8ee1)
+                            : AppColors.primaryColor,
                     decoration: TextDecoration.underline,
                   ),
                 ),
@@ -147,24 +131,9 @@ class SettingsScreensState extends State<SettingsScreens> {
                   selectedTimeEvening = pickedTime;
                 });
                 CacheHelper.saveData(
-                    key: 'Evening',
-                    value:
-                        "${selectedTimeEvening!.hour}:${selectedTimeEvening!.minute}");
-                await NotificationService.showNotification(
-                  title: "التنبية بأذكار المساء",
-                  payload: {
-                    "navigate": "true",
-                  },
-                  actionButtons: [
-                    NotificationActionButton(
-                      key: 'check',
-                      label: 'الدخول إلى التطبيق الآن',
-                      color: AppColors.primaryColor,
-                    ),
-                  ],
-                  scheduled: true,
-                  selectedTimeEvening: selectedTimeEvening,
-                  interval: 0,
+                  key: 'Evening',
+                  value:
+                      "${selectedTimeEvening!.hour}:${selectedTimeEvening!.minute}",
                 );
               }
             },
@@ -172,24 +141,25 @@ class SettingsScreensState extends State<SettingsScreens> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(left: 17),
+                  padding: const EdgeInsets.only(left: 20),
                   child: AppText(
                     selectedTimeEvening != null
-                        ? DateFormat('hh:mma ').format(
-                            DateTime(
-                              0,
-                              1,
-                              1,
-                              selectedTimeEvening!.hour,
-                              selectedTimeEvening!.minute,
-                            ),
-                          )
+                        ? DateFormat('hh:mma').format(
+                          DateTime(
+                            0,
+                            1,
+                            1,
+                            selectedTimeEvening!.hour,
+                            selectedTimeEvening!.minute,
+                          ),
+                        )
                         : 'اختر التوقيت',
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: isDarkModee
-                        ? const Color(0xff0c8ee1)
-                        : AppColors.primaryColor,
+                    color:
+                        isDarkModee
+                            ? const Color(0xff0c8ee1)
+                            : AppColors.primaryColor,
                     decoration: TextDecoration.underline,
                   ),
                 ),
@@ -197,7 +167,7 @@ class SettingsScreensState extends State<SettingsScreens> {
                   flex: 8,
                   child: RowWithTextAndIcon(
                     'التنبية لأذكار المساء',
-                    Icons.dark_mode,
+                    Icons.nightlight_round,
                   ),
                 ),
               ],
@@ -238,10 +208,7 @@ class SettingsScreensState extends State<SettingsScreens> {
             onTap: () {
               showappinfo(context);
             },
-            child: const RowWithTextAndIcon(
-              'معلومات عن التطبيق',
-              Icons.info,
-            ),
+            child: const RowWithTextAndIcon('معلومات عن التطبيق', Icons.info),
           ),
           const CustomSpace(),
 
@@ -260,10 +227,7 @@ class SettingsScreensState extends State<SettingsScreens> {
             onTap: () {
               shareFeedback(context);
             },
-            child: const RowWithTextAndIcon(
-              'تقييم التطبيق',
-              Icons.star,
-            ),
+            child: const RowWithTextAndIcon('تقييم التطبيق', Icons.star),
           ),
           const CustomSpace(),
 
@@ -271,10 +235,7 @@ class SettingsScreensState extends State<SettingsScreens> {
             onTap: () {
               shareOptions(context);
             },
-            child: const RowWithTextAndIcon(
-              'شارك التطبيق',
-              Icons.share,
-            ),
+            child: const RowWithTextAndIcon('شارك التطبيق', Icons.share),
           ),
           const CustomSpace(),
 
@@ -282,10 +243,7 @@ class SettingsScreensState extends State<SettingsScreens> {
             onTap: () {
               sendEmail();
             },
-            child: const RowWithTextAndIcon(
-              'تواصل معنا',
-              Icons.mail_rounded,
-            ),
+            child: const RowWithTextAndIcon('تواصل معنا', Icons.mail_rounded),
           ),
           const CustomSpace(),
 

@@ -13,12 +13,6 @@ import 'package:serat/Business_Logic/Cubit/qibla_cubit.dart';
 import 'package:serat/Presentation/screens/splash_screen.dart';
 import 'package:serat/imports.dart';
 
-Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  if (kDebugMode) {
-    print(message.messageId);
-  }
-}
-
 TimeOfDay? stringToTimeOfDay(String timeString) {
   if (timeString.isNotEmpty) {
     final parts = timeString.split(":");
@@ -51,12 +45,7 @@ final darkThemeData = ThemeData(
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await NotificationService.initializeNotification();
-
-  await CacheHelper.init();
-
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  await Firebase.initializeApp();
 
   await initializeAppSettings();
 
