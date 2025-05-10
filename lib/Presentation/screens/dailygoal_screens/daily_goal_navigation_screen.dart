@@ -1,0 +1,653 @@
+import 'package:flutter/material.dart';
+import 'package:serat/constants/app_theme.dart';
+import 'package:serat/models/daily_goal.dart';
+import 'package:serat/shared/services/daily_goal_service.dart';
+import 'package:serat/widgets/category_chips.dart';
+import 'package:serat/widgets/goal_item.dart';
+import 'package:serat/widgets/search_bar.dart';
+
+class DailyGoalNavigationScreen extends StatefulWidget {
+  const DailyGoalNavigationScreen({Key? key}) : super(key: key);
+
+  @override
+  State<DailyGoalNavigationScreen> createState() =>
+      _DailyGoalNavigationScreenState();
+}
+
+class _DailyGoalNavigationScreenState extends State<DailyGoalNavigationScreen>
+    with SingleTickerProviderStateMixin {
+  final TextEditingController _searchController = TextEditingController();
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  String _searchQuery = '';
+  String _selectedCategory = 'الكل';
+  List<DailyGoal> _goals = [];
+  final DailyGoalService _goalService = DailyGoalService();
+  bool _isLoading = true;
+
+  final List<String> _categories = [
+    'الكل',
+    'روحاني',
+    'صحي',
+    'تعليمي',
+    'اجتماعي',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text;
+      });
+    });
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
+
+    _animationController.forward();
+    _loadGoals();
+  }
+
+  Future<void> _loadGoals() async {
+    try {
+      final goals = await _goalService.getGoals();
+      setState(() {
+        _goals = goals;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading goals: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  List<DailyGoal> get _filteredGoals {
+    return _goals.where((g) {
+      final matchesSearch = g.title.toLowerCase().contains(
+        _searchQuery.toLowerCase(),
+      );
+      final matchesCategory =
+          _selectedCategory == 'الكل' || g.category == _selectedCategory;
+      return matchesSearch && matchesCategory;
+    }).toList();
+  }
+
+  void _toggleGoalComplete(int index) async {
+    final goal = _goals[index];
+    final updatedGoal = goal.copyWith(
+      isCompleted: !goal.isCompleted,
+      completedAt: goal.isCompleted ? null : DateTime.now(),
+    );
+    await _goalService.updateGoal(updatedGoal);
+    setState(() {
+      _goals[index] = updatedGoal;
+    });
+  }
+
+  void _showGoalOptions(DailyGoal goal, int index) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder:
+          (context) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.edit, color: AppTheme.primaryColor),
+                  title: const Text(
+                    'تعديل',
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
+                      color: AppTheme.textPrimaryColor,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _editGoal(goal, index);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.delete, color: Colors.red),
+                  title: const Text(
+                    'حذف',
+                    style: TextStyle(fontFamily: 'Cairo', color: Colors.red),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _deleteGoal(index);
+                  },
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
+  void _addGoal() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      isScrollControlled: true,
+      builder:
+          (context) => _GoalForm(
+            categories: _categories,
+            onSubmit: (goal) async {
+              try {
+                await _goalService.addGoal(goal);
+                await _loadGoals();
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'تمت إضافة الهدف بنجاح',
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
+                      backgroundColor: AppTheme.primaryColor,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'حدث خطأ أثناء إضافة الهدف: ${e.toString()}',
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          color: Colors.white,
+                        ),
+                      ),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+    );
+  }
+
+  void _editGoal(DailyGoal goal, int index) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      isScrollControlled: true,
+      builder:
+          (context) => _GoalForm(
+            categories: _categories,
+            initialGoal: goal,
+            onSubmit: (updatedGoal) async {
+              try {
+                await _goalService.updateGoal(updatedGoal);
+                setState(() {
+                  _goals[index] = updatedGoal;
+                });
+                if (mounted) {
+                  Navigator.pop(context);
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'حدث خطأ أثناء تحديث الهدف: ${e.toString()}',
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          color: Colors.white,
+                        ),
+                      ),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+    );
+  }
+
+  void _deleteGoal(int index) {
+    if (index < 0 || index >= _filteredGoals.length) {
+      print('Invalid index for deletion: $index');
+      return;
+    }
+
+    final goalToDelete = _filteredGoals[index];
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text(
+              'حذف الهدف',
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                color: AppTheme.textPrimaryColor,
+                fontSize: 16,
+              ),
+            ),
+            content: Text(
+              'هل أنت متأكد من حذف هذا الهدف؟',
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                color: AppTheme.textSecondaryColor,
+                fontSize: 16,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'إلغاء',
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    color: AppTheme.textSecondaryColor,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () async {
+                  try {
+                    await _goalService.deleteGoal(goalToDelete.id);
+                    setState(() {
+                      _goals.removeWhere((g) => g.id == goalToDelete.id);
+                    });
+                    if (mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'تم حذف الهدف بنجاح',
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                          backgroundColor: AppTheme.primaryColor,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'حدث خطأ أثناء حذف الهدف: ${e.toString()}',
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              color: Colors.white,
+                            ),
+                          ),
+                          backgroundColor: Colors.red,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: Text(
+                  'حذف',
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      backgroundColor:
+          isDarkMode ? AppTheme.darkBackgroundColor : AppTheme.backgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          'الأهداف اليومية',
+          style: AppTheme.titleStyle.copyWith(
+            color: isDarkMode ? Colors.white : AppTheme.textPrimaryColor,
+          ),
+        ),
+        centerTitle: true,
+        iconTheme: IconThemeData(
+          color: isDarkMode ? Colors.white : AppTheme.primaryColor,
+        ),
+      ),
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : FadeTransition(
+                opacity: _fadeAnimation,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
+                  child: Column(
+                    children: [
+                      CustomSearchBar(
+                        controller: _searchController,
+                        isDarkMode: isDarkMode,
+                      ),
+                      const SizedBox(height: 16),
+                      CategoryChips(
+                        categories: _categories,
+                        selectedCategory: _selectedCategory,
+                        onCategorySelected: (category) {
+                          setState(() {
+                            _selectedCategory = category;
+                          });
+                        },
+                        isDarkMode: isDarkMode,
+                      ),
+                      const SizedBox(height: 16),
+                      Expanded(
+                        child:
+                            _filteredGoals.isEmpty
+                                ? _buildEmptyState(isDarkMode)
+                                : ListView.separated(
+                                  itemCount: _filteredGoals.length,
+                                  separatorBuilder:
+                                      (_, __) => const SizedBox(height: 12),
+                                  itemBuilder: (context, index) {
+                                    final goal = _filteredGoals[index];
+                                    return GoalItem(
+                                      goal: goal,
+                                      isDarkMode: isDarkMode,
+                                      onTap: () => _toggleGoalComplete(index),
+                                      onLongPress:
+                                          () => _showGoalOptions(goal, index),
+                                    );
+                                  },
+                                ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildAddButton(isDarkMode),
+                    ],
+                  ),
+                ),
+              ),
+    );
+  }
+
+  Widget _buildEmptyState(bool isDarkMode) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.flag_outlined,
+            size: 120,
+            color: isDarkMode ? Colors.white70 : AppTheme.textSecondaryColor,
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'ليس لديك أي أهداف يومية',
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontSize: 18,
+              color: isDarkMode ? Colors.white70 : AppTheme.textSecondaryColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddButton(bool isDarkMode) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          style: AppTheme.primaryButtonStyle,
+          onPressed: _addGoal,
+          child: const Text(
+            'أضف الآن',
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GoalForm extends StatefulWidget {
+  final List<String> categories;
+  final DailyGoal? initialGoal;
+  final Function(DailyGoal) onSubmit;
+
+  const _GoalForm({
+    Key? key,
+    required this.categories,
+    this.initialGoal,
+    required this.onSubmit,
+  }) : super(key: key);
+
+  @override
+  State<_GoalForm> createState() => _GoalFormState();
+}
+
+class _GoalFormState extends State<_GoalForm> {
+  late final TextEditingController _titleController;
+  late final TextEditingController _descriptionController;
+  late String _selectedCategory;
+  bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(
+      text: widget.initialGoal?.title ?? '',
+    );
+    _descriptionController = TextEditingController(
+      text: widget.initialGoal?.subtitle ?? '',
+    );
+    _selectedCategory = widget.initialGoal?.category ?? widget.categories[1];
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: 24,
+        right: 24,
+        top: 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                widget.initialGoal == null ? 'إضافة هدف جديد' : 'تعديل الهدف',
+                style: AppTheme.titleStyle.copyWith(
+                  color: isDarkMode ? Colors.white : AppTheme.textPrimaryColor,
+                ),
+              ),
+              IconButton(
+                onPressed: _isSubmitting ? null : () => Navigator.pop(context),
+                icon: const Icon(Icons.close),
+                color: AppTheme.textSecondaryColor,
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          TextField(
+            controller: _titleController,
+            textDirection: TextDirection.rtl,
+            enabled: !_isSubmitting,
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              color: isDarkMode ? Colors.white : AppTheme.textPrimaryColor,
+            ),
+            decoration: AppTheme.getInputDecoration(
+              labelText: 'عنوان الهدف',
+              isDarkMode: isDarkMode,
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _descriptionController,
+            textDirection: TextDirection.rtl,
+            enabled: !_isSubmitting,
+            maxLines: 2,
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              color: isDarkMode ? Colors.white : AppTheme.textPrimaryColor,
+            ),
+            decoration: AppTheme.getInputDecoration(
+              labelText: 'وصف الهدف',
+              isDarkMode: isDarkMode,
+            ),
+          ),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(
+            value: _selectedCategory,
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              color: isDarkMode ? Colors.white : AppTheme.textPrimaryColor,
+            ),
+            decoration: AppTheme.getInputDecoration(
+              labelText: 'الفئة',
+              isDarkMode: isDarkMode,
+            ),
+            items:
+                widget.categories.where((c) => c != 'الكل').map((category) {
+                  return DropdownMenuItem(
+                    value: category,
+                    child: Text(category),
+                  );
+                }).toList(),
+            onChanged:
+                _isSubmitting
+                    ? null
+                    : (value) {
+                      setState(() {
+                        _selectedCategory = value!;
+                      });
+                    },
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            style: AppTheme.primaryButtonStyle,
+            onPressed:
+                _isSubmitting
+                    ? null
+                    : () {
+                      final title = _titleController.text.trim();
+                      final description = _descriptionController.text.trim();
+                      if (title.isNotEmpty) {
+                        setState(() {
+                          _isSubmitting = true;
+                        });
+                        final goal =
+                            widget.initialGoal?.copyWith(
+                              title: title,
+                              subtitle: description,
+                              category: _selectedCategory,
+                            ) ??
+                            DailyGoal(
+                              title: title,
+                              subtitle: description,
+                              category: _selectedCategory,
+                              createdAt: DateTime.now(),
+                            );
+                        widget.onSubmit(goal);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'يرجى إدخال عنوان الهدف',
+                              style: TextStyle(
+                                fontFamily: 'Cairo',
+                                color: Colors.white,
+                              ),
+                            ),
+                            backgroundColor: Colors.red,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
+            child:
+                _isSubmitting
+                    ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                    : Text(
+                      widget.initialGoal == null ? 'إضافة' : 'حفظ التغييرات',
+                      style: const TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+          ),
+          const SizedBox(height: 10),
+        ],
+      ),
+    );
+  }
+}

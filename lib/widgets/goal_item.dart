@@ -1,0 +1,157 @@
+import 'package:flutter/material.dart';
+import 'package:serat/constants/app_theme.dart';
+import 'package:serat/models/daily_goal.dart';
+
+class GoalItem extends StatelessWidget {
+  final DailyGoal goal;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+  final bool isDarkMode;
+
+  const GoalItem({
+    Key? key,
+    required this.goal,
+    required this.onTap,
+    required this.onLongPress,
+    required this.isDarkMode,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Hero(
+      tag: 'goal_${goal.id}',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: onLongPress,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDarkMode ? AppTheme.darkCardColor : AppTheme.cardColor,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  _buildProgressIndicator(),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            _buildCategoryChip(),
+                            const Spacer(),
+                            _buildDateText(),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        _buildTitleText(),
+                        if (goal.subtitle.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          _buildSubtitleText(),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressIndicator() {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        SizedBox(
+          width: 40,
+          height: 40,
+          child: CircularProgressIndicator(
+            value: goal.progress,
+            backgroundColor: Colors.grey[200],
+            valueColor: AlwaysStoppedAnimation<Color>(
+              goal.isCompleted ? Colors.green : AppTheme.primaryColor,
+            ),
+            strokeWidth: 3,
+          ),
+        ),
+        Icon(
+          goal.isCompleted ? Icons.check : Icons.flag,
+          color: goal.isCompleted ? Colors.green : AppTheme.primaryColor,
+          size: 20,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryChip() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        goal.category,
+        style: const TextStyle(
+          fontFamily: 'Cairo',
+          color: AppTheme.primaryColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateText() {
+    return Text(
+      _formatDate(goal.createdAt),
+      style: TextStyle(
+        fontFamily: 'Cairo',
+        color: isDarkMode ? Colors.white70 : AppTheme.textSecondaryColor,
+        fontSize: 12,
+      ),
+    );
+  }
+
+  Widget _buildTitleText() {
+    return Text(
+      goal.title,
+      style: TextStyle(
+        fontFamily: 'Cairo',
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: isDarkMode ? Colors.white : AppTheme.textPrimaryColor,
+      ),
+    );
+  }
+
+  Widget _buildSubtitleText() {
+    return Text(
+      goal.subtitle,
+      style: TextStyle(
+        fontFamily: 'Cairo',
+        fontSize: 14,
+        color: isDarkMode ? Colors.white70 : AppTheme.textSecondaryColor,
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
+  }
+}

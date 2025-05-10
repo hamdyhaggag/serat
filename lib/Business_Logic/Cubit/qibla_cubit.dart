@@ -1,0 +1,38 @@
+import 'dart:developer';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:serat/Data/Model/direction_model.dart';
+import 'package:serat/imports.dart';
+
+class QiblaCubit extends Cubit<QiblaState> {
+  QiblaCubit() : super(QiblaInitial());
+
+  static QiblaCubit get(context) => BlocProvider.of(context);
+
+  DirectionModel? directionModel;
+
+  Future<void> getDirection({
+    required double latitude,
+    required double longitude,
+  }) async {
+    emit(GetDirectionLoading());
+    try {
+      final value = await DioHelper.getData(url: "qibla/$latitude/$longitude");
+      directionModel = DirectionModel.fromJson(value.data);
+      emit(GetDirectionSuccess());
+    } catch (error) {
+      log('getDirection error: $error');
+      emit(GetDirectionError());
+    }
+  }
+}
+
+// Qibla States
+abstract class QiblaState {}
+
+class QiblaInitial extends QiblaState {}
+
+class GetDirectionLoading extends QiblaState {}
+
+class GetDirectionSuccess extends QiblaState {}
+
+class GetDirectionError extends QiblaState {}
