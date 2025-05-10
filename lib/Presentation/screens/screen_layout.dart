@@ -82,7 +82,10 @@ class ScreenLayout extends StatelessWidget {
               }
               return true;
             },
-            child: cubit.buildScreens[cubit.index],
+            child: IndexedStack(
+              index: cubit.index,
+              children: cubit.buildScreens,
+            ),
           ),
         );
       },
