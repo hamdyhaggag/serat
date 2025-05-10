@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:serat/Presentation/Widgets/Shared/islamic_loading_indicator.dart';
 import '../../imports.dart';
 import '../onBoarading/onboarding_screen.dart';
 import 'screen_layout.dart';
-import 'package:serat/Presentation/Widgets/Shared/islamic_loading_indicator.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -62,8 +62,8 @@ class SplashScreenState extends State<SplashScreen>
             end: Alignment.bottomCenter,
             colors: [
               Theme.of(context).primaryColor,
-              Theme.of(context).primaryColor.withOpacity(0.9),
-              Theme.of(context).primaryColor.withOpacity(0.8),
+              Theme.of(context).primaryColor.withValues(alpha: 0.9),
+              Theme.of(context).primaryColor.withValues(alpha: 0.8),
             ],
             stops: const [0.0, 0.5, 1.0],
           ),
@@ -93,7 +93,7 @@ class SplashScreenState extends State<SplashScreen>
                   return Opacity(opacity: _fadeAnimation.value, child: child);
                 },
                 child: const Text(
-                  "serat - تَطْمَئِن",
+                  "serat - صراط",
                   style: TextStyle(
                     fontSize: 27,
                     color: Colors.white,
