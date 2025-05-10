@@ -23,7 +23,7 @@ TimeOfDay? stringToTimeOfDay(String timeString) {
 
 bool isEnterBefore = false;
 int radioValue = 5;
-bool isLight = CacheHelper.getBoolean(key: 'isLight');
+bool isLight = false;
 TimeOfDay? selectedTimeMorning;
 TimeOfDay? selectedTimeEvening;
 String? selectedMorning;
@@ -45,8 +45,7 @@ final darkThemeData = ThemeData(
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-
+  await CacheHelper.init();
   await initializeAppSettings();
 
   Bloc.observer = MyGlobalObserver();
@@ -57,6 +56,7 @@ void main() async {
 Future<void> initializeAppSettings() async {
   radioValue = CacheHelper.getInteger(key: 'value');
   isEnterBefore = CacheHelper.getBoolean(key: 'isEnterBefore');
+  isLight = CacheHelper.getBoolean(key: 'isLight');
   selectedMorning = CacheHelper.getString(key: 'Morning');
   selectedEvening = CacheHelper.getString(key: 'Evening');
   selectedTimeMorning = stringToTimeOfDay(selectedMorning!);

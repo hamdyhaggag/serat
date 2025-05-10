@@ -1,6 +1,5 @@
 export 'dart:developer';
 export 'package:easy_dynamic_theme/easy_dynamic_theme.dart';
-export 'package:firebase_core/firebase_core.dart';
 export 'package:flutter/foundation.dart';
 export 'package:flutter_bloc/flutter_bloc.dart';
 export 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -15,7 +14,6 @@ export 'package:serat/Presentation/Widgets/Azkar/azkar_item.dart';
 export 'package:serat/Presentation/Widgets/Shared/custom_app_bar.dart';
 export 'package:serat/Presentation/Widgets/Shared/custom_reset_button.dart';
 export 'Presentation/screens/splash_screen.dart';
-export 'firebase_options.dart';
 export 'dart:async';
 export 'package:font_awesome_flutter/font_awesome_flutter.dart';
 export 'package:intl/intl.dart';
