@@ -44,25 +44,49 @@ class LocationCubit extends Cubit<LocationState> {
     required double longitude,
   }) async {
     emit(GetCurrentAddressLoading());
-    time = time.substring(0, time.length - 3);
     try {
+      final now = DateTime.now();
+      final formattedTime =
+          "${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year}";
+
       final response = await DioHelper.getData(
-        url: "timings/$time",
+        url: "timings/$formattedTime",
         latitude: latitude,
         longitude: longitude,
         method: radioValue,
       );
 
+      log('API Response: ${response.data}');
+
+      // Check if response is HTML (indicating a redirection or error page)
+      if (response.data is String &&
+          (response.data as String).contains('<!DOCTYPE html>')) {
+        log(
+          'Received HTML response instead of JSON. Possible network issue or API endpoint problem.',
+        );
+        throw Exception(
+          'Network error: Received HTML response. Please check your internet connection.',
+        );
+      }
+
       if (response.data is Map<String, dynamic>) {
-        timesModel = TimesModel.fromJson(response.data);
-        saveTimeModel(timeModel: timesModel!);
-        emit(GetTimingsSuccess());
+        try {
+          timesModel = TimesModel.fromJson(response.data);
+          saveTimeModel(timeModel: timesModel!);
+          emit(GetTimingsSuccess());
+        } catch (parseError) {
+          log('Error parsing response: $parseError');
+          throw Exception('Error parsing prayer times data: $parseError');
+        }
       } else {
-        throw Exception('Invalid response format');
+        log('Invalid response type: ${response.data.runtimeType}');
+        throw Exception(
+          'Invalid response format: Expected Map<String, dynamic> but got ${response.data.runtimeType}',
+        );
       }
     } catch (error) {
       log('getTimings error: $error');
-      _handleError();
+      await _handleError();
     }
   }
 

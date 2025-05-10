@@ -14,6 +14,22 @@ class QiblaScreen extends StatefulWidget {
 
 class QiblaScreenState extends State<QiblaScreen> {
   @override
+  void initState() {
+    super.initState();
+    _getQiblaDirection();
+  }
+
+  Future<void> _getQiblaDirection() async {
+    final locationCubit = LocationCubit.get(context);
+    if (locationCubit.position != null) {
+      await QiblaCubit.get(context).getQiblaDirection(
+        latitude: locationCubit.position!.latitude,
+        longitude: locationCubit.position!.longitude,
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
@@ -29,7 +45,7 @@ class QiblaScreenState extends State<QiblaScreen> {
                 final locationCubit = LocationCubit.get(context);
                 await locationCubit.getMyCurrentLocation();
                 if (locationCubit.position != null && mounted) {
-                  await QiblaCubit.get(context).getDirection(
+                  await QiblaCubit.get(context).getQiblaDirection(
                     latitude: locationCubit.position!.latitude,
                     longitude: locationCubit.position!.longitude,
                   );

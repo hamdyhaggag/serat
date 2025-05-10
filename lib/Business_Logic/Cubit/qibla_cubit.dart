@@ -10,18 +10,28 @@ class QiblaCubit extends Cubit<QiblaState> {
 
   DirectionModel? directionModel;
 
-  Future<void> getDirection({
+  Future<void> getQiblaDirection({
     required double latitude,
     required double longitude,
   }) async {
-    emit(GetDirectionLoading());
+    emit(GetQiblaDirectionLoading());
     try {
-      final value = await DioHelper.getData(url: "qibla/$latitude/$longitude");
-      directionModel = DirectionModel.fromJson(value.data);
-      emit(GetDirectionSuccess());
+      final value = await DioHelper.getData(
+        url: "qibla/$latitude/$longitude",
+        latitude: latitude,
+        longitude: longitude,
+        method: 5, // Using default method for qibla calculation
+      );
+
+      if (value.data is Map<String, dynamic>) {
+        directionModel = DirectionModel.fromJson(value.data);
+        emit(GetQiblaDirectionSuccess());
+      } else {
+        throw Exception('Invalid response format');
+      }
     } catch (error) {
-      log('getDirection error: $error');
-      emit(GetDirectionError());
+      log('getQiblaDirection error: $error');
+      emit(GetQiblaDirectionError());
     }
   }
 }
@@ -31,8 +41,8 @@ abstract class QiblaState {}
 
 class QiblaInitial extends QiblaState {}
 
-class GetDirectionLoading extends QiblaState {}
+class GetQiblaDirectionLoading extends QiblaState {}
 
-class GetDirectionSuccess extends QiblaState {}
+class GetQiblaDirectionSuccess extends QiblaState {}
 
-class GetDirectionError extends QiblaState {}
+class GetQiblaDirectionError extends QiblaState {}

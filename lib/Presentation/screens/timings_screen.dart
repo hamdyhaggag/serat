@@ -10,7 +10,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serat/Business_Logic/Cubit/navigation_cubit.dart';
 import 'package:serat/Presentation/screens/dailygoal_screens/daily_goal_navigation_screen.dart';
 import 'package:serat/Presentation/screens/zakah_calculator_screen.dart';
-import 'package:serat/shared/services/notification_service.dart';
 import 'dart:math';
 import 'dart:async';
 
@@ -30,7 +29,7 @@ class _TimingsScreenState extends State<TimingsScreen>
   final List<Offset> _particles = [];
   final int _particleCount = 100;
   final Random _random = Random();
-  bool _isLoading = false;
+  bool _isLoading = true;
   Timer? _countdownTimer;
   Duration _timeUntilNextPrayer = Duration.zero;
   String _nextPrayerName = '';
@@ -50,7 +49,9 @@ class _TimingsScreenState extends State<TimingsScreen>
     _loadSavedTimes();
     _initializeParticles();
     _startCountdownTimer();
-    NotificationService().initialize(); // Initialize notifications
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      location.LocationCubit.get(context).getMyCurrentLocation();
+    });
   }
 
   void _initializeParticles() {
@@ -87,10 +88,6 @@ class _TimingsScreenState extends State<TimingsScreen>
     _countdownTimer?.cancel();
     _animationController.dispose();
     super.dispose();
-  }
-
-  void requestPermission() async {
-    // Removed notification permission request
   }
 
   Widget _buildSkeletonCard() {
@@ -257,9 +254,13 @@ class _TimingsScreenState extends State<TimingsScreen>
       listener: (context, state) {
         if (state is location.GetTimingsSuccess) {
           location.LocationCubit.get(context).errorStatus = false;
-          setState(() => _isLoading = false);
+          if (mounted) {
+            setState(() => _isLoading = false);
+          }
         } else if (state is location.GetCurrentAddressLoading) {
-          setState(() => _isLoading = true);
+          if (mounted) {
+            setState(() => _isLoading = true);
+          }
         }
       },
       builder: (context, state) {
@@ -271,7 +272,6 @@ class _TimingsScreenState extends State<TimingsScreen>
           endDrawer: _buildDrawer(isDarkMode),
           body: Stack(
             children: [
-              // Background particles
               CustomPaint(
                 size: Size.infinite,
                 painter: EnhancedParticlePainter(
@@ -279,8 +279,6 @@ class _TimingsScreenState extends State<TimingsScreen>
                   isDarkMode: isDarkMode,
                 ),
               ),
-
-              // Main content
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -311,7 +309,6 @@ class _TimingsScreenState extends State<TimingsScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Header Section
                           Container(
                             height: 220,
                             decoration: BoxDecoration(
@@ -346,7 +343,6 @@ class _TimingsScreenState extends State<TimingsScreen>
                                   mainAxisSize: MainAxisSize.min,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // Top row with greeting and icons
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
@@ -383,7 +379,20 @@ class _TimingsScreenState extends State<TimingsScreen>
                                                       color: Colors.white,
                                                     ),
                                                     const SizedBox(height: 4),
-                                                    if (locationCubit
+                                                    if (_isLoading)
+                                                      Container(
+                                                        width: 200,
+                                                        height: 14,
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.white
+                                                              .withOpacity(0.2),
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                4,
+                                                              ),
+                                                        ),
+                                                      )
+                                                    else if (locationCubit
                                                             .timesModel !=
                                                         null)
                                                       AppText(
@@ -441,110 +450,127 @@ class _TimingsScreenState extends State<TimingsScreen>
                                       ],
                                     ),
                                     const Spacer(),
-                                    // Location row
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 10,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(
-                                                0.2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                            child: const Icon(
-                                              Icons.location_on,
-                                              color: Colors.white,
-                                              size: 20,
-                                            ),
+                                    if (_isLoading)
+                                      Container(
+                                        height: 60,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
                                           ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                AppText(
-                                                  'موقعك الحالي',
-                                                  fontSize: 12,
-                                                  color: Colors.white
-                                                      .withOpacity(0.7),
+                                        ),
+                                      )
+                                    else
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 10,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(8),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(
+                                                  0.2,
                                                 ),
-                                                const SizedBox(height: 2),
-                                                AppText(
-                                                  locationCubit
-                                                              .address
-                                                              ?.locality !=
-                                                          null
-                                                      ? _translateLocationToArabic(
-                                                        locationCubit
-                                                            .address!
-                                                            .locality,
-                                                      )
-                                                      : 'جاري تحديد الموقع...',
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.white,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                                if (locationCubit
-                                                        .address
-                                                        ?.administrativeArea !=
-                                                    null)
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              child: const Icon(
+                                                Icons.location_on,
+                                                color: Colors.white,
+                                                size: 20,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
                                                   AppText(
-                                                    _translateLocationToArabic(
-                                                      locationCubit
-                                                          .address!
-                                                          .administrativeArea,
-                                                    ),
-                                                    fontSize: 12,
-                                                    color: Colors.white
-                                                        .withOpacity(0.7),
+                                                    locationCubit
+                                                                .address
+                                                                ?.locality !=
+                                                            null
+                                                        ? _translateLocationToArabic(
+                                                          locationCubit
+                                                              .address!
+                                                              .locality,
+                                                        )
+                                                        : 'جاري تحديد الموقع...',
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.white,
                                                     maxLines: 1,
                                                     overflow:
                                                         TextOverflow.ellipsis,
                                                   ),
-                                              ],
+                                                  if (locationCubit
+                                                          .address
+                                                          ?.administrativeArea !=
+                                                      null)
+                                                    AppText(
+                                                      _translateLocationToArabic(
+                                                        locationCubit
+                                                            .address!
+                                                            .administrativeArea,
+                                                      ),
+                                                      fontSize: 12,
+                                                      color: Colors.white
+                                                          .withOpacity(0.7),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  const SizedBox(height: 16),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                          IconButton(
-                                            padding: EdgeInsets.zero,
-                                            constraints: const BoxConstraints(),
-                                            icon: const Icon(
-                                              Icons.refresh,
-                                              color: Colors.white,
-                                              size: 20,
+                                            IconButton(
+                                              padding: EdgeInsets.zero,
+                                              constraints:
+                                                  const BoxConstraints(),
+                                              icon: const Icon(
+                                                Icons.refresh,
+                                                color: Colors.white,
+                                                size: 20,
+                                              ),
+                                              onPressed: () async {
+                                                setState(
+                                                  () => _isLoading = true,
+                                                );
+                                                await locationCubit
+                                                    .getMyCurrentLocation();
+                                              },
                                             ),
-                                            onPressed: () async {
-                                              setState(() => _isLoading = true);
-                                              await locationCubit
-                                                  .getMyCurrentLocation();
-                                            },
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
-                                    ),
                                   ],
                                 ),
                               ),
                             ),
                           ),
-
-                          // Floating Prayer Times Card
-                          if (locationCubit.timesModel != null)
+                          if (_isLoading)
+                            Transform.translate(
+                              offset: const Offset(0, -30),
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                                child: _buildSkeletonPrayerTimes(),
+                              ),
+                            )
+                          else if (locationCubit.timesModel != null)
                             Transform.translate(
                               offset: const Offset(0, -30),
                               child: Container(
@@ -715,8 +741,6 @@ class _TimingsScreenState extends State<TimingsScreen>
                                 ),
                               ),
                             ),
-
-                          // Main Grid
                           Padding(
                             padding: const EdgeInsets.all(20),
                             child: Column(
@@ -731,72 +755,88 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           ? Colors.white
                                           : AppColors.primaryColor,
                                 ),
-                                const SizedBox(height: 20),
-                                GridView.count(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  crossAxisCount: 2,
-                                  mainAxisSpacing: 15,
-                                  crossAxisSpacing: 15,
-                                  childAspectRatio: 1.2,
-                                  children: [
-                                    _buildFeatureCard(
-                                      'الهدف اليومي',
-                                      Icons.flag,
-                                      isDarkMode,
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (context) =>
-                                                    const DailyGoalNavigationScreen(),
-                                          ),
-                                        );
-                                      },
+                                const SizedBox(height: 10),
+                                if (_isLoading)
+                                  GridView.count(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    crossAxisCount: 2,
+                                    mainAxisSpacing: 15,
+                                    crossAxisSpacing: 15,
+                                    childAspectRatio: 1.2,
+                                    children: List.generate(
+                                      4,
+                                      (index) => _buildSkeletonCard(),
                                     ),
-                                    _buildFeatureCard(
-                                      'حاسبة الزكاة',
-                                      Icons.calculate,
-                                      isDarkMode,
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (context) =>
-                                                    const ZakahCalculatorScreen(),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    _buildFeatureCard(
-                                      'الراديو',
-                                      Icons.radio,
-                                      isDarkMode,
-                                      onTap: () {
-                                        NavigationCubit.get(
-                                          context,
-                                        ).changeIndex(1);
-                                      },
-                                    ),
-                                    _buildFeatureCard(
-                                      'التقويم الهجري',
-                                      Icons.calendar_month,
-                                      isDarkMode,
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (context) =>
-                                                    const HijriCalendarScreen(),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ),
+                                  )
+                                else
+                                  GridView.count(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    crossAxisCount: 2,
+                                    mainAxisSpacing: 15,
+                                    crossAxisSpacing: 15,
+                                    childAspectRatio: 1.2,
+                                    children: [
+                                      _buildFeatureCard(
+                                        'الهدف اليومي',
+                                        Icons.flag,
+                                        isDarkMode,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) =>
+                                                      const DailyGoalNavigationScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _buildFeatureCard(
+                                        'حاسبة الزكاة',
+                                        Icons.calculate,
+                                        isDarkMode,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) =>
+                                                      const ZakahCalculatorScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _buildFeatureCard(
+                                        'الراديو',
+                                        Icons.radio,
+                                        isDarkMode,
+                                        onTap: () {
+                                          NavigationCubit.get(
+                                            context,
+                                          ).changeIndex(1);
+                                        },
+                                      ),
+                                      _buildFeatureCard(
+                                        'التقويم الهجري',
+                                        Icons.calendar_month,
+                                        isDarkMode,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) =>
+                                                      const HijriCalendarScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
                               ],
                             ),
                           ),
@@ -1258,8 +1298,7 @@ class _TimingsScreenState extends State<TimingsScreen>
 
   void _startCountdownTimer() {
     _countdownTimer?.cancel();
-    _updateTimeUntilNextPrayer(); // Initial update
-    _schedulePrayerNotifications(); // Schedule notifications
+    _updateTimeUntilNextPrayer();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() {
@@ -1269,54 +1308,6 @@ class _TimingsScreenState extends State<TimingsScreen>
     });
   }
 
-  Future<void> _schedulePrayerNotifications() async {
-    final locationCubit = location.LocationCubit.get(context);
-    if (locationCubit.timesModel == null) return;
-
-    final timings = locationCubit.timesModel!.data.timings;
-    final now = DateTime.now();
-
-    // Cancel existing notifications
-    await NotificationService().cancelAllNotifications();
-
-    // Schedule notifications for each prayer
-    await NotificationService().schedulePrayerNotification(
-      prayerName: 'الفجر',
-      prayerTime: _parsePrayerTime(timings.fajr),
-      id: 1,
-    );
-
-    await NotificationService().schedulePrayerNotification(
-      prayerName: 'الشروق',
-      prayerTime: _parsePrayerTime(timings.sunrise),
-      id: 2,
-    );
-
-    await NotificationService().schedulePrayerNotification(
-      prayerName: 'الظهر',
-      prayerTime: _parsePrayerTime(timings.dhuhr),
-      id: 3,
-    );
-
-    await NotificationService().schedulePrayerNotification(
-      prayerName: 'العصر',
-      prayerTime: _parsePrayerTime(timings.asr),
-      id: 4,
-    );
-
-    await NotificationService().schedulePrayerNotification(
-      prayerName: 'المغرب',
-      prayerTime: _parsePrayerTime(timings.maghrib),
-      id: 5,
-    );
-
-    await NotificationService().schedulePrayerNotification(
-      prayerName: 'العشاء',
-      prayerTime: _parsePrayerTime(timings.isha),
-      id: 6,
-    );
-  }
-
   void _updateTimeUntilNextPrayer() {
     final locationCubit = location.LocationCubit.get(context);
     if (locationCubit.timesModel == null) return;
@@ -1324,7 +1315,6 @@ class _TimingsScreenState extends State<TimingsScreen>
     final timings = locationCubit.timesModel!.data.timings;
     final now = DateTime.now();
 
-    // Parse all prayer times
     DateTime fajrTime = _parsePrayerTime(timings.fajr);
     DateTime sunriseTime = _parsePrayerTime(timings.sunrise);
     DateTime dhuhrTime = _parsePrayerTime(timings.dhuhr);
@@ -1332,7 +1322,6 @@ class _TimingsScreenState extends State<TimingsScreen>
     DateTime maghribTime = _parsePrayerTime(timings.maghrib);
     DateTime ishaTime = _parsePrayerTime(timings.isha);
 
-    // If we're past Isha, the next prayer is tomorrow's Fajr
     if (now.isAfter(ishaTime)) {
       fajrTime = fajrTime.add(const Duration(days: 1));
       sunriseTime = sunriseTime.add(const Duration(days: 1));
@@ -1342,7 +1331,6 @@ class _TimingsScreenState extends State<TimingsScreen>
       ishaTime = ishaTime.add(const Duration(days: 1));
     }
 
-    // Find the next prayer time
     if (now.isBefore(fajrTime)) {
       _nextPrayerTime = fajrTime;
       _nextPrayerName = 'الفجر';
@@ -1370,9 +1358,7 @@ class _TimingsScreenState extends State<TimingsScreen>
   }
 
   String _formatCountdown(Duration duration) {
-    if (duration.isNegative) {
-      return '00:00:00';
-    }
+    if (duration.isNegative) return '00:00:00';
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     String hours = twoDigits(duration.inHours);
     String minutes = twoDigits(duration.inMinutes.remainder(60));
@@ -1383,10 +1369,7 @@ class _TimingsScreenState extends State<TimingsScreen>
   String _translateLocationToArabic(String? location) {
     if (location == null) return '';
 
-    // Common location translations
-    final Map<String, String> translations = {
-      'Beheira Governorate': 'محافظة البحيرة',
-      'Egypt': 'مصر',
+    final Map<String, String> cities = {
       'At Tamamah': 'التمامة',
       'Cairo': 'القاهرة',
       'Alexandria': 'الإسكندرية',
@@ -1464,97 +1447,94 @@ class _TimingsScreenState extends State<TimingsScreen>
       'Farafra': 'الفرافرة',
       'Dakhla': 'الداخلة',
       'Kharga': 'الخارجة',
-      'El Kharga': 'الخارجة',
-      'El Dakhla': 'الداخلة',
-      'El Farafra': 'الفرافرة',
-      'El Bahariya': 'البحرية',
-      'El Siwa': 'سيوة',
-      'El Mersa Matruh': 'مرسى مطروح',
-      'El Dabaa': 'الضبعة',
-      'El Sidi Abdel Rahman': 'سيدي عبد الرحمن',
-      'El Marina': 'مارينا',
-      'El Alamein': 'العلمين',
-      'El Hamam': 'الحمام',
-      'El Ras Shukheir': 'رأس شقير',
-      'El Ras Gharib': 'رأس غارب',
-      'El Ain El Sokhna': 'العين السخنة',
-      'El Sahl Hasheesh': 'سهل حشيش',
-      'El Makadi Bay': 'مكادي باي',
-      'El Soma Bay': 'سوما باي',
-      'El Gouna': 'الجونة',
-      'El Safaga': 'سفاجا',
-      'El Marsa Alam': 'مرسى علم',
-      'El Quseir': 'القصير',
-      'El Taba': 'طابا',
-      'El Nuweiba': 'نويبع',
-      'El Dahab': 'دهب',
-      'El Saint Catherine': 'سانت كاترين',
-      'El Tor': 'الطور',
-      'El Rafah': 'رفح',
-      'El Arish': 'العريش',
-      'El Kafr El Sheikh': 'كفر الشيخ',
-      'El Mahalla El Kubra': 'المحلة الكبرى',
-      'El 10th of Ramadan City': 'مدينة العاشر من رمضان',
-      'El Sadat City': 'مدينة السادات',
-      'El New Capital': 'العاصمة الإدارية',
-      'El Badr City': 'مدينة بدر',
-      'El Shorouk': 'الشروق',
-      'El Obour': 'العبور',
-      'El Tagamo\'': 'التجمع',
-      'El Rehab': 'الرحاب',
-      'El Matareya': 'المطرية',
-      'El Marg': 'المرج',
-      'El Ain Shams': 'عين شمس',
-      'El Rod El Farag': 'روض الفرج',
-      'El Shubra': 'شبرا',
-      'El Helwan': 'حلوان',
-      'El Zamalek': 'الزمالك',
-      'El Agouza': 'العجوزة',
-      'El Mohandessin': 'المهندسين',
-      'El Dokki': 'الدقي',
-      'El Garden City': 'جاردن سيتي',
-      'El Maadi': 'المعادي',
-      'El Heliopolis': 'مصر الجديدة',
-      'El Madinat Nasr': 'مدينة نصر',
-      'El Sheikh Zayed City': 'مدينة الشيخ زايد',
-      'El New Cairo': 'القاهرة الجديدة',
-      'El Sharm El Sheikh': 'شرم الشيخ',
-      'El 6th of October City': 'مدينة 6 أكتوبر',
-      'El Hurghada': 'الغردقة',
-      'El Sohag': 'سوهاج',
-      'El Beni Suef': 'بني سويف',
-      'El Minya': 'المنيا',
-      'El Damanhur': 'دمنهور',
-      'El Damietta': 'دمياط',
-      'El Aswan': 'أسوان',
-      'El Zagazig': 'الزقازيق',
-      'El Fayyum': 'الفيوم',
-      'El Ismailia': 'الإسماعيلية',
-      'El Asyut': 'أسيوط',
-      'El Tanta': 'طنطا',
-      'El Mansoura': 'المنصورة',
-      'El Luxor': 'الأقصر',
-      'El Suez': 'السويس',
-      'El Port Said': 'بورسعيد',
-      'El Shubra El Kheima': 'شبرا الخيمة',
-      'El Giza': 'الجيزة',
-      'El Alexandria': 'الإسكندرية',
-      'El Cairo': 'القاهرة',
-      'El Egypt': 'مصر',
-      'El Beheira Governorate': 'محافظة البحيرة',
-      'El At Tamamah': 'التمامة',
     };
 
-    // Try to find an exact match
-    if (translations.containsKey(location)) {
-      return translations[location]!;
+    final Map<String, String> governorates = {
+      'Cairo Governorate': 'محافظة القاهرة',
+      'Alexandria Governorate': 'محافظة الإسكندرية',
+      'Giza Governorate': 'محافظة الجيزة',
+      'Beheira Governorate': 'محافظة البحيرة',
+      'Port Said Governorate': 'محافظة بورسعيد',
+      'Suez Governorate': 'محافظة السويس',
+      'Luxor Governorate': 'محافظة الأقصر',
+      'Dakahlia Governorate': 'محافظة الدقهلية',
+      'Gharbia Governorate': 'محافظة الغربية',
+      'Asyut Governorate': 'محافظة أسيوط',
+      'Ismailia Governorate': 'محافظة الإسماعيلية',
+      'Fayyum Governorate': 'محافظة الفيوم',
+      'Sharqia Governorate': 'محافظة الشرقية',
+      'Aswan Governorate': 'محافظة أسوان',
+      'Damietta Governorate': 'محافظة دمياط',
+      'Minya Governorate': 'محافظة المنيا',
+      'Beni Suef Governorate': 'محافظة بني سويف',
+      'Sohag Governorate': 'محافظة سوهاج',
+      'Red Sea Governorate': 'محافظة البحر الأحمر',
+      'New Valley Governorate': 'محافظة الوادي الجديد',
+      'Matrouh Governorate': 'محافظة مطروح',
+      'North Sinai Governorate': 'محافظة شمال سيناء',
+      'South Sinai Governorate': 'محافظة جنوب سيناء',
+      'Kafr El Sheikh Governorate': 'محافظة كفر الشيخ',
+      'Qalyubia Governorate': 'محافظة القليوبية',
+      'Monufia Governorate': 'محافظة المنوفية',
+      'Qena Governorate': 'محافظة قنا',
+      'Beheira': 'محافظة البحيرة',
+      'Cairo': 'محافظة القاهرة',
+      'Alexandria': 'محافظة الإسكندرية',
+      'Giza': 'محافظة الجيزة',
+      'Port Said': 'محافظة بورسعيد',
+      'Suez': 'محافظة السويس',
+      'Luxor': 'محافظة الأقصر',
+      'Dakahlia': 'محافظة الدقهلية',
+      'Gharbia': 'محافظة الغربية',
+      'Asyut': 'محافظة أسيوط',
+      'Ismailia': 'محافظة الإسماعيلية',
+      'Fayyum': 'محافظة الفيوم',
+      'Sharqia': 'محافظة الشرقية',
+      'Aswan': 'محافظة أسوان',
+      'Damietta': 'محافظة دمياط',
+      'Minya': 'محافظة المنيا',
+      'Beni Suef': 'محافظة بني سويف',
+      'Sohag': 'محافظة سوهاج',
+      'Red Sea': 'محافظة البحر الأحمر',
+      'New Valley': 'محافظة الوادي الجديد',
+      'Matrouh': 'محافظة مطروح',
+      'North Sinai': 'محافظة شمال سيناء',
+      'South Sinai': 'محافظة جنوب سيناء',
+      'Kafr El Sheikh': 'محافظة كفر الشيخ',
+      'Qalyubia': 'محافظة القليوبية',
+      'Monufia': 'محافظة المنوفية',
+      'Qena': 'محافظة قنا',
+    };
+
+    // First try to find an exact match
+    if (cities.containsKey(location)) {
+      String cityName = cities[location]!;
+      // Try to find the governorate
+      for (var entry in governorates.entries) {
+        if (location.toLowerCase().contains(entry.key.toLowerCase())) {
+          return '$cityName - ${entry.value}';
+        }
+      }
+      return cityName;
     }
 
-    // If no exact match, try to find a partial match
-    for (var entry in translations.entries) {
+    // If no exact match, try partial matches
+    for (var entry in cities.entries) {
       if (location.toLowerCase().contains(entry.key.toLowerCase())) {
-        return entry.value;
+        String cityName = entry.value;
+        // Try to find the governorate
+        for (var govEntry in governorates.entries) {
+          if (location.toLowerCase().contains(govEntry.key.toLowerCase())) {
+            return '$cityName - ${govEntry.value}';
+          }
+        }
+        return cityName;
       }
+    }
+
+    // Check if the location is a governorate
+    if (governorates.containsKey(location)) {
+      return governorates[location]!;
     }
 
     // If no match found, return the original location
