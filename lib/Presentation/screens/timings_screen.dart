@@ -10,6 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serat/Business_Logic/Cubit/navigation_cubit.dart';
 import 'package:serat/Presentation/screens/dailygoal_screens/daily_goal_navigation_screen.dart';
 import 'package:serat/Presentation/screens/zakah_calculator_screen.dart';
+import 'package:serat/shared/services/notification_service.dart';
 import 'dart:math';
 import 'dart:async';
 
@@ -49,6 +50,7 @@ class _TimingsScreenState extends State<TimingsScreen>
     _loadSavedTimes();
     _initializeParticles();
     _startCountdownTimer();
+    NotificationService().initialize(); // Initialize notifications
   }
 
   void _initializeParticles() {
@@ -1257,6 +1259,7 @@ class _TimingsScreenState extends State<TimingsScreen>
   void _startCountdownTimer() {
     _countdownTimer?.cancel();
     _updateTimeUntilNextPrayer(); // Initial update
+    _schedulePrayerNotifications(); // Schedule notifications
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() {
@@ -1264,6 +1267,54 @@ class _TimingsScreenState extends State<TimingsScreen>
         });
       }
     });
+  }
+
+  Future<void> _schedulePrayerNotifications() async {
+    final locationCubit = location.LocationCubit.get(context);
+    if (locationCubit.timesModel == null) return;
+
+    final timings = locationCubit.timesModel!.data.timings;
+    final now = DateTime.now();
+
+    // Cancel existing notifications
+    await NotificationService().cancelAllNotifications();
+
+    // Schedule notifications for each prayer
+    await NotificationService().schedulePrayerNotification(
+      prayerName: 'الفجر',
+      prayerTime: _parsePrayerTime(timings.fajr),
+      id: 1,
+    );
+
+    await NotificationService().schedulePrayerNotification(
+      prayerName: 'الشروق',
+      prayerTime: _parsePrayerTime(timings.sunrise),
+      id: 2,
+    );
+
+    await NotificationService().schedulePrayerNotification(
+      prayerName: 'الظهر',
+      prayerTime: _parsePrayerTime(timings.dhuhr),
+      id: 3,
+    );
+
+    await NotificationService().schedulePrayerNotification(
+      prayerName: 'العصر',
+      prayerTime: _parsePrayerTime(timings.asr),
+      id: 4,
+    );
+
+    await NotificationService().schedulePrayerNotification(
+      prayerName: 'المغرب',
+      prayerTime: _parsePrayerTime(timings.maghrib),
+      id: 5,
+    );
+
+    await NotificationService().schedulePrayerNotification(
+      prayerName: 'العشاء',
+      prayerTime: _parsePrayerTime(timings.isha),
+      id: 6,
+    );
   }
 
   void _updateTimeUntilNextPrayer() {

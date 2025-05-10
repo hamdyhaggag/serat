@@ -75,6 +75,7 @@ dependencies:
   flutter_launcher_icons: ^0.13.1
   flutter_native_splash: ^2.3.9
   shimmer: ^3.0.0
+  flutter_local_notifications: ^16.1.0
 
 
 
@@ -114,6 +115,8 @@ flutter:
       - assets/images/
       - assets/icons/
       - assets/nawawi_hadiths.json
+      - assets/logo.png
+      - assets/azkar/
   fonts:
     - family: Cairo
       fonts:

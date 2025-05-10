@@ -30,17 +30,17 @@ String? selectedMorning;
 String? selectedEvening;
 
 final lightThemeData = ThemeData(
-  primaryColor: Colors.blue,
+  primaryColor: AppColors.primaryColor,
   textTheme: const TextTheme(labelLarge: TextStyle(color: Colors.white70)),
   brightness: Brightness.light,
-  hintColor: Colors.blue,
+  hintColor: AppColors.primaryColor,
 );
 
 final darkThemeData = ThemeData(
-  primaryColor: Colors.blue,
+  primaryColor: AppColors.primaryColor,
   textTheme: const TextTheme(labelLarge: TextStyle(color: Color(0xff1F1F1F))),
   brightness: Brightness.dark,
-  hintColor: Colors.blue,
+  hintColor: AppColors.primaryColor,
 );
 
 void main() async {
@@ -94,7 +94,7 @@ class SeratApp extends StatelessWidget {
           builder: (context, state) {
             return MaterialApp(
               navigatorKey: navigatorKey,
-              title: "tatmaen - تَطْمَئِن",
+              title: "Serat - صراط",
               locale: const Locale('ar', 'SA'),
               localizationsDelegates: const [
                 GlobalMaterialLocalizations.delegate,

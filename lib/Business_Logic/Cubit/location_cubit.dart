@@ -46,15 +46,20 @@ class LocationCubit extends Cubit<LocationState> {
     emit(GetCurrentAddressLoading());
     time = time.substring(0, time.length - 3);
     try {
-      final value = await DioHelper.getData(
+      final response = await DioHelper.getData(
         url: "timings/$time",
         latitude: latitude,
         longitude: longitude,
         method: radioValue,
       );
-      timesModel = TimesModel.fromJson(value.data);
-      saveTimeModel(timeModel: timesModel!);
-      emit(GetTimingsSuccess());
+
+      if (response.data is Map<String, dynamic>) {
+        timesModel = TimesModel.fromJson(response.data);
+        saveTimeModel(timeModel: timesModel!);
+        emit(GetTimingsSuccess());
+      } else {
+        throw Exception('Invalid response format');
+      }
     } catch (error) {
       log('getTimings error: $error');
       _handleError();
