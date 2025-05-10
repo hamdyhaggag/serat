@@ -25,28 +25,36 @@ class Sebha extends StatefulWidget {
 }
 
 class SebhaState extends State<Sebha> with TickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late AnimationController _counterController;
-  late Animation<double> _counterAnimation;
+  AnimationController? _controller;
+  Animation<double>? _scaleAnimation;
+  AnimationController? _counterController;
+  Animation<double>? _counterAnimation;
   bool _isLongPress = false;
   Timer? _longPressTimer;
   int _longPressCount = 0;
-  late SharedPreferences _prefs;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _initializePrefs();
+    _initialize();
   }
 
-  Future<void> _initializePrefs() async {
-    _prefs = await SharedPreferences.getInstance();
-    _initializeAnimations();
-    _loadCounters();
+  Future<void> _initialize() async {
+    try {
+      await _initializeAnimations();
+      await _loadCounters();
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+    } catch (e) {
+      debugPrint('Initialization error: $e');
+    }
   }
 
-  void _initializeAnimations() {
+  Future<void> _initializeAnimations() async {
     _controller = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
@@ -54,20 +62,20 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
     _scaleAnimation = Tween<double>(
       begin: 1.0,
       end: 0.95,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    ).animate(CurvedAnimation(parent: _controller!, curve: Curves.easeInOut));
     _counterController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
     _counterAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _counterController, curve: Curves.easeOut),
+      CurvedAnimation(parent: _counterController!, curve: Curves.easeOut),
     );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
-    _counterController.dispose();
+    _controller?.dispose();
+    _counterController?.dispose();
     _longPressTimer?.cancel();
     super.dispose();
   }
@@ -75,21 +83,29 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
   Future<void> _loadCounters() async {
     if (!mounted) return;
 
-    final counters = await loadSebhaCounter(widget.title);
-    final cubit = CounterCubit.get(context);
-    cubit.initializeCounters(
-      counter: counters['counter']!,
-      totalCounter: counters['totalCounter']!,
-      cycleCounter: counters['cycleCounter']!,
-    );
-    if (widget.maxCounter != null) {
-      cubit.changeMaxCounter(widget.maxCounter!);
+    try {
+      final counters = await loadSebhaCounter(widget.title);
+      if (!mounted) return;
+
+      final cubit = CounterCubit.get(context);
+      cubit.initializeCounters(
+        counter: counters['counter']!,
+        totalCounter: counters['totalCounter']!,
+        cycleCounter: counters['cycleCounter']!,
+      );
+      if (widget.maxCounter != null) {
+        cubit.changeMaxCounter(widget.maxCounter!);
+      }
+    } catch (e) {
+      debugPrint('Error loading counters: $e');
     }
   }
 
   void _handleCounterIncrement(CounterCubit cubit) async {
+    if (!_isInitialized) return;
+
     HapticFeedback.mediumImpact();
-    _counterController.forward(from: 0.0);
+    _counterController?.forward(from: 0.0);
     cubit.incrementCounter();
     await saveSebhaCounter(
       widget.title,
@@ -104,6 +120,8 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
   }
 
   void _startLongPress(CounterCubit cubit) {
+    if (!_isInitialized) return;
+
     _isLongPress = true;
     _longPressCount = 0;
     _longPressTimer = Timer.periodic(const Duration(milliseconds: 100), (
@@ -112,7 +130,6 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
       if (_isLongPress) {
         _longPressCount++;
         if (_longPressCount % 2 == 0) {
-          // Increment every 200ms
           _handleCounterIncrement(cubit);
         }
       } else {
@@ -148,6 +165,10 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    if (!_isInitialized) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
 
@@ -177,22 +198,22 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
                   SizedBox(height: 20.h),
                   GestureDetector(
                     onTapDown: (_) {
-                      _controller.forward();
+                      _controller?.forward();
                       _startLongPress(cubit);
                     },
                     onTapUp: (_) {
-                      _controller.reverse();
+                      _controller?.reverse();
                       _stopLongPress();
                       if (!_isLongPress) {
                         _handleCounterIncrement(cubit);
                       }
                     },
                     onTapCancel: () {
-                      _controller.reverse();
+                      _controller?.reverse();
                       _stopLongPress();
                     },
                     child: ScaleTransition(
-                      scale: _scaleAnimation,
+                      scale: _scaleAnimation!,
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
@@ -249,19 +270,28 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
                               child: Stack(
                                 children: [
                                   if (widget.maxCounter != null)
-                                    CircularProgressIndicator(
-                                      value: progress,
-                                      backgroundColor:
-                                          isDarkMode
-                                              ? Colors.grey.withOpacity(0.2)
-                                              : AppColors.primaryColor
-                                                  .withOpacity(0.1),
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        isDarkMode
-                                            ? Colors.grey
-                                            : AppColors.primaryColor,
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color:
+                                              isDarkMode
+                                                  ? Colors.grey.withOpacity(0.2)
+                                                  : AppColors.primaryColor
+                                                      .withOpacity(0.2),
+                                          width: 3,
+                                        ),
                                       ),
-                                      strokeWidth: 3,
+                                      child: CustomPaint(
+                                        painter: ProgressPainter(
+                                          progress: progress,
+                                          color:
+                                              isDarkMode
+                                                  ? Colors.grey
+                                                  : AppColors.primaryColor,
+                                          strokeWidth: 3,
+                                        ),
+                                      ),
                                     ),
                                   Center(
                                     child: Column(
@@ -269,12 +299,12 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
                                           MainAxisAlignment.center,
                                       children: [
                                         AnimatedBuilder(
-                                          animation: _counterAnimation,
+                                          animation: _counterAnimation!,
                                           builder: (context, child) {
                                             return Transform.scale(
                                               scale:
                                                   1.0 +
-                                                  (_counterAnimation.value *
+                                                  (_counterAnimation!.value *
                                                       0.1),
                                               child: Text(
                                                 '${cubit.counter}',
@@ -390,4 +420,54 @@ Future<Map<String, int>> loadSebhaCounter(String itemText) async {
     'totalCounter': totalCounter,
     'cycleCounter': cycleCounter,
   };
+}
+
+class ProgressPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final double strokeWidth;
+
+  ProgressPainter({
+    required this.progress,
+    required this.color,
+    required this.strokeWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - strokeWidth) / 2;
+
+    // Draw background circle
+    final backgroundPaint =
+        Paint()
+          ..color = color.withOpacity(0.1)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth;
+
+    canvas.drawCircle(center, radius, backgroundPaint);
+
+    // Draw progress arc
+    final progressPaint =
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round;
+
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi / 2, // Start from top
+      2 * math.pi * progress, // Progress arc
+      false,
+      progressPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(ProgressPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.color != color ||
+        oldDelegate.strokeWidth != strokeWidth;
+  }
 }
