@@ -35,7 +35,7 @@ class NotificationService {
     required DateTime prayerTime,
     required int id,
   }) async {
-    final androidDetails = AndroidNotificationDetails(
+    const androidDetails = AndroidNotificationDetails(
       'prayer_times_channel',
       'Prayer Times',
       channelDescription: 'Notifications for prayer times',
@@ -45,13 +45,13 @@ class NotificationService {
       playSound: true,
     );
 
-    final iosDetails = const DarwinNotificationDetails(
+    const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
     );
 
-    final details = NotificationDetails(
+    const details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
@@ -63,8 +63,6 @@ class NotificationService {
       tz.TZDateTime.from(prayerTime, tz.local),
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
