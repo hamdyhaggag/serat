@@ -3,6 +3,7 @@ import 'package:serat/imports.dart';
 import '../screens/screen_layout.dart';
 import 'onboarding_contents.dart';
 import 'size_config.dart';
+import '../Config/constants/colors.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -20,6 +21,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.initState();
   }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   int _currentPage = 0;
   List colors = const [
     Color(0xfff3eded),
@@ -33,15 +40,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   AnimatedContainer _buildDots({required int index}) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      decoration: const BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(50)),
-        color: Color(0xFF1E5A83),
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.all(Radius.circular(50)),
+        color: AppColors.primaryColor,
       ),
-      margin: const EdgeInsets.only(right: 5),
+      margin: const EdgeInsets.symmetric(horizontal: 2.5),
       height: 10,
       curve: Curves.easeIn,
       width: _currentPage == index ? 20 : 10,
     );
+  }
+
+  void _nextPage() {
+    if (_currentPage < contents.length - 1) {
+      _controller.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   @override
@@ -49,6 +65,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     SizeConfig().init(context);
     double width = SizeConfig.screenW!;
     bool isSmallScreen = width <= 550;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: colors[_currentPage],
@@ -60,7 +77,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: PageView.builder(
                 physics: const BouncingScrollPhysics(),
                 controller: _controller,
-                reverse: true,
                 onPageChanged: (value) => setState(() => _currentPage = value),
                 itemCount: contents.length,
                 itemBuilder: (context, i) {
@@ -69,9 +85,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        SizedBox(
-                          height: 70.h,
-                        ),
+                        SizedBox(height: 70.h),
                         Image.asset(
                           contents[i].image,
                           height:
@@ -84,7 +98,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           style: TextStyle(
                             fontFamily: "DIN",
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1E5A83),
+                            color: AppColors.primaryColor,
                             fontSize: isSmallScreen ? 30 : 28,
                           ),
                         ),
@@ -97,7 +111,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               style: TextStyle(
                                 fontFamily: "DIN",
                                 fontWeight: FontWeight.w300,
-                                color: const Color(0xFF1E5A83),
+                                color: AppColors.primaryColor,
                                 fontSize: fontSize,
                               ),
                               textAlign: TextAlign.center,
@@ -119,96 +133,91 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
                       contents.length,
-                      (index) => _buildDots(
-                          index:
-                              contents.length - index - 1), // Reverse the dots
+                      (index) => _buildDots(index: index),
                     ),
                   ),
                   _currentPage + 1 == contents.length
                       ? Padding(
-                          padding: EdgeInsets.all(isSmallScreen ? 38 : 40),
-                          child: ElevatedButton(
-                            onPressed: () {
-                              navigateTo(context, const ScreenLayout());
-                              CacheHelper.saveData(
-                                  key: 'isEnterBefore', value: true);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1E5A83),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(50),
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: isSmallScreen ? 60 : width * 0.2,
-                                vertical: isSmallScreen ? 15 : 17,
-                              ),
-                              textStyle: TextStyle(
-                                fontSize: isSmallScreen ? 20 : 23,
-                                fontFamily: 'DIN',
-                              ),
+                        padding: EdgeInsets.all(isSmallScreen ? 38 : 40),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            navigateTo(context, const ScreenLayout());
+                            CacheHelper.saveData(
+                              key: 'isEnterBefore',
+                              value: true,
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(50),
                             ),
-                            child: const Text(
-                              "ابدأ الآن",
-                              style: TextStyle(
-                                  color: Colors.white), // Change this line
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isSmallScreen ? 60 : width * 0.2,
+                              vertical: isSmallScreen ? 15 : 17,
+                            ),
+                            textStyle: TextStyle(
+                              fontSize: isSmallScreen ? 20 : 23,
+                              fontFamily: 'DIN',
                             ),
                           ),
-                        )
-                      : Padding(
-                          padding: EdgeInsets.all(isSmallScreen ? 20 : 30),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              ElevatedButton(
-                                onPressed: () {
-                                  _controller.nextPage(
-                                    duration: const Duration(milliseconds: 200),
-                                    curve: Curves.easeIn,
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF1E5A83),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(50),
-                                  ),
-                                  elevation: 0,
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: isSmallScreen ? 20 : 30,
-                                    vertical: isSmallScreen ? 15 : 25,
-                                  ),
-                                  textStyle: TextStyle(
-                                    fontSize: isSmallScreen ? 18 : 20,
-                                    fontFamily: 'DIN',
-                                  ),
-                                ),
-                                child: const Text(
-                                  "التالي",
-                                  style: TextStyle(
-                                      color: Colors.white), // Change this line
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  navigateTo(context, const ScreenLayout());
-                                  CacheHelper.saveData(
-                                      key: 'isEnterBefore', value: true);
-                                },
-                                style: TextButton.styleFrom(
-                                  elevation: 0,
-                                  textStyle: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: isSmallScreen ? 18 : 20,
-                                    fontFamily: 'DIN',
-                                  ),
-                                ),
-                                child: const Text(
-                                  "التخطي",
-                                  style: TextStyle(color: Color(0xFF1E5A83)),
-                                ),
-                              ),
-                            ],
+                          child: const Text(
+                            "ابدأ الآن",
+                            style: TextStyle(color: Colors.white),
                           ),
                         ),
+                      )
+                      : Padding(
+                        padding: EdgeInsets.all(isSmallScreen ? 20 : 30),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                navigateTo(context, const ScreenLayout());
+                                CacheHelper.saveData(
+                                  key: 'isEnterBefore',
+                                  value: true,
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                elevation: 0,
+                                textStyle: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: isSmallScreen ? 18 : 20,
+                                  fontFamily: 'DIN',
+                                ),
+                              ),
+                              child: Text(
+                                "التخطي",
+                                style: TextStyle(color: AppColors.primaryColor),
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: _nextPage,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryColor,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(50),
+                                ),
+                                elevation: 0,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: isSmallScreen ? 20 : 30,
+                                  vertical: isSmallScreen ? 15 : 25,
+                                ),
+                                textStyle: TextStyle(
+                                  fontSize: isSmallScreen ? 18 : 20,
+                                  fontFamily: 'DIN',
+                                ),
+                              ),
+                              child: const Text(
+                                "التالي",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                 ],
               ),
             ),

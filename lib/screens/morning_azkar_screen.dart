@@ -4,10 +4,7 @@ import '../models/morning_azkar.dart';
 import '../services/morning_azkar_service.dart';
 import '../Business_Logic/Cubit/azkar_cubit.dart';
 import '../Business_Logic/Cubit/azkar_state.dart';
-import '../presentation/widgets/azkar/azkar_header.dart';
-import '../presentation/widgets/azkar/azkar_title.dart';
 import '../presentation/widgets/azkar/azkar_pages.dart';
-import '../presentation/widgets/azkar/azkar_progress_indicator.dart';
 import '../presentation/widgets/azkar/azkar_dots_indicator.dart';
 
 class MorningAzkarScreen extends StatefulWidget {
@@ -113,11 +110,7 @@ class _MorningAzkarScreenState extends State<MorningAzkarScreen> {
                       maxValues: maxValues,
                     ),
                     SizedBox(height: screenHeight * 0.05),
-                    AzkarProgressIndicator(
-                      screenWidth: screenWidth,
-                      screenHeight: screenHeight,
-                      azkar: azkarTexts,
-                    ),
+                  
                     SizedBox(height: screenHeight * 0.08),
                   ],
                 ),
