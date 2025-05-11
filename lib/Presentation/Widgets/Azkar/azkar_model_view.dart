@@ -29,6 +29,7 @@ class AzkarModelView extends StatefulWidget {
 class AzkarModelViewState extends State<AzkarModelView> {
   late ConfettiController _confettiController;
   late PageController _pageController;
+  bool _hasShownDialog = false;
 
   @override
   void initState() {
@@ -42,6 +43,10 @@ class AzkarModelViewState extends State<AzkarModelView> {
     _loadAzkarState().then((state) {
       if (mounted) {
         context.read<AzkarCubit>().emit(state);
+        // Show dialog if there's cached progress
+        if (!_hasShownDialog && state.cachedProgress > 0) {
+          _showContinueDialog(state);
+        }
       }
     });
   }
@@ -109,6 +114,78 @@ class AzkarModelViewState extends State<AzkarModelView> {
       cachedProgress: cachedProgress,
       counters: counters,
       maxValues: maxValues,
+    );
+  }
+
+  Future<void> _showContinueDialog(AzkarState state) async {
+    if (!mounted) return;
+
+    _hasShownDialog = true;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final cubit = context.read<AzkarCubit>();
+
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: isDarkMode ? const Color(0xff2C2C2C) : Colors.white,
+          title: Text(
+            'استمرار الأذكار',
+            style: TextStyle(
+              color: isDarkMode ? Colors.white : Colors.black,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'DIN',
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: Text(
+            'هل تريد الاستمرار من حيث توقفت أم البدء من جديد؟',
+            style: TextStyle(
+              color: isDarkMode ? Colors.white70 : Colors.black87,
+              fontSize: 16,
+              fontFamily: 'DIN',
+            ),
+            textAlign: TextAlign.center,
+          ),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                    cubit.resetProgress();
+                    _pageController.jumpToPage(0);
+                  },
+                  child: Text(
+                    'بدء من جديد',
+                    style: TextStyle(
+                      color: Colors.red[400],
+                      fontSize: 16,
+                      fontFamily: 'DIN',
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: Text(
+                    'استمرار',
+                    style: TextStyle(
+                      color: Colors.green[400],
+                      fontSize: 16,
+                      fontFamily: 'DIN',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
   }
 
