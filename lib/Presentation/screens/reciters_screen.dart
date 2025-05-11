@@ -5,6 +5,7 @@ import 'package:serat/Business_Logic/Cubit/reciters_cubit.dart';
 import 'package:serat/Business_Logic/Models/reciter_model.dart';
 import 'package:serat/imports.dart';
 import 'package:flutter/foundation.dart';
+import 'package:serat/Presentation/Widgets/Shared/custom_app_bar.dart';
 
 class RecitersScreen extends StatefulWidget {
   const RecitersScreen({super.key});
@@ -15,10 +16,6 @@ class RecitersScreen extends StatefulWidget {
 
 class _RecitersScreenState extends State<RecitersScreen>
     with SingleTickerProviderStateMixin {
-  String? selectedLanguage;
-  int? selectedReciterId;
-  int? selectedRewayaId;
-  int? selectedSuraId;
   final TextEditingController _searchController = TextEditingController();
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -113,12 +110,7 @@ class _RecitersScreenState extends State<RecitersScreen>
   void _loadReciters() {
     try {
       RecitersCubit.get(context)
-          .getReciters(
-            language: selectedLanguage,
-            reciterId: selectedReciterId,
-            rewayaId: selectedRewayaId,
-            suraId: selectedSuraId,
-          )
+          .getReciters()
           .then((_) {
             _filterReciters(_searchController.text);
           })
@@ -175,15 +167,36 @@ class _RecitersScreenState extends State<RecitersScreen>
       appBar: AppBar(
         title: const AppText(
           'القراء',
-          fontSize: 24,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
+          color: Colors.white,
         ),
         centerTitle: true,
         backgroundColor:
             isDarkMode ? const Color(0xff2F2F2F) : AppColors.primaryColor,
         elevation: 0,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        shape: const Border(),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors:
+                  isDarkMode
+                      ? [const Color(0xff2F2F2F), const Color(0xff1F1F1F)]
+                      : [
+                        AppColors.primaryColor,
+                        AppColors.primaryColor.withOpacity(0.8),
+                      ],
+            ),
+          ),
+        ),
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: isDarkMode ? Colors.white.withOpacity(0.7) : Colors.white,
+          ),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: FadeTransition(
@@ -209,82 +222,52 @@ class _RecitersScreenState extends State<RecitersScreen>
                   ),
                 ],
               ),
-              child: Column(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isDarkMode ? Colors.grey[800] : Colors.white,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[800] : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 5,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  style: TextStyle(
+                    fontFamily: 'DIN',
+                    fontSize: 16,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'ابحث عن قارئ...',
+                    hintStyle: TextStyle(
+                      fontFamily: 'DIN',
+                      fontSize: 16,
+                      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color:
+                          isDarkMode
+                              ? Colors.grey[400]
+                              : AppColors.primaryColor,
+                    ),
+                    filled: true,
+                    fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 5,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      borderSide: BorderSide.none,
                     ),
-                    child: TextField(
-                      controller: _searchController,
-                      style: TextStyle(
-                        fontFamily: 'DIN',
-                        fontSize: 16,
-                        color: isDarkMode ? Colors.white : Colors.black87,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'ابحث عن قارئ...',
-                        hintStyle: TextStyle(
-                          fontFamily: 'DIN',
-                          fontSize: 16,
-                          color:
-                              isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                        ),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color:
-                              isDarkMode
-                                  ? Colors.grey[400]
-                                  : AppColors.primaryColor,
-                        ),
-                        filled: true,
-                        fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
-                        ),
-                      ),
-                      onChanged: _filterReciters,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildFilterChip(
-                          'اللغة',
-                          selectedLanguage ?? 'العربية',
-                          onTap: () => _showLanguageDialog(),
-                        ),
-                        const SizedBox(width: 12),
-                        _buildFilterChip(
-                          'الرواية',
-                          selectedRewayaId != null ? 'تم التحديد' : 'الكل',
-                          onTap: () => _showRewayaDialog(),
-                        ),
-                        const SizedBox(width: 12),
-                        _buildFilterChip(
-                          'السورة',
-                          selectedSuraId != null ? 'تم التحديد' : 'الكل',
-                          onTap: () => _showSuraDialog(),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  onChanged: _filterReciters,
+                ),
               ),
             ),
             Expanded(
@@ -343,86 +326,6 @@ class _RecitersScreenState extends State<RecitersScreen>
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterChip(
-    String label,
-    String value, {
-    required VoidCallback onTap,
-  }) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          decoration: BoxDecoration(
-            color: isDarkMode ? Colors.grey[800] : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 5,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppText(
-                label,
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: isDarkMode ? Colors.white : AppColors.primaryColor,
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color:
-                      isDarkMode
-                          ? Colors.grey[700]
-                          : AppColors.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AppText(
-                      value,
-                      fontSize: 14,
-                      color:
-                          isDarkMode
-                              ? Colors.grey[300]
-                              : AppColors.primaryColor,
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.arrow_drop_down,
-                      size: 20,
-                      color:
-                          isDarkMode
-                              ? Colors.grey[300]
-                              : AppColors.primaryColor,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -1294,206 +1197,6 @@ class _RecitersScreenState extends State<RecitersScreen>
         icon: Icon(icon, color: AppColors.primaryColor, size: 24),
         onPressed: onPressed,
       ),
-    );
-  }
-
-  void _showLanguageDialog() {
-    final languages = {
-      'ar': 'العربية',
-      'eng': 'English',
-      'fr': 'Français',
-      'ru': 'Русский',
-      'de': 'Deutsch',
-      'es': 'Español',
-      'tr': 'Türkçe',
-    };
-
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: const AppText(
-              'اختر اللغة',
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children:
-                  languages.entries.map((entry) {
-                    final isSelected = selectedLanguage == entry.key;
-                    return ListTile(
-                      title: AppText(
-                        entry.value,
-                        fontSize: 16,
-                        color: isSelected ? AppColors.primaryColor : null,
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
-                      ),
-                      trailing:
-                          isSelected
-                              ? Icon(
-                                Icons.check_circle,
-                                color: AppColors.primaryColor,
-                              )
-                              : null,
-                      onTap: () {
-                        setState(() {
-                          selectedLanguage = entry.key;
-                        });
-                        _loadReciters();
-                        Navigator.pop(context);
-                      },
-                    );
-                  }).toList(),
-            ),
-          ),
-    );
-  }
-
-  void _showRewayaDialog() {
-    final rewayas = {
-      1: 'حفص عن عاصم',
-      2: 'ورش عن نافع',
-      3: 'قالون عن نافع',
-      4: 'الدوري عن أبي عمرو',
-      5: 'السوسي عن أبي عمرو',
-      6: 'شعبة عن عاصم',
-      7: 'ابن ذكوان عن ابن عامر',
-      8: 'ابن كثير المكي',
-      9: 'البزي عن ابن كثير',
-      10: 'قنبل عن ابن كثير',
-    };
-
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: const AppText(
-              'اختر الرواية',
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  title: const AppText('الكل'),
-                  onTap: () {
-                    setState(() {
-                      selectedRewayaId = null;
-                    });
-                    _loadReciters();
-                    Navigator.pop(context);
-                  },
-                ),
-                ...rewayas.entries.map((entry) {
-                  final isSelected = selectedRewayaId == entry.key;
-                  return ListTile(
-                    title: AppText(
-                      entry.value,
-                      fontSize: 16,
-                      color: isSelected ? AppColors.primaryColor : null,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                    trailing:
-                        isSelected
-                            ? Icon(
-                              Icons.check_circle,
-                              color: AppColors.primaryColor,
-                            )
-                            : null,
-                    onTap: () {
-                      setState(() {
-                        selectedRewayaId = entry.key;
-                      });
-                      _loadReciters();
-                      Navigator.pop(context);
-                    },
-                  );
-                }).toList(),
-              ],
-            ),
-          ),
-    );
-  }
-
-  void _showSuraDialog() {
-    final suras = {
-      1: 'الفاتحة',
-      2: 'البقرة',
-      3: 'آل عمران',
-      4: 'النساء',
-      5: 'المائدة',
-      6: 'الأنعام',
-      7: 'الأعراف',
-      8: 'الأنفال',
-      9: 'التوبة',
-      10: 'يونس',
-      // Add more surahs as needed
-    };
-
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: const AppText(
-              'اختر السورة',
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  title: const AppText('الكل'),
-                  onTap: () {
-                    setState(() {
-                      selectedSuraId = null;
-                    });
-                    _loadReciters();
-                    Navigator.pop(context);
-                  },
-                ),
-                ...suras.entries.map((entry) {
-                  final isSelected = selectedSuraId == entry.key;
-                  return ListTile(
-                    title: AppText(
-                      entry.value,
-                      fontSize: 16,
-                      color: isSelected ? AppColors.primaryColor : null,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                    trailing:
-                        isSelected
-                            ? Icon(
-                              Icons.check_circle,
-                              color: AppColors.primaryColor,
-                            )
-                            : null,
-                    onTap: () {
-                      setState(() {
-                        selectedSuraId = entry.key;
-                      });
-                      _loadReciters();
-                      Navigator.pop(context);
-                    },
-                  );
-                }).toList(),
-              ],
-            ),
-          ),
     );
   }
 
