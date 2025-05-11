@@ -88,10 +88,18 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDarkMode ? const Color(0xFF1A1A1A) : const Color(0xFFF6F7FB);
+    final cardColor = isDarkMode ? const Color(0xFF2D2D2D) : Colors.white;
+    final textColor = isDarkMode ? Colors.white : const Color(0xFF2D3142);
+    final secondaryTextColor = isDarkMode ? Colors.white70 : const Color(0xFF2D3142).withOpacity(0.7);
+    final borderColor = isDarkMode ? Colors.white24 : const Color(0xFF4CB7A5).withOpacity(0.3);
+    final accentColor = const Color(0xFF4CB7A5);
+
     return BlocBuilder<LocationCubit, LocationState>(
       builder: (context, state) {
         return Scaffold(
-          backgroundColor: const Color(0xFFF6F7FB),
+          backgroundColor: backgroundColor,
           appBar: const CustomAppBar(title: 'التقويم'),
           body: SingleChildScrollView(
             child: Padding(
@@ -103,7 +111,8 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                       borderRadius: BorderRadius.circular(24),
                     ),
                     elevation: 4,
-                    shadowColor: Colors.black12,
+                    shadowColor: isDarkMode ? Colors.black : Colors.black12,
+                    color: cardColor,
                     child: Padding(
                       padding: const EdgeInsets.all(20.0),
                       child: Column(
@@ -111,7 +120,7 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF4CB7A5).withOpacity(0.1),
+                              color: accentColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Row(
@@ -123,10 +132,8 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                                       Container(
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFF4CB7A5),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
+                                          color: accentColor,
+                                          borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: const Icon(
                                           Icons.calendar_today,
@@ -138,10 +145,10 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                                       Expanded(
                                         child: Text(
                                           _getCurrentDateString(),
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
-                                            color: Color(0xFF2D3142),
+                                            color: textColor,
                                           ),
                                           overflow: TextOverflow.ellipsis,
                                           softWrap: false,
@@ -159,10 +166,8 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                                       Container(
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFF4CB7A5),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
+                                          color: accentColor,
+                                          borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: const Icon(
                                           Icons.calendar_today,
@@ -174,10 +179,10 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                                       Expanded(
                                         child: Text(
                                           _getAlternateDateString(),
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
-                                            color: Color(0xFF2D3142),
+                                            color: textColor,
                                           ),
                                           overflow: TextOverflow.ellipsis,
                                           softWrap: false,
@@ -196,51 +201,40 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                               Expanded(
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: cardColor,
                                     borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: const Color(
-                                        0xFF4CB7A5,
-                                      ).withOpacity(0.3),
-                                    ),
+                                    border: Border.all(color: borderColor),
                                   ),
                                   child: DropdownButtonFormField<String>(
                                     value: selectedMonth,
                                     isExpanded: true,
-                                    dropdownColor: Colors.white,
-                                    style: const TextStyle(
-                                      color: Color(0xFF2D3142),
+                                    dropdownColor: cardColor,
+                                    style: TextStyle(
+                                      color: textColor,
                                       fontWeight: FontWeight.w500,
                                     ),
                                     decoration: InputDecoration(
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 8,
-                                          ),
+                                      contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
+                                      ),
                                       border: InputBorder.none,
-                                      prefixIcon: const Icon(
+                                      prefixIcon: Icon(
                                         Icons.calendar_month,
-                                        color: Color(0xFF4CB7A5),
+                                        color: accentColor,
                                       ),
                                     ),
-                                    items:
-                                        months
-                                            .map(
-                                              (month) => DropdownMenuItem(
-                                                value: month,
-                                                child: Text(
-                                                  month,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w500,
-                                                    color: Color(0xFF2D3142),
-                                                  ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            )
-                                            .toList(),
+                                    items: months.map((month) => DropdownMenuItem(
+                                      value: month,
+                                      child: Text(
+                                        month,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          color: textColor,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    )).toList(),
                                     onChanged: (val) {
                                       setState(() {
                                         selectedMonth = val!;
@@ -259,51 +253,40 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                               Expanded(
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: cardColor,
                                     borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: const Color(
-                                        0xFF4CB7A5,
-                                      ).withOpacity(0.3),
-                                    ),
+                                    border: Border.all(color: borderColor),
                                   ),
                                   child: DropdownButtonFormField<String>(
                                     value: selectedCalendar,
                                     isExpanded: true,
-                                    dropdownColor: Colors.white,
-                                    style: const TextStyle(
-                                      color: Color(0xFF2D3142),
+                                    dropdownColor: cardColor,
+                                    style: TextStyle(
+                                      color: textColor,
                                       fontWeight: FontWeight.w500,
                                     ),
                                     decoration: InputDecoration(
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 8,
-                                          ),
+                                      contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
+                                      ),
                                       border: InputBorder.none,
-                                      prefixIcon: const Icon(
+                                      prefixIcon: Icon(
                                         Icons.swap_horiz,
-                                        color: Color(0xFF4CB7A5),
+                                        color: accentColor,
                                       ),
                                     ),
-                                    items:
-                                        calendarTypes
-                                            .map(
-                                              (type) => DropdownMenuItem(
-                                                value: type,
-                                                child: Text(
-                                                  type,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w500,
-                                                    color: Color(0xFF2D3142),
-                                                  ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            )
-                                            .toList(),
+                                    items: calendarTypes.map((type) => DropdownMenuItem(
+                                      value: type,
+                                      child: Text(
+                                        type,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          color: textColor,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    )).toList(),
                                     onChanged: (val) {
                                       setState(() {
                                         selectedCalendar = val!;
@@ -327,20 +310,20 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'مناسبات قادمة',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
-                            color: Color(0xFF2D3142),
+                            color: textColor,
                           ),
                         ),
                         TextButton(
                           onPressed: () {},
-                          child: const Text(
+                          child: Text(
                             'عرض كل المناسبات',
                             style: TextStyle(
-                              color: Color(0xFF4CB7A5),
+                              color: accentColor,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
                             ),
@@ -355,7 +338,8 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     elevation: 2,
-                    shadowColor: Colors.black12,
+                    shadowColor: isDarkMode ? Colors.black : Colors.black12,
+                    color: cardColor,
                     child: Stack(
                       children: [
                         Container(
@@ -363,8 +347,8 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                const Color(0xFF4CB7A5).withOpacity(0.1),
-                                Colors.white,
+                                accentColor.withOpacity(0.1),
+                                cardColor,
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -376,7 +360,7 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF4CB7A5),
+                                  color: accentColor,
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: const Icon(
@@ -390,21 +374,19 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
+                                    Text(
                                       'عيد الفطر المبارك',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
-                                        color: Color(0xFF2D3142),
+                                        color: textColor,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       '2025 يناير 27 الاثنين | 1446 رجب 27 الاثنين',
                                       style: TextStyle(
-                                        color: const Color(
-                                          0xFF2D3142,
-                                        ).withOpacity(0.7),
+                                        color: secondaryTextColor,
                                         fontSize: 14,
                                       ),
                                     ),
@@ -417,7 +399,7 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                         Positioned.fill(
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.95),
+                              color: cardColor.withOpacity(0.95),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: SingleChildScrollView(
@@ -428,32 +410,30 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: const Color(
-                                        0xFF4CB7A5,
-                                      ).withOpacity(0.1),
+                                      color: accentColor.withOpacity(0.1),
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.event_available,
                                       size: 20,
-                                      color: Color(0xFF4CB7A5),
+                                      color: accentColor,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  const Text(
+                                  Text(
                                     'قريباً',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF2D3142),
+                                      color: textColor,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
-                                  const Text(
+                                  Text(
                                     'سيتم إضافة المناسبات قريباً',
                                     style: TextStyle(
                                       fontSize: 10,
-                                      color: Color(0xFF2D3142),
+                                      color: textColor,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -463,7 +443,7 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                                       vertical: 2,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF4CB7A5),
+                                      color: accentColor,
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: const Row(
@@ -504,6 +484,12 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
   }
 
   Widget _buildCalendarGrid() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white : const Color(0xFF2D3142);
+    final secondaryTextColor = isDarkMode ? Colors.white70 : const Color(0xFF2D3142).withOpacity(0.7);
+    final accentColor = const Color(0xFF4CB7A5);
+    final cardColor = isDarkMode ? const Color(0xFF2D2D2D) : Colors.white;
+
     final daysOfWeek = [
       'سبت',
       'أحد',
@@ -520,21 +506,17 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
     }
 
     final date = locationCubit.timesModel!.data.date;
-    final daysInMonth =
-        selectedCalendar == 'هجري'
-            ? 30 // Hijri months are either 29 or 30 days
-            : DateTime(selectedDate.year, selectedDate.month + 1, 0).day;
+    final daysInMonth = selectedCalendar == 'هجري'
+        ? 30 // Hijri months are either 29 or 30 days
+        : DateTime(selectedDate.year, selectedDate.month + 1, 0).day;
 
-    // Calculate the first day of the month (0 = Saturday, 6 = Friday)
-    final firstDayOfMonth =
-        selectedCalendar == 'هجري'
-            ? _getHijriFirstDayOfMonth(
-              int.parse(date.hijri.year),
-              date.hijri.month.number,
-            )
-            : DateTime(selectedDate.year, selectedDate.month, 1).weekday % 7;
+    final firstDayOfMonth = selectedCalendar == 'هجري'
+        ? _getHijriFirstDayOfMonth(
+            int.parse(date.hijri.year),
+            date.hijri.month.number,
+          )
+        : DateTime(selectedDate.year, selectedDate.month, 1).weekday % 7;
 
-    // Calculate total cells needed (including empty cells at start)
     final totalCells = firstDayOfMonth + daysInMonth;
     final rowsNeeded = (totalCells / 7).ceil();
 
@@ -544,23 +526,18 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children:
-                  daysOfWeek
-                      .map(
-                        (d) => Expanded(
-                          child: Center(
-                            child: Text(
-                              d,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF2D3142),
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ),
-                      )
-                      .toList(),
+              children: daysOfWeek.map((d) => Expanded(
+                child: Center(
+                  child: Text(
+                    d,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              )).toList(),
             ),
             const SizedBox(height: 12),
             Table(
@@ -587,18 +564,12 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                         child: Container(
                           height: 40,
                           decoration: BoxDecoration(
-                            color:
-                                isSelected
-                                    ? const Color(0xFF4CB7A5)
-                                    : Colors.transparent,
+                            color: isSelected ? accentColor : Colors.transparent,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color:
-                                  isSelected
-                                      ? const Color(0xFF4CB7A5)
-                                      : const Color(
-                                        0xFF2D3142,
-                                      ).withOpacity(0.1),
+                              color: isSelected
+                                  ? accentColor
+                                  : secondaryTextColor,
                               width: 1,
                             ),
                           ),
@@ -606,14 +577,8 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                             child: Text(
                               dayNumber.toString(),
                               style: TextStyle(
-                                color:
-                                    isSelected
-                                        ? Colors.white
-                                        : const Color(0xFF2D3142),
-                                fontWeight:
-                                    isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.w500,
+                                color: isSelected ? Colors.white : textColor,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                                 fontSize: 15,
                               ),
                             ),
@@ -630,7 +595,7 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
         Positioned.fill(
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
+              color: cardColor.withOpacity(0.9),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Column(
@@ -639,28 +604,31 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4CB7A5).withOpacity(0.1),
+                    color: accentColor.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.rocket_launch,
                     size: 40,
-                    color: Color(0xFF4CB7A5),
+                    color: accentColor,
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'قريباً',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D3142),
+                    color: textColor,
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'سيتم إضافة هذه الميزة قريباً',
-                  style: TextStyle(fontSize: 16, color: Color(0xFF2D3142)),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: textColor,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Container(
@@ -669,7 +637,7 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4CB7A5),
+                    color: accentColor,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Row(

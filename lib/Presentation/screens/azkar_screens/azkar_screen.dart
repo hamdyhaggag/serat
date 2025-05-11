@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:serat/imports.dart';
 
 class IconConstants {
@@ -331,20 +332,15 @@ class _AzkarScreenState extends State<AzkarScreen> {
                   progressColor: Colors.white,
                   barRadius: const Radius.circular(12),
                   padding: EdgeInsets.zero,
+                  isRTL: true,
+                  animation: true,
+                  animateFromLastPercent: true,
                 ),
               ),
               const SizedBox(height: 16.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    '${(_progress * 100).toInt()}%',
-                    style: const TextStyle(
-                      fontSize: 20.0,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
                   ElevatedButton(
                     onPressed: _clearProgress,
                     style: ElevatedButton.styleFrom(
@@ -368,6 +364,14 @@ class _AzkarScreenState extends State<AzkarScreen> {
                       ),
                     ),
                   ),
+                  Text(
+                    '${(_progress * 100).toInt()}%',
+                    style: const TextStyle(
+                      fontSize: 20.0,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -381,14 +385,6 @@ class _AzkarScreenState extends State<AzkarScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Icon(_lastOpenedIcon, color: Colors.white, size: 32.0),
-        ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -410,6 +406,14 @@ class _AzkarScreenState extends State<AzkarScreen> {
               ),
             ),
           ],
+        ),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Icon(_lastOpenedIcon, color: Colors.white, size: 32.0),
         ),
       ],
     );
