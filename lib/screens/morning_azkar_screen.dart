@@ -99,9 +99,6 @@ class _MorningAzkarScreenState extends State<MorningAzkarScreen> {
                 ),
                 child: Column(
                   children: [
-                    AzkarHeader(screenWidth: screenWidth),
-                    SizedBox(height: screenHeight * 0.01),
-                    AzkarTitle(screenWidth: screenWidth, title: widget.title),
                     SizedBox(height: screenHeight * 0.03),
                     AzkarDotsIndicator(
                       screenWidth: screenWidth,
