@@ -16,6 +16,7 @@ class _RadioScreenState extends State<RadioScreen> {
   final RadioService _radioService = RadioService();
   bool _isPlaying = false;
   String _currentStation = '';
+  String _currentStationName = '';
   double _volume = 1.0;
   List<RadioStation> _stations = [];
   bool _isLoading = true;
@@ -79,6 +80,7 @@ class _RadioScreenState extends State<RadioScreen> {
         await _audioPlayer.resume();
         setState(() {
           _currentStation = url;
+          _currentStationName = name;
         });
       }
     } catch (e) {
@@ -138,7 +140,7 @@ class _RadioScreenState extends State<RadioScreen> {
                 ),
                 const SizedBox(height: 20),
                 AppText(
-                  _currentStation.isEmpty ? 'اختر محطة' : _currentStation,
+                  _currentStation.isEmpty ? 'اختر محطة' : _currentStationName,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
