@@ -918,38 +918,87 @@ class _TimingsScreenState extends State<TimingsScreen>
       margin: const EdgeInsets.only(left: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color:
+        gradient:
             isNext
-                ? (isDarkMode
-                    ? Colors.grey[800]
-                    : AppColors.primaryColor.withOpacity(0.1))
-                : Colors.transparent,
+                ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors:
+                      isDarkMode
+                          ? [
+                            AppColors.primaryColor.withOpacity(0.2),
+                            AppColors.primaryColor.withOpacity(0.1),
+                          ]
+                          : [
+                            AppColors.primaryColor.withOpacity(0.15),
+                            AppColors.primaryColor.withOpacity(0.05),
+                          ],
+                )
+                : null,
+        color: isNext ? null : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+          color:
+              isDarkMode
+                  ? AppColors.primaryColor.withOpacity(0.3)
+                  : Colors.grey[200]!,
           width: 1,
         ),
+        boxShadow:
+            isNext
+                ? [
+                  BoxShadow(
+                    color: AppColors.primaryColor.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+                : null,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            _getPrayerIcon(name),
-            color: isDarkMode ? Colors.white : AppColors.primaryColor,
-            size: 24,
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors:
+                    isDarkMode
+                        ? [
+                          AppColors.primaryColor.withOpacity(0.3),
+                          AppColors.primaryColor.withOpacity(0.1),
+                        ]
+                        : [
+                          AppColors.primaryColor.withOpacity(0.2),
+                          AppColors.primaryColor.withOpacity(0.05),
+                        ],
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              _getPrayerIcon(name),
+              color:
+                  isDarkMode ? AppColors.primaryColor : AppColors.primaryColor,
+              size: 24,
+            ),
           ),
           const SizedBox(height: 8),
           AppText(
             name,
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: isDarkMode ? Colors.white : AppColors.primaryColor,
+            color: isDarkMode ? AppColors.primaryColor : AppColors.primaryColor,
           ),
           const SizedBox(height: 4),
           AppText(
             _formatTime12Hour(prayerTime),
             fontSize: 12,
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            color:
+                isDarkMode
+                    ? AppColors.primaryColor.withOpacity(0.7)
+                    : Colors.grey[600],
           ),
         ],
       ),
@@ -967,11 +1016,21 @@ class _TimingsScreenState extends State<TimingsScreen>
       borderRadius: BorderRadius.circular(20),
       child: Container(
         decoration: BoxDecoration(
-          color: isDarkMode ? const Color(0xff2F2F2F) : Colors.white,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors:
+                isDarkMode
+                    ? [const Color(0xff2F2F2F), const Color(0xff252525)]
+                    : [Colors.white, Colors.grey[50]!],
+          ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color:
+                  isDarkMode
+                      ? Colors.black.withOpacity(0.2)
+                      : Colors.black.withOpacity(0.05),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -983,15 +1042,35 @@ class _TimingsScreenState extends State<TimingsScreen>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color:
-                    isDarkMode
-                        ? Colors.grey[800]
-                        : AppColors.primaryColor.withOpacity(0.1),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors:
+                      isDarkMode
+                          ? [
+                            AppColors.primaryColor.withOpacity(0.3),
+                            AppColors.primaryColor.withOpacity(0.1),
+                          ]
+                          : [
+                            AppColors.primaryColor.withOpacity(0.2),
+                            AppColors.primaryColor.withOpacity(0.05),
+                          ],
+                ),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primaryColor.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Icon(
                 icon,
-                color: isDarkMode ? Colors.white : AppColors.primaryColor,
+                color:
+                    isDarkMode
+                        ? AppColors.primaryColor
+                        : AppColors.primaryColor,
                 size: 28,
               ),
             ),
@@ -1000,7 +1079,8 @@ class _TimingsScreenState extends State<TimingsScreen>
               title,
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: isDarkMode ? Colors.white : AppColors.primaryColor,
+              color:
+                  isDarkMode ? AppColors.primaryColor : AppColors.primaryColor,
             ),
           ],
         ),
@@ -1252,21 +1332,38 @@ class _TimingsScreenState extends State<TimingsScreen>
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color:
-              isDarkMode
-                  ? Colors.grey[800]
-                  : AppColors.primaryColor.withOpacity(0.1),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors:
+                isDarkMode
+                    ? [
+                      AppColors.primaryColor.withOpacity(0.3),
+                      AppColors.primaryColor.withOpacity(0.1),
+                    ]
+                    : [
+                      AppColors.primaryColor.withOpacity(0.2),
+                      AppColors.primaryColor.withOpacity(0.05),
+                    ],
+          ),
           borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryColor.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Icon(
           icon,
-          color: isDarkMode ? Colors.white : AppColors.primaryColor,
+          color: isDarkMode ? AppColors.primaryColor : AppColors.primaryColor,
         ),
       ),
       title: Text(
         title,
         style: TextStyle(
-          color: isDarkMode ? Colors.white : AppColors.primaryColor,
+          color: isDarkMode ? AppColors.primaryColor : AppColors.primaryColor,
           fontSize: 16,
           fontWeight: FontWeight.w600,
           fontFamily: 'DIN',
@@ -1277,7 +1374,10 @@ class _TimingsScreenState extends State<TimingsScreen>
               ? Text(
                 subtitle,
                 style: TextStyle(
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  color:
+                      isDarkMode
+                          ? AppColors.primaryColor.withOpacity(0.7)
+                          : Colors.grey[600],
                   fontSize: 14,
                   fontFamily: 'DIN',
                 ),
@@ -1826,32 +1926,75 @@ class _TimingsScreenState extends State<TimingsScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color:
+        gradient:
             isNext
-                ? (isDarkMode
-                    ? Colors.grey[800]
-                    : AppColors.primaryColor.withOpacity(0.1))
-                : Colors.transparent,
+                ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors:
+                      isDarkMode
+                          ? [
+                            AppColors.primaryColor.withOpacity(0.2),
+                            AppColors.primaryColor.withOpacity(0.1),
+                          ]
+                          : [
+                            AppColors.primaryColor.withOpacity(0.15),
+                            AppColors.primaryColor.withOpacity(0.05),
+                          ],
+                )
+                : null,
+        color: isNext ? null : Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+          color:
+              isDarkMode
+                  ? AppColors.primaryColor.withOpacity(0.3)
+                  : Colors.grey[200]!,
           width: 1,
         ),
+        boxShadow:
+            isNext
+                ? [
+                  BoxShadow(
+                    color: AppColors.primaryColor.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+                : null,
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color:
-                  isDarkMode
-                      ? Colors.grey[800]
-                      : AppColors.primaryColor.withOpacity(0.1),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors:
+                    isDarkMode
+                        ? [
+                          AppColors.primaryColor.withOpacity(0.3),
+                          AppColors.primaryColor.withOpacity(0.1),
+                        ]
+                        : [
+                          AppColors.primaryColor.withOpacity(0.2),
+                          AppColors.primaryColor.withOpacity(0.05),
+                        ],
+              ),
               borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primaryColor.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Icon(
               _getPrayerIcon(name),
-              color: isDarkMode ? Colors.white : AppColors.primaryColor,
+              color:
+                  isDarkMode ? AppColors.primaryColor : AppColors.primaryColor,
               size: 24,
             ),
           ),
@@ -1864,13 +2007,19 @@ class _TimingsScreenState extends State<TimingsScreen>
                   name,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: isDarkMode ? Colors.white : AppColors.primaryColor,
+                  color:
+                      isDarkMode
+                          ? AppColors.primaryColor
+                          : AppColors.primaryColor,
                 ),
                 const SizedBox(height: 4),
                 AppText(
                   _formatTime12Hour(prayerTime),
                   fontSize: 14,
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  color:
+                      isDarkMode
+                          ? AppColors.primaryColor.withOpacity(0.7)
+                          : Colors.grey[600],
                 ),
               ],
             ),
@@ -1879,16 +2028,36 @@ class _TimingsScreenState extends State<TimingsScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color:
-                    isDarkMode
-                        ? Colors.grey[700]
-                        : AppColors.primaryColor.withOpacity(0.1),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors:
+                      isDarkMode
+                          ? [
+                            AppColors.primaryColor.withOpacity(0.3),
+                            AppColors.primaryColor.withOpacity(0.1),
+                          ]
+                          : [
+                            AppColors.primaryColor.withOpacity(0.2),
+                            AppColors.primaryColor.withOpacity(0.05),
+                          ],
+                ),
                 borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primaryColor.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: AppText(
                 'القادمة',
                 fontSize: 12,
-                color: isDarkMode ? Colors.white : AppColors.primaryColor,
+                color:
+                    isDarkMode
+                        ? AppColors.primaryColor
+                        : AppColors.primaryColor,
               ),
             ),
         ],
