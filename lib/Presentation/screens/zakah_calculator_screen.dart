@@ -237,8 +237,18 @@ class _ZakahCalculatorScreenState extends State<ZakahCalculatorScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor =
+        isDarkMode ? const Color(0xFF1A1A1A) : const Color(0xFFF8F9FA);
+    final cardColor = isDarkMode ? const Color(0xFF2D2D2D) : Colors.white;
+    final textColor = isDarkMode ? Colors.white : const Color(0xFF333333);
+    final hintColor =
+        isDarkMode ? Colors.grey[400] ?? Colors.grey : const Color(0xFFCCCCCC);
+    final borderColor =
+        isDarkMode ? Colors.grey[700] ?? Colors.grey : const Color(0xFFE0E0E0);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: backgroundColor,
       appBar: const CustomAppBar(title: 'حاسبة الزكاة', isHome: false),
       body: SafeArea(
         child: Form(
@@ -254,7 +264,6 @@ class _ZakahCalculatorScreenState extends State<ZakahCalculatorScreen>
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const SizedBox(height: 20),
-                        // Header container with primary color
                         Container(
                           margin: const EdgeInsets.symmetric(horizontal: 10),
                           padding: const EdgeInsets.all(20),
@@ -272,7 +281,6 @@ class _ZakahCalculatorScreenState extends State<ZakahCalculatorScreen>
                           ),
                           child: Column(
                             children: [
-                              // Animated icon container
                               Container(
                                 width: 80,
                                 height: 80,
@@ -315,12 +323,16 @@ class _ZakahCalculatorScreenState extends State<ZakahCalculatorScreen>
                           ),
                         ),
                         const SizedBox(height: 30),
-                        // Input fields with improved styling
                         _buildInputField(
                           label: 'النقود',
                           controller: _cashController,
                           example: '( 250.000 جنيه )',
                           icon: Icons.money,
+                          isDarkMode: isDarkMode,
+                          cardColor: cardColor,
+                          textColor: textColor,
+                          hintColor: hintColor,
+                          borderColor: borderColor,
                         ),
                         const SizedBox(height: 15),
                         _buildInputField(
@@ -328,6 +340,11 @@ class _ZakahCalculatorScreenState extends State<ZakahCalculatorScreen>
                           controller: _goldController,
                           example: '( 100 غرام )',
                           icon: Icons.monetization_on,
+                          isDarkMode: isDarkMode,
+                          cardColor: cardColor,
+                          textColor: textColor,
+                          hintColor: hintColor,
+                          borderColor: borderColor,
                         ),
                         const SizedBox(height: 15),
                         _buildInputField(
@@ -335,6 +352,11 @@ class _ZakahCalculatorScreenState extends State<ZakahCalculatorScreen>
                           controller: _silverController,
                           example: '( 1000 غرام )',
                           icon: Icons.monetization_on_outlined,
+                          isDarkMode: isDarkMode,
+                          cardColor: cardColor,
+                          textColor: textColor,
+                          hintColor: hintColor,
+                          borderColor: borderColor,
                         ),
                         const SizedBox(height: 15),
                         _buildInputField(
@@ -342,6 +364,11 @@ class _ZakahCalculatorScreenState extends State<ZakahCalculatorScreen>
                           controller: _stocksController,
                           example: '( 250.000 جنيه )',
                           icon: Icons.show_chart,
+                          isDarkMode: isDarkMode,
+                          cardColor: cardColor,
+                          textColor: textColor,
+                          hintColor: hintColor,
+                          borderColor: borderColor,
                         ),
                         const SizedBox(height: 15),
                         _buildInputField(
@@ -349,6 +376,11 @@ class _ZakahCalculatorScreenState extends State<ZakahCalculatorScreen>
                           controller: _businessController,
                           example: '( 250.000 جنيه )',
                           icon: Icons.business,
+                          isDarkMode: isDarkMode,
+                          cardColor: cardColor,
+                          textColor: textColor,
+                          hintColor: hintColor,
+                          borderColor: borderColor,
                         ),
                         const SizedBox(height: 15),
                         _buildInputField(
@@ -356,6 +388,11 @@ class _ZakahCalculatorScreenState extends State<ZakahCalculatorScreen>
                           controller: _otherAssetsController,
                           example: '( 250.000 جنيه )',
                           icon: Icons.category,
+                          isDarkMode: isDarkMode,
+                          cardColor: cardColor,
+                          textColor: textColor,
+                          hintColor: hintColor,
+                          borderColor: borderColor,
                         ),
                         const SizedBox(height: 15),
                         _buildInputField(
@@ -363,9 +400,13 @@ class _ZakahCalculatorScreenState extends State<ZakahCalculatorScreen>
                           controller: _debtsController,
                           example: '( 250.000 جنيه )',
                           icon: Icons.credit_card,
+                          isDarkMode: isDarkMode,
+                          cardColor: cardColor,
+                          textColor: textColor,
+                          hintColor: hintColor,
+                          borderColor: borderColor,
                         ),
                         const SizedBox(height: 30),
-                        // Calculate button with improved styling
                         Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: Container(
@@ -422,14 +463,22 @@ class _ZakahCalculatorScreenState extends State<ZakahCalculatorScreen>
     required TextEditingController controller,
     required String example,
     required IconData icon,
+    required bool isDarkMode,
+    required Color cardColor,
+    required Color textColor,
+    required Color? hintColor,
+    required Color borderColor,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color:
+                isDarkMode
+                    ? Colors.black.withOpacity(0.3)
+                    : Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -443,10 +492,10 @@ class _ZakahCalculatorScreenState extends State<ZakahCalculatorScreen>
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF333333),
+                color: textColor,
                 fontFamily: 'DIN',
               ),
             ),
@@ -456,19 +505,19 @@ class _ZakahCalculatorScreenState extends State<ZakahCalculatorScreen>
             textAlign: TextAlign.right,
             decoration: InputDecoration(
               hintText: example,
-              hintStyle: const TextStyle(
-                color: Color(0xFFCCCCCC),
+              hintStyle: TextStyle(
+                color: hintColor,
                 fontSize: 14,
                 fontFamily: 'DIN',
               ),
               suffixIcon: Icon(icon, color: AppColors.primaryColor),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                borderSide: BorderSide(color: borderColor),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                borderSide: BorderSide(color: borderColor),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -478,6 +527,8 @@ class _ZakahCalculatorScreenState extends State<ZakahCalculatorScreen>
                 horizontal: 16,
                 vertical: 16,
               ),
+              fillColor: cardColor,
+              filled: true,
             ),
             keyboardType: TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
@@ -488,11 +539,7 @@ class _ZakahCalculatorScreenState extends State<ZakahCalculatorScreen>
                     (value == null || value.isEmpty)
                         ? 'الرجاء إدخال قيمة'
                         : null,
-            style: const TextStyle(
-              fontFamily: 'DIN',
-              fontSize: 14,
-              color: Color(0xFF666666),
-            ),
+            style: TextStyle(fontFamily: 'DIN', fontSize: 14, color: textColor),
           ),
         ],
       ),
