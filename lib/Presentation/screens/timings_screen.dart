@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:serat/Business_Logic/Cubit/location_cubit.dart' as location;
 import 'package:serat/Presentation/screens/hijri_calendar_screen.dart';
+import 'package:serat/Presentation/screens/radio_screen.dart';
 import 'package:serat/imports.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -815,9 +816,14 @@ class _TimingsScreenState extends State<TimingsScreen>
                                         Icons.radio,
                                         isDarkMode,
                                         onTap: () {
-                                          NavigationCubit.get(
+                                          Navigator.push(
                                             context,
-                                          ).changeIndex(1);
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) =>
+                                                      const RadioScreen(),
+                                            ),
+                                          );
                                         },
                                       ),
                                       _buildFeatureCard(
