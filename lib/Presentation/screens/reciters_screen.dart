@@ -22,6 +22,7 @@ class _RecitersScreenState extends State<RecitersScreen>
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isPlaying = false;
   bool _isInitialized = false;
+  bool _isOfflineMode = false;
 
   @override
   void initState() {
@@ -81,11 +82,16 @@ class _RecitersScreenState extends State<RecitersScreen>
     try {
       RecitersCubit.get(context)
           .getReciters()
-          .then((_) => _filterReciters(_searchController.text))
-          .catchError(
-            (_) => _showErrorSnackBar('حدث خطأ أثناء تحميل بيانات القراء'),
-          );
+          .then((_) {
+            setState(() => _isOfflineMode = false);
+            _filterReciters(_searchController.text);
+          })
+          .catchError((_) {
+            setState(() => _isOfflineMode = true);
+            _showErrorSnackBar('حدث خطأ أثناء تحميل بيانات القراء');
+          });
     } catch (e) {
+      setState(() => _isOfflineMode = true);
       _showErrorSnackBar('حدث خطأ أثناء تحميل بيانات القراء');
     }
   }
@@ -144,11 +150,38 @@ class _RecitersScreenState extends State<RecitersScreen>
 
   PreferredSizeWidget _buildAppBar(bool isDarkMode) {
     return AppBar(
-      title: const AppText(
-        'القراء',
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: Colors.white,
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const AppText(
+            'القراء',
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+          if (_isOfflineMode) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.cloud_off, color: Colors.orange, size: 16),
+                  SizedBox(width: 4),
+                  AppText(
+                    'وضع عدم الاتصال',
+                    fontSize: 12,
+                    color: Colors.orange,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ),
       centerTitle: true,
       backgroundColor:
@@ -173,10 +206,22 @@ class _RecitersScreenState extends State<RecitersScreen>
       leading: IconButton(
         icon: Icon(
           Icons.arrow_back_ios_new_rounded,
-          color: isDarkMode ? const Color.fromRGBO(255, 255, 255, 0.7) : Colors.white,
+          color:
+              isDarkMode
+                  ? const Color.fromRGBO(255, 255, 255, 0.7)
+                  : Colors.white,
         ),
         onPressed: () => Navigator.pop(context),
       ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          onPressed: () {
+            setState(() => _isOfflineMode = false);
+            RecitersCubit.get(context).getReciters(forceRefresh: true);
+          },
+        ),
+      ],
     );
   }
 
@@ -208,20 +253,47 @@ class _RecitersScreenState extends State<RecitersScreen>
   Widget _buildRecitersList(bool isDarkMode) {
     return BlocBuilder<RecitersCubit, RecitersState>(
       builder: (context, state) {
-        if (state is RecitersLoading) {
+        if (state is RecitersLoading && !_isOfflineMode) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (state is RecitersError) {
+        if (state is RecitersError && !_isOfflineMode) {
           return _ErrorView(
             error: RecitersCubit.get(context).error ?? 'حدث خطأ غير معروف',
-            onRetry: _loadReciters,
+            onRetry: () {
+              setState(() => _isOfflineMode = false);
+              _loadReciters();
+            },
           );
         }
 
         final cubit = RecitersCubit.get(context);
         if (cubit.recitersModel?.reciters.isEmpty ?? true) {
-          return const Center(child: AppText('لا يوجد قراء', fontSize: 16));
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const AppText('لا يوجد قراء', fontSize: 16),
+                if (_isOfflineMode) ...[
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      setState(() => _isOfflineMode = false);
+                      RecitersCubit.get(
+                        context,
+                      ).getReciters(forceRefresh: true);
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const AppText('إعادة المحاولة'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryColor,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          );
         }
 
         return ListView.builder(
@@ -1051,7 +1123,7 @@ class _ReciterCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
-      shadowColor: Colors.black.withValues(alpha:  0.1),
+      shadowColor: Colors.black.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       color: isDarkMode ? const Color(0xff2F2F2F) : Colors.white,
       child: InkWell(
@@ -1246,7 +1318,8 @@ class _ReciterDetailsSheet extends StatelessWidget {
       width: 50,
       height: 50,
       decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey[800] : Colors.white.withValues(alpha: 0.2),
+        color:
+            isDarkMode ? Colors.grey[800] : Colors.white.withValues(alpha: 0.2),
         shape: BoxShape.circle,
       ),
       child: Center(
