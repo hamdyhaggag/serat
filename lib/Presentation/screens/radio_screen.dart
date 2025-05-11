@@ -161,6 +161,7 @@ class _RadioScreenState extends State<RadioScreen>
         centerTitle: true,
         elevation: 0,
         bottom: TabBar(
+          dividerColor: Colors.transparent,
           controller: _tabController,
           tabs: const [
             Tab(
@@ -192,136 +193,146 @@ class _RadioScreenState extends State<RadioScreen>
       body: SafeArea(
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color:
-                    isDarkMode
-                        ? const Color(0xff2F2F2F)
-                        : AppColors.primaryColor,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    width: 200,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
+            Flexible(
+              child: SingleChildScrollView(
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color:
+                        isDarkMode
+                            ? const Color(0xff2F2F2F)
+                            : AppColors.primaryColor,
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(30),
+                      bottomRight: Radius.circular(30),
                     ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        if (_isPlaying)
-                          TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0.8, end: 1.2),
-                            duration: const Duration(seconds: 1),
-                            curve: Curves.easeInOut,
-                            builder: (context, value, child) {
-                              return Transform.scale(
-                                scale: value,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.3),
-                                      width: 2,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        Icon(
-                          _isPlaying
-                              ? Icons.radio
-                              : Icons.radio_button_unchecked,
-                          size: 80,
-                          color: Colors.white,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  AppText(
-                    _currentStation.isEmpty ? 'اختر محطة' : _currentStationName,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontFamily: 'Cairo',
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildControlButton(
-                        icon: _isPlaying ? Icons.pause : Icons.play_arrow,
-                        onPressed: () {
-                          if (_currentStation.isNotEmpty) {
-                            _playStation(_currentStation, _currentStationName);
-                          }
-                        },
-                      ),
-                      const SizedBox(width: 20),
-                      _buildControlButton(
-                        icon: Icons.stop,
-                        onPressed: () async {
-                          await _audioPlayer.stop();
-                          setState(() {
-                            _currentStation = '';
-                            _currentStationName = '';
-                          });
-                        },
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.volume_down, color: Colors.white),
-                        Expanded(
-                          child: Slider(
-                            value: _volume,
-                            onChanged: (value) {
-                              setState(() {
-                                _volume = value;
-                              });
-                              _audioPlayer.setVolume(value);
-                            },
-                            activeColor: Colors.white,
-                            inactiveColor: Colors.white.withOpacity(0.3),
-                          ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        width: 200,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
                         ),
-                        const Icon(Icons.volume_up, color: Colors.white),
-                      ],
-                    ),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            if (_isPlaying)
+                              TweenAnimationBuilder<double>(
+                                tween: Tween(begin: 0.8, end: 1.2),
+                                duration: const Duration(seconds: 1),
+                                curve: Curves.easeInOut,
+                                builder: (context, value, child) {
+                                  return Transform.scale(
+                                    scale: value,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.white.withOpacity(0.3),
+                                          width: 2,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            Icon(
+                              _isPlaying
+                                  ? Icons.radio
+                                  : Icons.radio_button_unchecked,
+                              size: 80,
+                              color: Colors.white,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      AppText(
+                        _currentStation.isEmpty
+                            ? 'اختر محطة'
+                            : _currentStationName,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontFamily: 'Cairo',
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildControlButton(
+                            icon: _isPlaying ? Icons.pause : Icons.play_arrow,
+                            onPressed: () {
+                              if (_currentStation.isNotEmpty) {
+                                _playStation(
+                                  _currentStation,
+                                  _currentStationName,
+                                );
+                              }
+                            },
+                          ),
+                          const SizedBox(width: 20),
+                          _buildControlButton(
+                            icon: Icons.stop,
+                            onPressed: () async {
+                              await _audioPlayer.stop();
+                              setState(() {
+                                _currentStation = '';
+                                _currentStationName = '';
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.volume_down, color: Colors.white),
+                            Expanded(
+                              child: Slider(
+                                value: _volume,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _volume = value;
+                                  });
+                                  _audioPlayer.setVolume(value);
+                                },
+                                activeColor: Colors.white,
+                                inactiveColor: Colors.white.withOpacity(0.3),
+                              ),
+                            ),
+                            const Icon(Icons.volume_up, color: Colors.white),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
             Padding(

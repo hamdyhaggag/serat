@@ -93,7 +93,8 @@ class SplashScreenState extends State<SplashScreen>
                   return Opacity(opacity: _fadeAnimation.value, child: child);
                 },
                 child: const Text(
-                  "serat - صراط",
+                  "صراط – serat",
+
                   style: TextStyle(
                     fontSize: 27,
                     color: Colors.white,
