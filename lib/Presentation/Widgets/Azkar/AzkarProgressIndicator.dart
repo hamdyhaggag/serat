@@ -29,11 +29,10 @@ class AzkarProgressIndicator extends StatelessWidget {
           final progress = state.progress;
           return Column(
             children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-                child: Transform(
-                  alignment: Alignment.center,
-                  transform: Matrix4.rotationY(pi),
+              Directionality(
+                textDirection: TextDirection.rtl,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                   child: LinearProgressIndicator(
                     value: progress,
                     backgroundColor: Colors.grey[300],
