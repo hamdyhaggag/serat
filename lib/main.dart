@@ -3,10 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:serat/Business_Logic/Cubit/location_cubit.dart';
+import 'package:serat/Business_Logic/Cubit/location_cubit.dart' as location;
 import 'package:serat/Business_Logic/Cubit/settings_cubit.dart';
 import 'package:serat/Business_Logic/Cubit/counter_cubit.dart';
-import 'package:serat/Business_Logic/Cubit/navigation_cubit.dart';
+import 'package:serat/Business_Logic/Cubit/navigation_cubit.dart' as navigation;
 import 'package:serat/Business_Logic/Cubit/app_cubit.dart';
 import 'package:serat/Business_Logic/Cubit/app_states.dart';
 import 'package:serat/Business_Logic/Cubit/qibla_cubit.dart';
@@ -14,6 +14,7 @@ import 'package:serat/Business_Logic/Cubit/quran_video_cubit.dart';
 import 'package:serat/Data/Web_Services/quran_video_web_services.dart';
 import 'package:serat/Presentation/screens/splash_screen.dart';
 import 'package:serat/imports.dart';
+import 'package:serat/Business_Logic/Cubit/reciters_cubit.dart';
 
 TimeOfDay? stringToTimeOfDay(String timeString) {
   if (timeString.isNotEmpty) {
@@ -82,15 +83,16 @@ class SeratApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (context) => AppCubit()),
         BlocProvider(
-          create: (context) => LocationCubit()..getMyCurrentLocation(),
+          create: (context) => location.LocationCubit()..getMyCurrentLocation(),
         ),
         BlocProvider(create: (context) => SettingsCubit()),
         BlocProvider(create: (context) => CounterCubit()),
-        BlocProvider(create: (context) => NavigationCubit()),
+        BlocProvider(create: (context) => navigation.NavigationCubit()),
         BlocProvider(create: (context) => QiblaCubit()),
         BlocProvider(
           create: (context) => QuranVideoCubit(QuranVideoWebServices()),
         ),
+        BlocProvider(create: (context) => RecitersCubit()),
       ],
       child: ScreenUtilInit(
         designSize: const Size(360, 690),

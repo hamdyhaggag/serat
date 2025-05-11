@@ -81,7 +81,9 @@ dependencies:
   chewie: ^1.7.4
   package_info_plus: ^8.3.0
   wakelock_plus: ^1.1.4
-
+  just_audio: ^0.10.2
+  audio_session: ^0.2.1
+  audio_service: ^0.18.12
 
 
   # The following adds the Cupertino Icons font to your application.

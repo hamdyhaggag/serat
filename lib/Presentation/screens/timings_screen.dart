@@ -3,6 +3,7 @@ import 'package:serat/Business_Logic/Cubit/location_cubit.dart' as location;
 import 'package:serat/Presentation/screens/hijri_calendar_screen.dart';
 import 'package:serat/Presentation/screens/radio_screen.dart';
 import 'package:serat/Presentation/screens/quran_video_screen.dart';
+import 'package:serat/Presentation/screens/reciters_screen.dart';
 import 'package:serat/imports.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -853,6 +854,21 @@ class _TimingsScreenState extends State<TimingsScreen>
                                               builder:
                                                   (context) =>
                                                       const QuranVideoScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _buildFeatureCard(
+                                        'القراء',
+                                        Icons.record_voice_over,
+                                        isDarkMode,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) =>
+                                                      const RecitersScreen(),
                                             ),
                                           );
                                         },
