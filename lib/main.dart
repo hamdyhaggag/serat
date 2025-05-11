@@ -10,6 +10,8 @@ import 'package:serat/Business_Logic/Cubit/navigation_cubit.dart';
 import 'package:serat/Business_Logic/Cubit/app_cubit.dart';
 import 'package:serat/Business_Logic/Cubit/app_states.dart';
 import 'package:serat/Business_Logic/Cubit/qibla_cubit.dart';
+import 'package:serat/Business_Logic/Cubit/quran_video_cubit.dart';
+import 'package:serat/Data/Web_Services/quran_video_web_services.dart';
 import 'package:serat/Presentation/screens/splash_screen.dart';
 import 'package:serat/imports.dart';
 
@@ -86,6 +88,9 @@ class SeratApp extends StatelessWidget {
         BlocProvider(create: (context) => CounterCubit()),
         BlocProvider(create: (context) => NavigationCubit()),
         BlocProvider(create: (context) => QiblaCubit()),
+        BlocProvider(
+          create: (context) => QuranVideoCubit(QuranVideoWebServices()),
+        ),
       ],
       child: ScreenUtilInit(
         designSize: const Size(360, 690),
