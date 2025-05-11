@@ -3,7 +3,6 @@ import 'package:serat/imports.dart';
 import '../screens/screen_layout.dart';
 import 'onboarding_contents.dart';
 import 'size_config.dart';
-import '../Config/constants/colors.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
