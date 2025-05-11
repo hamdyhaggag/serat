@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serat/imports.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 
 class AzkarPages extends StatelessWidget {
   final double screenWidth;
@@ -70,21 +72,71 @@ class AzkarPages extends StatelessWidget {
                       children: [
                         Padding(
                           padding: EdgeInsets.all(screenWidth * 0.05),
-                          child: Text(
-                            azkar[index],
-                            style: TextStyle(
-                              fontSize: screenWidth * 0.06,
-                              color:
-                                  isDarkMode
-                                      ? Colors.white
-                                      : const Color(0xFF2D3436),
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'DIN',
-                            ),
-                            textAlign: TextAlign.center,
+                          child: Column(
+                            children: [
+                              Text(
+                                azkar[index],
+                                style: TextStyle(
+                                  fontSize: screenWidth * 0.06,
+                                  color:
+                                      isDarkMode
+                                          ? Colors.white
+                                          : const Color(0xFF2D3436),
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'DIN',
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: screenHeight * 0.02),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.copy,
+                                      color:
+                                          isDarkMode
+                                              ? Colors.white70
+                                              : Colors.grey[700],
+                                    ),
+                                    onPressed: () {
+                                      Clipboard.setData(
+                                        ClipboardData(text: azkar[index]),
+                                      );
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'تم نسخ الذكر',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontFamily: 'DIN',
+                                              fontSize: screenWidth * 0.04,
+                                            ),
+                                          ),
+                                          duration: const Duration(seconds: 2),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.share,
+                                      color:
+                                          isDarkMode
+                                              ? Colors.white70
+                                              : Colors.grey[700],
+                                    ),
+                                    onPressed: () {
+                                      Share.share(azkar[index]);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
-                        SizedBox(height: screenHeight * 0.02),
                         AzkarCounter(
                           maxValue: maxValues[index],
                           onComplete: () {
