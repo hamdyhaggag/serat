@@ -39,6 +39,11 @@ class AzkarModelViewState extends State<AzkarModelView> {
     _pageController = PageController(
       initialPage: widget.initialAzkarState?.currentIndex ?? 0,
     );
+    _loadAzkarState().then((state) {
+      if (mounted) {
+        context.read<AzkarCubit>().emit(state);
+      }
+    });
   }
 
   @override
@@ -56,6 +61,55 @@ class AzkarModelViewState extends State<AzkarModelView> {
       state.completedCards.map((e) => e.toString()).toList(),
     );
     await prefs.setInt('totalCards', state.totalCards);
+    await prefs.setDouble('cachedProgress', state.cachedProgress);
+
+    // Save counters
+    final countersJson =
+        state.counters.entries.map((e) => '${e.key}:${e.value}').toList();
+    await prefs.setStringList('counters', countersJson);
+
+    // Save max values
+    final maxValuesJson =
+        state.maxValues.entries.map((e) => '${e.key}:${e.value}').toList();
+    await prefs.setStringList('maxValues', maxValuesJson);
+  }
+
+  Future<AzkarState> _loadAzkarState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final currentIndex = prefs.getInt('currentIndex') ?? 0;
+    final completedCards =
+        (prefs.getStringList('completedCards') ?? [])
+            .map((e) => int.parse(e))
+            .toList();
+    final totalCards = prefs.getInt('totalCards') ?? 0;
+    final cachedProgress = prefs.getDouble('cachedProgress') ?? 0.0;
+
+    // Load counters
+    final countersJson = prefs.getStringList('counters') ?? [];
+    final counters = Map<int, int>.fromEntries(
+      countersJson.map((e) {
+        final parts = e.split(':');
+        return MapEntry(int.parse(parts[0]), int.parse(parts[1]));
+      }),
+    );
+
+    // Load max values
+    final maxValuesJson = prefs.getStringList('maxValues') ?? [];
+    final maxValues = Map<int, int>.fromEntries(
+      maxValuesJson.map((e) {
+        final parts = e.split(':');
+        return MapEntry(int.parse(parts[0]), int.parse(parts[1]));
+      }),
+    );
+
+    return AzkarState(
+      currentIndex: currentIndex,
+      completedCards: completedCards,
+      totalCards: totalCards,
+      cachedProgress: cachedProgress,
+      counters: counters,
+      maxValues: maxValues,
+    );
   }
 
   @override

@@ -22,10 +22,12 @@ class AzkarCubit extends Cubit<AzkarState> {
         final currentCompleted = List<int>.from(state.completedCards);
         if (!currentCompleted.contains(cardIndex)) {
           currentCompleted.add(cardIndex);
+          final newProgress = currentCompleted.length / state.totalCards;
           emit(
             state.copyWith(
               counters: currentCounters,
               completedCards: currentCompleted,
+              cachedProgress: newProgress,
             ),
           );
         }
@@ -39,7 +41,13 @@ class AzkarCubit extends Cubit<AzkarState> {
     final currentCompleted = List<int>.from(state.completedCards);
     if (!currentCompleted.contains(cardIndex)) {
       currentCompleted.add(cardIndex);
-      emit(state.copyWith(completedCards: currentCompleted));
+      final newProgress = currentCompleted.length / state.totalCards;
+      emit(
+        state.copyWith(
+          completedCards: currentCompleted,
+          cachedProgress: newProgress,
+        ),
+      );
     }
   }
 
@@ -48,6 +56,32 @@ class AzkarCubit extends Cubit<AzkarState> {
   }
 
   void updateMaxValues(Map<int, int> newMaxValues) {
-    emit(state.copyWith(maxValues: newMaxValues));
+    // Initialize counters for new max values if they don't exist
+    final currentCounters = Map<int, int>.from(state.counters);
+    newMaxValues.forEach((key, value) {
+      if (!currentCounters.containsKey(key)) {
+        currentCounters[key] = 0;
+      }
+    });
+
+    emit(state.copyWith(maxValues: newMaxValues, counters: currentCounters));
+  }
+
+  void resetProgress() {
+    emit(
+      state.copyWith(
+        completedCards: [],
+        counters: Map<int, int>.fromEntries(
+          state.maxValues.entries.map((e) => MapEntry(e.key, 0)),
+        ),
+        cachedProgress: 0.0,
+      ),
+    );
+  }
+
+  void setCounter(int cardIndex, int value) {
+    final currentCounters = Map<int, int>.from(state.counters);
+    currentCounters[cardIndex] = value;
+    emit(state.copyWith(counters: currentCounters));
   }
 }
