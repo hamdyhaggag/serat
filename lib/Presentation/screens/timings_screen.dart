@@ -611,46 +611,71 @@ class _TimingsScreenState extends State<TimingsScreen>
                                                   ? Colors.white
                                                   : AppColors.primaryColor,
                                         ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 6,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                isDarkMode
-                                                    ? Colors.grey[800]
-                                                    : AppColors.primaryColor
-                                                        .withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(
-                                              12,
+                                        Row(
+                                          children: [
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 6,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color:
+                                                    isDarkMode
+                                                        ? Colors.grey[800]
+                                                        : AppColors.primaryColor
+                                                            .withOpacity(0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: Column(
+                                                children: [
+                                                  AppText(
+                                                    'متبقي حتى $_nextPrayerName',
+                                                    fontSize: 12,
+                                                    color:
+                                                        isDarkMode
+                                                            ? Colors.white
+                                                            : AppColors
+                                                                .primaryColor,
+                                                  ),
+                                                  AppText(
+                                                    _formatCountdown(
+                                                      _timeUntilNextPrayer,
+                                                    ),
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.bold,
+                                                    color:
+                                                        isDarkMode
+                                                            ? Colors.white
+                                                            : AppColors
+                                                                .primaryColor,
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              AppText(
-                                                'متبقي حتى $_nextPrayerName',
-                                                fontSize: 12,
+                                            const SizedBox(width: 8),
+                                            IconButton(
+                                              padding: EdgeInsets.zero,
+                                              constraints:
+                                                  const BoxConstraints(),
+                                              icon: Icon(
+                                                Icons.list_alt,
                                                 color:
                                                     isDarkMode
                                                         ? Colors.white
                                                         : AppColors
                                                             .primaryColor,
+                                                size: 24,
                                               ),
-                                              AppText(
-                                                _formatCountdown(
-                                                  _timeUntilNextPrayer,
-                                                ),
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold,
-                                                color:
-                                                    isDarkMode
-                                                        ? Colors.white
-                                                        : AppColors
-                                                            .primaryColor,
-                                              ),
-                                            ],
-                                          ),
+                                              onPressed:
+                                                  () => _showAllPrayerTimes(
+                                                    context,
+                                                    locationCubit,
+                                                    isDarkMode,
+                                                  ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
@@ -749,16 +774,6 @@ class _TimingsScreenState extends State<TimingsScreen>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                AppText(
-                                  'الخدمات',
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color:
-                                      isDarkMode
-                                          ? Colors.white
-                                          : AppColors.primaryColor,
-                                ),
-                                const SizedBox(height: 10),
                                 if (_isLoading)
                                   GridView.count(
                                     shrinkWrap: true,
@@ -814,6 +829,21 @@ class _TimingsScreenState extends State<TimingsScreen>
                                         },
                                       ),
                                       _buildFeatureCard(
+                                        'القراء',
+                                        Icons.record_voice_over,
+                                        isDarkMode,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) =>
+                                                      const RecitersScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _buildFeatureCard(
                                         'الراديو',
                                         Icons.radio,
                                         isDarkMode,
@@ -824,21 +854,6 @@ class _TimingsScreenState extends State<TimingsScreen>
                                               builder:
                                                   (context) =>
                                                       const RadioScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _buildFeatureCard(
-                                        'التقويم الهجري',
-                                        Icons.calendar_month,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (context) =>
-                                                      const HijriCalendarScreen(),
                                             ),
                                           );
                                         },
@@ -859,8 +874,8 @@ class _TimingsScreenState extends State<TimingsScreen>
                                         },
                                       ),
                                       _buildFeatureCard(
-                                        'القراء',
-                                        Icons.record_voice_over,
+                                        'التقويم الهجري',
+                                        Icons.calendar_month,
                                         isDarkMode,
                                         onTap: () {
                                           Navigator.push(
@@ -868,7 +883,7 @@ class _TimingsScreenState extends State<TimingsScreen>
                                             MaterialPageRoute(
                                               builder:
                                                   (context) =>
-                                                      const RecitersScreen(),
+                                                      const HijriCalendarScreen(),
                                             ),
                                           );
                                         },
@@ -1577,6 +1592,308 @@ class _TimingsScreenState extends State<TimingsScreen>
 
     // If no match found, return the original location
     return location;
+  }
+
+  void _showAllPrayerTimes(
+    BuildContext context,
+    location.LocationCubit locationCubit,
+    bool isDarkMode,
+  ) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Prayer Times',
+      barrierColor: Colors.black.withOpacity(0.5),
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, animation1, animation2) => Container(),
+      transitionBuilder: (context, animation1, animation2, child) {
+        final curvedAnimation = CurvedAnimation(
+          parent: animation1,
+          curve: Curves.easeInOut,
+        );
+        return ScaleTransition(
+          scale: Tween<double>(begin: 0.8, end: 1.0).animate(curvedAnimation),
+          child: FadeTransition(
+            opacity: Tween<double>(
+              begin: 0.0,
+              end: 1.0,
+            ).animate(curvedAnimation),
+            child: Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              child: Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                ),
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: isDarkMode ? const Color(0xff2F2F2F) : Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color:
+                                    isDarkMode
+                                        ? Colors.grey[800]
+                                        : AppColors.primaryColor.withOpacity(
+                                          0.1,
+                                        ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.access_time,
+                                color:
+                                    isDarkMode
+                                        ? Colors.white
+                                        : AppColors.primaryColor,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            AppText(
+                              'مواقيت الصلاة',
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  isDarkMode
+                                      ? Colors.white
+                                      : AppColors.primaryColor,
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color:
+                                  isDarkMode
+                                      ? Colors.grey[800]
+                                      : Colors.grey[200],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.close,
+                              color:
+                                  isDarkMode
+                                      ? Colors.white
+                                      : AppColors.primaryColor,
+                              size: 20,
+                            ),
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    if (locationCubit.timesModel != null) ...[
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color:
+                              isDarkMode
+                                  ? Colors.grey[800]
+                                  : AppColors.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          children: [
+                            AppText(
+                              'الصلاة القادمة',
+                              fontSize: 14,
+                              color:
+                                  isDarkMode
+                                      ? Colors.white70
+                                      : AppColors.primaryColor.withOpacity(0.7),
+                            ),
+                            const SizedBox(height: 4),
+                            AppText(
+                              _nextPrayerName,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  isDarkMode
+                                      ? Colors.white
+                                      : AppColors.primaryColor,
+                            ),
+                            const SizedBox(height: 4),
+                            AppText(
+                              _formatCountdown(_timeUntilNextPrayer),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color:
+                                  isDarkMode
+                                      ? Colors.white70
+                                      : AppColors.primaryColor.withOpacity(0.7),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Flexible(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: List.generate(6, (index) {
+                              final prayers = [
+                                (
+                                  'الفجر',
+                                  locationCubit.timesModel!.data.timings.fajr,
+                                ),
+                                (
+                                  'الشروق',
+                                  locationCubit
+                                      .timesModel!
+                                      .data
+                                      .timings
+                                      .sunrise,
+                                ),
+                                (
+                                  'الظهر',
+                                  locationCubit.timesModel!.data.timings.dhuhr,
+                                ),
+                                (
+                                  'العصر',
+                                  locationCubit.timesModel!.data.timings.asr,
+                                ),
+                                (
+                                  'المغرب',
+                                  locationCubit
+                                      .timesModel!
+                                      .data
+                                      .timings
+                                      .maghrib,
+                                ),
+                                (
+                                  'العشاء',
+                                  locationCubit.timesModel!.data.timings.isha,
+                                ),
+                              ];
+                              final (name, time) = prayers[index];
+                              return Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: index == 5 ? 0 : 12,
+                                ),
+                                child: _buildPrayerTimeRow(
+                                  name,
+                                  time,
+                                  isDarkMode,
+                                  isNext: _isNextPrayer(name, locationCubit),
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPrayerTimeRow(
+    String name,
+    String time,
+    bool isDarkMode, {
+    bool isNext = false,
+  }) {
+    final prayerTime = _parsePrayerTime(time);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color:
+            isNext
+                ? (isDarkMode
+                    ? Colors.grey[800]
+                    : AppColors.primaryColor.withOpacity(0.1))
+                : Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color:
+                  isDarkMode
+                      ? Colors.grey[800]
+                      : AppColors.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              _getPrayerIcon(name),
+              color: isDarkMode ? Colors.white : AppColors.primaryColor,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppText(
+                  name,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isDarkMode ? Colors.white : AppColors.primaryColor,
+                ),
+                const SizedBox(height: 4),
+                AppText(
+                  _formatTime12Hour(prayerTime),
+                  fontSize: 14,
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ],
+            ),
+          ),
+          if (isNext)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color:
+                    isDarkMode
+                        ? Colors.grey[700]
+                        : AppColors.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: AppText(
+                'القادمة',
+                fontSize: 12,
+                color: isDarkMode ? Colors.white : AppColors.primaryColor,
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
 
