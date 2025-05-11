@@ -118,6 +118,7 @@ flutter:
       - assets/nawawi_hadiths.json
       - assets/logo.png
       - assets/azkar/
+      - lib/Data/azkar/morning_azkar.json
   fonts:
     - family: Cairo
       fonts:

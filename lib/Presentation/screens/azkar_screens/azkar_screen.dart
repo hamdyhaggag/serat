@@ -32,7 +32,7 @@ class _AzkarScreenState extends State<AzkarScreen> {
 
   AzkarState _azkarState = AzkarState(
     currentIndex: 0,
-    completedCards: 0,
+    completedCards: [],
     totalCards: 0,
   );
 
@@ -140,9 +140,15 @@ class _AzkarScreenState extends State<AzkarScreen> {
           IconConstants.morningAzkarIcon.codePoint;
       _lastOpenedIcon = IconData(iconCode, fontFamily: 'MaterialIcons');
 
+      final completedCards =
+          prefs
+              .getStringList('completedCards')
+              ?.map((e) => int.parse(e))
+              .toList() ??
+          [];
       _azkarState = AzkarState(
         currentIndex: prefs.getInt('currentIndex') ?? 0,
-        completedCards: prefs.getInt('completedCards') ?? 0,
+        completedCards: completedCards,
         totalCards: prefs.getInt('totalCards') ?? 0,
       );
     });
@@ -155,7 +161,10 @@ class _AzkarScreenState extends State<AzkarScreen> {
     await prefs.setInt('lastOpenedIcon', _lastOpenedIcon.codePoint);
 
     await prefs.setInt('currentIndex', _azkarState.currentIndex);
-    await prefs.setInt('completedCards', _azkarState.completedCards);
+    await prefs.setStringList(
+      'completedCards',
+      _azkarState.completedCards.map((e) => e.toString()).toList(),
+    );
     await prefs.setInt('totalCards', _azkarState.totalCards);
   }
 
@@ -176,7 +185,7 @@ class _AzkarScreenState extends State<AzkarScreen> {
   void _clearProgress() {
     setState(() {
       _progress = 0.0;
-      _azkarState = _azkarState.copyWith(completedCards: 0);
+      _azkarState = _azkarState.copyWith(completedCards: []);
     });
     _saveState();
   }
@@ -186,13 +195,29 @@ class _AzkarScreenState extends State<AzkarScreen> {
     Widget screen,
     AzkarState azkarState,
   ) {
+    // If the screen is an AzkarModelView, inject the callback
+    Widget targetScreen = screen;
+    if (screen is MorningAzkar) {
+      targetScreen = MorningAzkar(
+        title: (screen as MorningAzkar).title,
+        onProgressChanged: (AzkarState newState) {
+          setState(() {
+            _progress = newState.progress;
+            _azkarState = newState;
+          });
+        },
+      );
+    }
+    // TODO: Repeat for other Azkar screens if needed
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => screen,
+        builder: (context) => targetScreen,
         settings: RouteSettings(arguments: azkarState),
       ),
-    );
+    ).then((_) {
+      _loadState();
+    });
   }
 
   @override

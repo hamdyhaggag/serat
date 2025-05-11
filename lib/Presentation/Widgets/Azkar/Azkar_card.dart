@@ -45,8 +45,9 @@ class AzkarCardState extends State<AzkarCard> {
     super.initState();
     counterValue = widget.initialCounterValue;
     showCheckIcon = widget.showCheckIcon;
-    _confettiController =
-        ConfettiController(duration: const Duration(seconds: 1));
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 1),
+    );
   }
 
   @override
@@ -79,7 +80,7 @@ class AzkarCardState extends State<AzkarCard> {
           }
 
           BlocProvider.of<AzkarCubit>(context).updateCompletedCards(
-            BlocProvider.of<AzkarCubit>(context).state.completedCards + 1,
+            BlocProvider.of<AzkarCubit>(context).state.currentIndex,
           );
         }
       });
@@ -101,64 +102,61 @@ class AzkarCardState extends State<AzkarCard> {
       child: Card(
         color: isDarkMode ? Colors.grey[800] : Colors.white,
         margin: EdgeInsets.symmetric(horizontal: widget.screenWidth * 0.05),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: SingleChildScrollView(
           child: Padding(
-              padding: EdgeInsets.all(widget.screenWidth * 0.04),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      CopyButton(widget.text),
-                      ShareButton(widget.text),
-                    ],
-                  ),
-                  Center(
-                    child: Text(
-                      widget.text,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: widget.screenWidth * 0.06,
-                          fontFamily: 'DIN',
-                          fontWeight: FontWeight.w600,
-                          color: isDarkMode
+            padding: EdgeInsets.all(widget.screenWidth * 0.04),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [CopyButton(widget.text), ShareButton(widget.text)],
+                ),
+                Center(
+                  child: Text(
+                    widget.text,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: widget.screenWidth * 0.06,
+                      fontFamily: 'DIN',
+                      fontWeight: FontWeight.w600,
+                      color:
+                          isDarkMode
                               ? const Color(0xffffffff)
-                              : AppColors.primaryColor),
+                              : AppColors.primaryColor,
                     ),
                   ),
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      CustomPaint(
-                        painter: CircleProgressPainter(
-                          isDarkMode: isDarkMode,
-                          progress: showCheckIcon
-                              ? 1.0
-                              : counterValue / widget.maxValue,
-                          showCheckIcon: showCheckIcon,
-                        ),
-                        child: SizedBox(
-                          width: 54.w,
-                          height: 90.h,
-                        ),
+                ),
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CustomPaint(
+                      painter: CircleProgressPainter(
+                        isDarkMode: isDarkMode,
+                        progress:
+                            showCheckIcon
+                                ? 1.0
+                                : counterValue / widget.maxValue,
+                        showCheckIcon: showCheckIcon,
                       ),
-                      CircleAvatar(
-                        backgroundColor: showCheckIcon
-                            ? isDarkMode
-                                ? const Color(0xff0c8ee1)
-                                : AppColors.primaryColor
-                            : const Color.fromARGB(255, 195, 205, 212),
-                        radius: 27,
-                        child: showCheckIcon
-                            ? const Icon(
+                      child: SizedBox(width: 54.w, height: 90.h),
+                    ),
+                    CircleAvatar(
+                      backgroundColor:
+                          showCheckIcon
+                              ? isDarkMode
+                                  ? const Color(0xff0c8ee1)
+                                  : AppColors.primaryColor
+                              : const Color.fromARGB(255, 195, 205, 212),
+                      radius: 27,
+                      child:
+                          showCheckIcon
+                              ? const Icon(
                                 Icons.check,
                                 size: 30,
                                 color: Colors.white,
                               )
-                            : Text(
+                              : Text(
                                 counterValue.toString(),
                                 style: const TextStyle(
                                   fontFamily: 'DIN',
@@ -166,39 +164,39 @@ class AzkarCardState extends State<AzkarCard> {
                                   color: Colors.white,
                                 ),
                               ),
-                      ),
-                      ConfettiWidget(
-                        confettiController: _confettiController,
-                        blastDirectionality: BlastDirectionality.explosive,
-                        shouldLoop: false,
-                        colors: const [
-                          Colors.red,
-                          Colors.green,
-                          Colors.blue,
-                          Colors.orange
-                        ],
-                        createParticlePath: (size) {
-                          return Path()
-                            ..moveTo(size.width / 2, size.height / 2)
-                            ..lineTo(size.width, size.height);
-                        },
-                      ),
-                    ],
-                  ),
-                  Transform.translate(
-                    offset: const Offset(0, -13),
-                    child: Text(
-                      '${widget.maxValue} : عدد التكرارات ',
-                      style: TextStyle(
-                          color: isDarkMode
-                              ? Colors.white
-                              : AppColors.primaryColor,
-                          fontSize: 20.0,
-                          fontFamily: 'DIN'),
+                    ),
+                    ConfettiWidget(
+                      confettiController: _confettiController,
+                      blastDirectionality: BlastDirectionality.explosive,
+                      shouldLoop: false,
+                      colors: const [
+                        Colors.red,
+                        Colors.green,
+                        Colors.blue,
+                        Colors.orange,
+                      ],
+                      createParticlePath: (size) {
+                        return Path()
+                          ..moveTo(size.width / 2, size.height / 2)
+                          ..lineTo(size.width, size.height);
+                      },
+                    ),
+                  ],
+                ),
+                Transform.translate(
+                  offset: const Offset(0, -13),
+                  child: Text(
+                    '${widget.maxValue} : عدد التكرارات ',
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.white : AppColors.primaryColor,
+                      fontSize: 20.0,
+                      fontFamily: 'DIN',
                     ),
                   ),
-                ],
-              )),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

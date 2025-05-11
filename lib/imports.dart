@@ -97,7 +97,7 @@ export 'package:serat/Business_Logic/Cubit/azkar_cubit.dart';
 export 'package:serat/Business_Logic/Cubit/azkar_state.dart';
 export 'package:serat/Presentation/Widgets/Azkar/AzkarDotsIndicator.dart';
 export 'package:serat/Presentation/Widgets/Azkar/AzkarHeader.dart';
-export 'package:serat/Presentation/Widgets/Azkar/AzkarPages.dart';
+export 'package:serat/presentation/widgets/azkar/azkar_pages.dart';
 export 'package:serat/Presentation/Widgets/Azkar/AzkarProgressIndicator.dart';
 export 'package:serat/Presentation/Widgets/Azkar/AzkarTitle.dart';
 export 'package:serat/Presentation/Widgets/Azkar/ahadith_category_card.dart';
