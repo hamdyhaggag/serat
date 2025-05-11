@@ -246,11 +246,25 @@ class AzkarModelViewState extends State<AzkarModelView> {
                 decoration: BoxDecoration(
                   gradient:
                       isDarkMode
-                          ? null
-                          : const LinearGradient(
-                            colors: [Color(0xFF3A6073), Color(0xFF16222A)],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
+                          ? LinearGradient(
+                            colors: [
+                              const Color(0xFF1A1A1A),
+                              const Color(0xFF2D2D2D),
+                              const Color(0xFF1A1A1A),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            stops: const [0.0, 0.5, 1.0],
+                          )
+                          : LinearGradient(
+                            colors: [
+                              const Color(0xFFF8F9FA),
+                              const Color(0xFFE9ECEF),
+                              const Color(0xFFF8F9FA),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            stops: const [0.0, 0.5, 1.0],
                           ),
                   boxShadow: [
                     BoxShadow(

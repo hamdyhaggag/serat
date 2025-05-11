@@ -54,7 +54,8 @@ class AzkarPages extends StatelessWidget {
                   },
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isDarkMode ? const Color(0xff2C2C2C) : Colors.white,
+                      color:
+                          isDarkMode ? const Color(0xff2C2C2C) : Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
@@ -73,8 +74,12 @@ class AzkarPages extends StatelessWidget {
                             azkar[index],
                             style: TextStyle(
                               fontSize: screenWidth * 0.06,
-                              color: isDarkMode ? Colors.white : Colors.black,
+                              color:
+                                  isDarkMode
+                                      ? Colors.white
+                                      : const Color(0xFF2D3436),
                               fontWeight: FontWeight.bold,
+                              fontFamily: 'DIN',
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -141,7 +146,8 @@ class AzkarCounter extends StatefulWidget {
   State<AzkarCounter> createState() => _AzkarCounterState();
 }
 
-class _AzkarCounterState extends State<AzkarCounter> with SingleTickerProviderStateMixin {
+class _AzkarCounterState extends State<AzkarCounter>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
@@ -155,10 +161,7 @@ class _AzkarCounterState extends State<AzkarCounter> with SingleTickerProviderSt
     _scaleAnimation = Tween<double>(
       begin: 1.0,
       end: 0.95,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -177,8 +180,9 @@ class _AzkarCounterState extends State<AzkarCounter> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final currentValue = context.select((AzkarCubit cubit) => 
-      cubit.state.counters[widget.currentIndex] ?? 0);
+    final currentValue = context.select(
+      (AzkarCubit cubit) => cubit.state.counters[widget.currentIndex] ?? 0,
+    );
     final progress = currentValue / widget.maxValue;
 
     return ScaleTransition(
@@ -193,7 +197,8 @@ class _AzkarCounterState extends State<AzkarCounter> with SingleTickerProviderSt
               height: 80,
               child: CircularProgressIndicator(
                 value: progress,
-                backgroundColor: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                backgroundColor:
+                    isDarkMode ? Colors.grey[800] : Colors.grey[200],
                 valueColor: AlwaysStoppedAnimation<Color>(
                   widget.isCompleted ? Colors.green : AppColors.primaryColor,
                 ),
@@ -208,14 +213,17 @@ class _AzkarCounterState extends State<AzkarCounter> with SingleTickerProviderSt
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: isDarkMode ? Colors.white : Colors.black,
+                    color: isDarkMode ? Colors.white : const Color(0xFF2D3436),
+                    fontFamily: 'DIN',
                   ),
                 ),
                 Text(
                   '/${widget.maxValue}',
                   style: TextStyle(
                     fontSize: 16,
-                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                    color:
+                        isDarkMode ? Colors.grey[400] : const Color(0xFF636E72),
+                    fontFamily: 'DIN',
                   ),
                 ),
               ],

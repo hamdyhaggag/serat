@@ -21,6 +21,7 @@ class AzkarProgressIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     // Set the total cards count in the state
     BlocProvider.of<AzkarCubit>(context).updateTotalCards(azkar.length);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
@@ -48,9 +49,10 @@ class AzkarProgressIndicator extends StatelessWidget {
                 child: Text(
                   'أكملت %${(progress * 100).round()}',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: isDarkMode ? Colors.white : const Color(0xFF2D3436),
                     fontSize: screenWidth * 0.045,
                     fontFamily: 'DIN',
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
