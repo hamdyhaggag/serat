@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:serat/imports.dart';
-import 'azan1.dart';
-import 'azan2.dart';
-import 'azan3.dart';
+import 'mosque1.dart';
+import 'mosque2.dart';
+import 'mosque3.dart';
 
-class AzanScreen extends StatelessWidget {
+class MosqueScreen extends StatelessWidget {
   final String title;
-  const AzanScreen({super.key, required this.title});
+  const MosqueScreen({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(title: 'الأذان'),
+      appBar: const CustomAppBar(title: 'المسجد'),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -20,32 +20,32 @@ class AzanScreen extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const Azan1()),
+                  MaterialPageRoute(builder: (context) => const Mosque1()),
                 );
               },
-              child: const CustomFolderRow(title: 'رد المؤذن'),
+              child: const CustomFolderRow(title: 'دعاء دخول المسجد'),
             ),
             InkWell(
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const Azan2()),
+                  MaterialPageRoute(builder: (context) => const Mosque2()),
                 );
               },
-              child: const CustomFolderRow(title: 'الدعاء بعد الأذان'),
+              child: const CustomFolderRow(title: 'دعاء الخروج الي الصلاه'),
             ),
             InkWell(
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const Azan3()),
+                  MaterialPageRoute(builder: (context) => const Mosque3()),
                 );
               },
-              child: const CustomFolderRow(title: 'الإكثار من الدعاء'),
+              child: const CustomFolderRow(title: 'دعاء الخروج من المسجد'),
             ),
           ],
         ),
       ),
     );
   }
-}
+} 

@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import '../../data/models/sleep_azkar_model.dart';
-import '../../data/repositories/sleep_azkar_repository.dart';
+import '../../data/models/pray_azkar_model.dart';
+import '../../data/repositories/pray_azkar_repository.dart';
 import 'package:serat/imports.dart';
 
-class SleepAzkarScreen extends StatefulWidget {
+class PrayAzkarScreen extends StatefulWidget {
   final String? category;
-  const SleepAzkarScreen({super.key, this.category});
+  const PrayAzkarScreen({super.key, this.category});
 
   @override
-  State<SleepAzkarScreen> createState() => _SleepAzkarScreenState();
+  State<PrayAzkarScreen> createState() => _PrayAzkarScreenState();
 }
 
-class _SleepAzkarScreenState extends State<SleepAzkarScreen> {
-  final SleepAzkarRepository _repository = SleepAzkarRepository();
-  SleepAzkarData? _azkarData;
+class _PrayAzkarScreenState extends State<PrayAzkarScreen> {
+  final PrayAzkarRepository _repository = PrayAzkarRepository();
+  PrayAzkarData? _azkarData;
   bool _isLoading = true;
   String? _error;
   final PageController _pageController = PageController();
@@ -36,7 +36,7 @@ class _SleepAzkarScreenState extends State<SleepAzkarScreen> {
 
   Future<void> _loadAzkar() async {
     try {
-      final data = await _repository.getSleepAzkar();
+      final data = await _repository.getPrayAzkar();
       setState(() {
         _azkarData = data;
         _isLoading = false;
@@ -86,7 +86,7 @@ class _SleepAzkarScreenState extends State<SleepAzkarScreen> {
     final maxValues = category.azkar.map((azkar) => azkar.count).toList();
 
     return Scaffold(
-      appBar: const CustomAppBar(title: 'أذكار النوم'),
+      appBar: const CustomAppBar(title: 'أذكار الصلاة'),
       body: SafeArea(
         child: BlocProvider(
           create: (context) => AzkarCubit(),

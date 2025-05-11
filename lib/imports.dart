@@ -46,10 +46,6 @@ export 'package:serat/Presentation/screens/azkar_screens/Travel_Azkar/travel_7.d
 export 'package:serat/Presentation/screens/azkar_screens/Travel_Azkar/travel_8.dart';
 export 'package:serat/Presentation/screens/azkar_screens/Travel_Azkar/travel_9.dart';
 
-export 'package:serat/Presentation/screens/azkar_screens/Sleep_Azkar/sleep_1.dart';
-export 'package:serat/Presentation/screens/azkar_screens/Sleep_Azkar/sleep_2.dart';
-export 'package:serat/Presentation/screens/azkar_screens/Sleep_Azkar/sleep_3.dart';
-export 'package:serat/Presentation/screens/azkar_screens/Sleep_Azkar/sleep_4.dart';
 export 'package:serat/Presentation/Widgets/Shared/custom_folder_row.dart';
 export 'package:serat/Presentation/screens/azkar_screens/Mix_Azkar/Roqia/roqia_1.dart';
 export 'package:serat/Presentation/screens/azkar_screens/Mix_Azkar/Roqia/roqia_2.dart';
@@ -102,3 +98,9 @@ export 'package:serat/Presentation/Widgets/Azkar/ahadith_category_card.dart';
 export 'package:serat/Presentation/Config/constants/colors.dart';
 export 'package:serat/Data/utils/functions.dart';
 export 'package:serat/Presentation/Config/constants/app_text.dart';
+export 'package:serat/features/azkar/data/models/sleep_azkar_model.dart';
+export 'package:serat/features/azkar/data/repositories/sleep_azkar_repository.dart';
+export 'package:serat/features/azkar/presentation/screens/sleep_azkar_screen.dart';
+export 'package:serat/features/azkar/data/models/pray_azkar_model.dart';
+export 'package:serat/features/azkar/data/repositories/pray_azkar_repository.dart';
+export 'package:serat/features/azkar/presentation/screens/pray_azkar_screen.dart';

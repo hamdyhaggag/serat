@@ -18,7 +18,7 @@ class SleepAzkar extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const Sleep1(title: 'أذكار النوم'),
+                    builder: (context) => const SleepAzkarScreen(),
                   ),
                 );
               },
@@ -28,7 +28,11 @@ class SleepAzkar extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const Sleep2()),
+                  MaterialPageRoute(
+                    builder:
+                        (context) =>
+                            const SleepAzkarScreen(category: 'night_turning'),
+                  ),
                 );
               },
               child: const CustomFolderRow(title: 'الدعاء إذا تقلب ليلاً'),
@@ -37,7 +41,12 @@ class SleepAzkar extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const Sleep3()),
+                  MaterialPageRoute(
+                    builder:
+                        (context) => const SleepAzkarScreen(
+                          category: 'nightmare_prayer',
+                        ),
+                  ),
                 );
               },
               child: const CustomFolderRow(title: 'دعاء الفزع في النوم'),
@@ -46,11 +55,15 @@ class SleepAzkar extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const Sleep4()),
+                  MaterialPageRoute(
+                    builder:
+                        (context) =>
+                            const SleepAzkarScreen(category: 'dream_prayer'),
+                  ),
                 );
               },
               child: const CustomFolderRow(
-                title: ' ما يفعل من رأى الرؤيا اأو الحلم',
+                title: 'ما يفعل من رأى الرؤيا او الحلم',
               ),
             ),
           ],
