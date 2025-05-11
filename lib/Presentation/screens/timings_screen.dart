@@ -995,8 +995,7 @@ class _TimingsScreenState extends State<TimingsScreen>
             ),
             child: Icon(
               _getPrayerIcon(name),
-              color:
-                  isDarkMode ? AppColors.primaryColor : AppColors.primaryColor,
+              color: isDarkMode ? Colors.white : AppColors.primaryColor,
               size: 24,
             ),
           ),
@@ -1005,16 +1004,13 @@ class _TimingsScreenState extends State<TimingsScreen>
             name,
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: isDarkMode ? AppColors.primaryColor : AppColors.primaryColor,
+            color: isDarkMode ? Colors.white : AppColors.primaryColor,
           ),
           const SizedBox(height: 4),
           AppText(
             _formatTime12Hour(prayerTime),
             fontSize: 12,
-            color:
-                isDarkMode
-                    ? AppColors.primaryColor.withOpacity(0.7)
-                    : Colors.grey[600],
+            color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
           ),
         ],
       ),
@@ -1083,10 +1079,7 @@ class _TimingsScreenState extends State<TimingsScreen>
               ),
               child: Icon(
                 icon,
-                color:
-                    isDarkMode
-                        ? AppColors.primaryColor
-                        : AppColors.primaryColor,
+                color: isDarkMode ? Colors.white : AppColors.primaryColor,
                 size: 28,
               ),
             ),
@@ -1095,8 +1088,7 @@ class _TimingsScreenState extends State<TimingsScreen>
               title,
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color:
-                  isDarkMode ? AppColors.primaryColor : AppColors.primaryColor,
+              color: isDarkMode ? Colors.white : AppColors.primaryColor,
             ),
           ],
         ),
@@ -1460,10 +1452,7 @@ class _TimingsScreenState extends State<TimingsScreen>
                 ),
                 child: Icon(
                   icon,
-                  color:
-                      isDarkMode
-                          ? AppColors.primaryColor
-                          : AppColors.primaryColor,
+                  color: isDarkMode ? Colors.white : AppColors.primaryColor,
                   size: 20,
                 ),
               ),
@@ -1483,7 +1472,7 @@ class _TimingsScreenState extends State<TimingsScreen>
                       AppText(
                         subtitle,
                         fontSize: 14,
-                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                        color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
                       ),
                     ],
                   ],
@@ -1492,7 +1481,7 @@ class _TimingsScreenState extends State<TimingsScreen>
               Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
-                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
               ),
             ],
           ),
@@ -2068,8 +2057,7 @@ class _TimingsScreenState extends State<TimingsScreen>
             ),
             child: Icon(
               _getPrayerIcon(name),
-              color:
-                  isDarkMode ? AppColors.primaryColor : AppColors.primaryColor,
+              color: isDarkMode ? Colors.white : AppColors.primaryColor,
               size: 24,
             ),
           ),
@@ -2082,19 +2070,13 @@ class _TimingsScreenState extends State<TimingsScreen>
                   name,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color:
-                      isDarkMode
-                          ? AppColors.primaryColor
-                          : AppColors.primaryColor,
+                  color: isDarkMode ? Colors.white : AppColors.primaryColor,
                 ),
                 const SizedBox(height: 4),
                 AppText(
                   _formatTime12Hour(prayerTime),
                   fontSize: 14,
-                  color:
-                      isDarkMode
-                          ? AppColors.primaryColor.withOpacity(0.7)
-                          : Colors.grey[600],
+                  color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
                 ),
               ],
             ),
@@ -2129,10 +2111,7 @@ class _TimingsScreenState extends State<TimingsScreen>
               child: AppText(
                 'القادمة',
                 fontSize: 12,
-                color:
-                    isDarkMode
-                        ? AppColors.primaryColor
-                        : AppColors.primaryColor,
+                color: isDarkMode ? Colors.white : AppColors.primaryColor,
               ),
             ),
         ],
