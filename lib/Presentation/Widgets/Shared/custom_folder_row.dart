@@ -14,23 +14,26 @@ class CustomFolderRow extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.only(right: 12, top: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              AppText(
-                title,
-                fontSize: 18,
-                fontFamily: 'DIN',
-                fontWeight: FontWeight.w500,
-                color: isDarkMode ? Colors.white : AppColors.primaryColor,
-              ),
-              SizedBox(width: 22.w),
-              Icon(
-                FontAwesomeIcons.fileLines,
-                color: isDarkMode ? Colors.white : AppColors.primaryColor,
-              ),
-            ],
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Icon(
+                  FontAwesomeIcons.fileLines,
+                  color: isDarkMode ? Colors.white : AppColors.primaryColor,
+                ),
+                SizedBox(width: 22.w),
+                AppText(
+                  title,
+                  fontSize: 18,
+                  fontFamily: 'DIN',
+                  fontWeight: FontWeight.w500,
+                  color: isDarkMode ? Colors.white : AppColors.primaryColor,
+                ),
+              ],
+            ),
           ),
         ),
         SizedBox(height: 10.h),
