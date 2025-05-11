@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../business_logic/cubit/azkar_cubit.dart';
-import '../../../business_logic/cubit/azkar_state.dart';
+import '../../../Business_Logic/Cubit/azkar_cubit.dart';
+import '../../../Business_Logic/Cubit/azkar_state.dart';
 
 class AzkarDotsIndicator extends StatelessWidget {
   final double screenWidth;
@@ -29,8 +29,8 @@ class AzkarDotsIndicator extends StatelessWidget {
                 shape: BoxShape.circle,
                 color:
                     index == state.currentIndex
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.3),
+                        ? Colors.white.withAlpha(255)
+                        : Colors.black.withAlpha(51),
               ),
             ),
           ),

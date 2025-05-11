@@ -1,12 +1,16 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:serat/imports.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:serat/presentation/widgets/azkar/azkar_pages.dart';
 
 class AzkarModelView extends StatefulWidget {
   final String title;
   final List<String> azkarList;
   final List<int> maxValues;
   final VoidCallback? onRetry;
+  final AzkarState? initialAzkarState;
+  final void Function(AzkarState)? onProgressChanged;
 
   const AzkarModelView({
     super.key,
@@ -14,6 +18,8 @@ class AzkarModelView extends StatefulWidget {
     required this.azkarList,
     required this.maxValues,
     this.onRetry,
+    this.initialAzkarState,
+    this.onProgressChanged,
   });
 
   @override
@@ -30,7 +36,9 @@ class AzkarModelViewState extends State<AzkarModelView> {
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 1),
     );
-    _pageController = PageController(initialPage: 0);
+    _pageController = PageController(
+      initialPage: widget.initialAzkarState?.currentIndex ?? 0,
+    );
   }
 
   @override
@@ -38,6 +46,16 @@ class AzkarModelViewState extends State<AzkarModelView> {
     _confettiController.dispose();
     _pageController.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveAzkarState(AzkarState state) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('currentIndex', state.currentIndex);
+    await prefs.setStringList(
+      'completedCards',
+      state.completedCards.map((e) => e.toString()).toList(),
+    );
+    await prefs.setInt('totalCards', state.totalCards);
   }
 
   @override
@@ -85,6 +103,10 @@ class AzkarModelViewState extends State<AzkarModelView> {
             if (progress == 1.0) {
               _confettiController.play();
             }
+            _saveAzkarState(state);
+            if (widget.onProgressChanged != null) {
+              widget.onProgressChanged!(state);
+            }
             setState(() {});
           },
           child: Stack(
@@ -99,6 +121,13 @@ class AzkarModelViewState extends State<AzkarModelView> {
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                           ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(26),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
@@ -114,6 +143,7 @@ class AzkarModelViewState extends State<AzkarModelView> {
                       azkar: azkar,
                       pageController: _pageController,
                       maxValues: widget.maxValues,
+                      initialAzkarState: widget.initialAzkarState,
                     ),
                     SizedBox(height: screenHeight * 0.05),
                     AzkarProgressIndicator(

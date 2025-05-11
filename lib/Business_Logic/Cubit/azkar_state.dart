@@ -1,25 +1,34 @@
 class AzkarState {
   final int currentIndex;
-  final int completedCards;
+  final List<int> completedCards;
   final int totalCards;
+  final Map<int, int> counters;
+  final Map<int, int> maxValues;
 
   AzkarState({
     required this.currentIndex,
-    this.completedCards = 0,
+    this.completedCards = const [],
     this.totalCards = 0,
+    this.counters = const {},
+    this.maxValues = const {},
   });
 
-  double get progress => totalCards > 0 ? completedCards / totalCards : 0;
+  double get progress =>
+      totalCards > 0 ? completedCards.length / totalCards : 0;
 
   AzkarState copyWith({
     int? currentIndex,
-    int? completedCards,
+    List<int>? completedCards,
     int? totalCards,
+    Map<int, int>? counters,
+    Map<int, int>? maxValues,
   }) {
     return AzkarState(
       currentIndex: currentIndex ?? this.currentIndex,
       completedCards: completedCards ?? this.completedCards,
       totalCards: totalCards ?? this.totalCards,
+      counters: counters ?? this.counters,
+      maxValues: maxValues ?? this.maxValues,
     );
   }
 }

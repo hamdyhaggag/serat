@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serat/Business_Logic/Cubit/azkar_cubit.dart';
 import 'package:serat/Business_Logic/Cubit/azkar_state.dart';
+import 'package:serat/Presentation/Config/constants/colors.dart';
 
 class AzkarProgressIndicator extends StatelessWidget {
   final double screenWidth;
@@ -36,7 +37,9 @@ class AzkarProgressIndicator extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: progress,
                     backgroundColor: Colors.grey[300],
-                    color: Colors.blue,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.primaryColor,
+                    ),
                     minHeight: screenWidth * 0.025,
                   ),
                 ),

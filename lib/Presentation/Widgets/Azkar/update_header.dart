@@ -19,12 +19,14 @@ class UpdateHeader extends StatelessWidget {
               AzkarProgressIndicator(
                 screenWidth: screenWidth,
                 screenHeight: MediaQuery.of(context).size.height,
-                azkar: [], // Pass the actual azkar list here
+                azkar: const [], // Pass the actual azkar list here
               ),
               // Display check icon state or other information
               // For example:
               Icon(
-                state.completedCards > 0 ? Icons.check_circle : Icons.circle,
+                state.completedCards.isNotEmpty
+                    ? Icons.check_circle
+                    : Icons.circle,
                 color: Colors.green,
               ),
             ],

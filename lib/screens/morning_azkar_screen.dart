@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/morning_azkar.dart';
 import '../services/morning_azkar_service.dart';
-import '../business_logic/cubit/azkar_cubit.dart';
-import '../business_logic/cubit/azkar_state.dart';
-import '../presentation/widgets/azkar/azkar_card.dart';
+import '../Business_Logic/Cubit/azkar_cubit.dart';
+import '../Business_Logic/Cubit/azkar_state.dart';
 import '../presentation/widgets/azkar/azkar_header.dart';
 import '../presentation/widgets/azkar/azkar_title.dart';
 import '../presentation/widgets/azkar/azkar_pages.dart';
@@ -28,6 +27,9 @@ class _MorningAzkarScreenState extends State<MorningAzkarScreen> {
   void initState() {
     super.initState();
     _loadAzkar();
+    _pageController.addListener(() {
+      debugPrint('Page changed to: ${_pageController.page}');
+    });
   }
 
   Future<void> _loadAzkar() async {
@@ -39,7 +41,7 @@ class _MorningAzkarScreenState extends State<MorningAzkarScreen> {
         });
       }
     } catch (e) {
-      print('Error loading morning azkar: $e');
+      debugPrint('Error loading morning azkar: $e');
     }
   }
 
@@ -75,12 +77,25 @@ class _MorningAzkarScreenState extends State<MorningAzkarScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Theme.of(context).primaryColor.withOpacity(0.9),
-                      Theme.of(context).primaryColor.withOpacity(0.7),
+                      Theme.of(context).primaryColor.withAlpha(150),
+                      Theme.of(context).primaryColor.withAlpha(100),
                     ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(26), // 0.1 opacity
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withAlpha(26), // 0.1 opacity
+                      blurRadius: 10,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
