@@ -922,14 +922,32 @@ class _RecitersScreenState extends State<RecitersScreen>
       showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
-        builder:
-            (context) => Container(
+        enableDrag: true,
+        isDismissible: true,
+        builder: (context) => WillPopScope(
+          onWillPop: () async {
+            await _audioPlayer.stop();
+            setState(() {
+              _isPlaying = false;
+            });
+            return true;
+          },
+          child: NotificationListener<DraggableScrollableNotification>(
+            onNotification: (notification) {
+              if (notification.extent <= 0.0) {
+                _audioPlayer.stop();
+                setState(() {
+                  _isPlaying = false;
+                });
+              }
+              return true;
+            },
+            child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color:
-                    Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xff2F2F2F)
-                        : Colors.white,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xff2F2F2F)
+                    : Colors.white,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(20),
                 ),
@@ -1127,9 +1145,10 @@ class _RecitersScreenState extends State<RecitersScreen>
                                     thumbShape: const RoundSliderThumbShape(
                                       enabledThumbRadius: 6,
                                     ),
-                                    overlayShape: const RoundSliderOverlayShape(
-                                      overlayRadius: 12,
-                                    ),
+                                    overlayShape:
+                                        const RoundSliderOverlayShape(
+                                          overlayRadius: 12,
+                                        ),
                                     activeTrackColor: AppColors.primaryColor,
                                     inactiveTrackColor: Colors.grey[300],
                                     thumbColor: AppColors.primaryColor,
@@ -1137,10 +1156,12 @@ class _RecitersScreenState extends State<RecitersScreen>
                                         .withOpacity(0.2),
                                   ),
                                   child: Slider(
-                                    value: position.inSeconds.toDouble().clamp(
-                                      0.0,
-                                      duration.inSeconds.toDouble(),
-                                    ),
+                                    value: position.inSeconds
+                                        .toDouble()
+                                        .clamp(
+                                          0.0,
+                                          duration.inSeconds.toDouble(),
+                                        ),
                                     max: duration.inSeconds.toDouble(),
                                     onChanged: (value) async {
                                       try {
@@ -1206,6 +1227,8 @@ class _RecitersScreenState extends State<RecitersScreen>
                 ],
               ),
             ),
+          ),
+        ),
       );
 
       // Start playing
