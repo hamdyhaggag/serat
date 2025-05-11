@@ -12,7 +12,7 @@ class RadioScreen extends StatefulWidget {
 }
 
 class _RadioScreenState extends State<RadioScreen> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  late final AudioPlayer _audioPlayer;
   final RadioService _radioService = RadioService();
   bool _isPlaying = false;
   String _currentStation = '';
@@ -24,7 +24,13 @@ class _RadioScreenState extends State<RadioScreen> {
   @override
   void initState() {
     super.initState();
+    _initAudioPlayer();
     _loadRadioStations();
+  }
+
+  Future<void> _initAudioPlayer() async {
+    _audioPlayer = AudioPlayer();
+    await _audioPlayer.setReleaseMode(ReleaseMode.stop);
     _audioPlayer.onPlayerStateChanged.listen((state) {
       if (mounted) {
         setState(() {
