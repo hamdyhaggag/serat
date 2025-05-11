@@ -924,311 +924,333 @@ class _RecitersScreenState extends State<RecitersScreen>
         backgroundColor: Colors.transparent,
         enableDrag: true,
         isDismissible: true,
-        builder: (context) => WillPopScope(
-          onWillPop: () async {
-            await _audioPlayer.stop();
-            setState(() {
-              _isPlaying = false;
-            });
-            return true;
-          },
-          child: NotificationListener<DraggableScrollableNotification>(
-            onNotification: (notification) {
-              if (notification.extent <= 0.0) {
-                _audioPlayer.stop();
+        builder:
+            (context) => WillPopScope(
+              onWillPop: () async {
+                await _audioPlayer.stop();
                 setState(() {
                   _isPlaying = false;
                 });
-              }
-              return true;
-            },
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xff2F2F2F)
-                    : Colors.white,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Handle bar
-                  Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 20),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
+                return true;
+              },
+              child: NotificationListener<DraggableScrollableNotification>(
+                onNotification: (notification) {
+                  if (notification.extent <= 0.0) {
+                    _audioPlayer.stop();
+                    setState(() {
+                      _isPlaying = false;
+                    });
+                  }
+                  return true;
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xff2F2F2F)
+                            : Colors.white,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(20),
                     ),
-                  ),
-                  // Reciter info
-                  Row(
-                    children: [
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryColor.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primaryColor.withOpacity(0.2),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: AppText(
-                            reciter.letter,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primaryColor,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            AppText(
-                              reciter.name,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            const SizedBox(height: 4),
-                            AppText(
-                              '${moshaf.name} - ${surahs[selectedSurah]}',
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _audioPlayer.stop();
-                          setState(() {
-                            _isPlaying = false;
-                          });
-                        },
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, -5),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  // Audio controls
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildControlButton(
-                        icon: Icons.replay_10,
-                        onPressed: () async {
-                          try {
-                            final position =
-                                await _audioPlayer.getCurrentPosition();
-                            if (position != null) {
-                              final newPosition =
-                                  position - const Duration(seconds: 10);
-                              if (newPosition.inSeconds > 0) {
-                                await _audioPlayer.seek(newPosition);
-                              } else {
-                                await _audioPlayer.seek(Duration.zero);
-                              }
-                            }
-                          } catch (e) {
-                            debugPrint('Error seeking backward: $e');
-                          }
-                        },
-                      ),
-                      const SizedBox(width: 16),
+                      // Handle bar
                       Container(
-                        width: 64,
-                        height: 64,
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 20),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryColor,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primaryColor.withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            _isPlaying ? Icons.pause : Icons.play_arrow,
-                            color: Colors.white,
-                            size: 32,
-                          ),
-                          onPressed: () async {
-                            try {
-                              if (_isPlaying) {
-                                await _audioPlayer.pause();
-                              } else {
-                                await _audioPlayer.resume();
-                              }
-                              setState(() {
-                                _isPlaying = !_isPlaying;
-                              });
-                            } catch (e) {
-                              debugPrint('Error toggling play state: $e');
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: AppText(
-                                    'حدث خطأ أثناء التحكم في التشغيل',
-                                    color: Colors.white,
-                                  ),
-                                  backgroundColor: Colors.red,
-                                  duration: Duration(seconds: 3),
-                                ),
-                              );
-                            }
-                          },
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      _buildControlButton(
-                        icon: Icons.forward_10,
-                        onPressed: () async {
-                          try {
-                            final position =
-                                await _audioPlayer.getCurrentPosition();
-                            final duration = await _audioPlayer.getDuration();
-                            if (position != null && duration != null) {
-                              final newPosition =
-                                  position + const Duration(seconds: 10);
-                              if (newPosition <= duration) {
-                                await _audioPlayer.seek(newPosition);
-                              } else {
-                                await _audioPlayer.seek(duration);
-                              }
-                            }
-                          } catch (e) {
-                            debugPrint('Error seeking forward: $e');
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  // Progress bar
-                  StreamBuilder<Duration?>(
-                    stream: _audioPlayer.onPositionChanged,
-                    builder: (context, snapshot) {
-                      final position = snapshot.data ?? Duration.zero;
-                      return StreamBuilder<Duration?>(
-                        stream: _audioPlayer.onDurationChanged,
-                        builder: (context, snapshot) {
-                          final duration = snapshot.data ?? Duration.zero;
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (duration.inSeconds > 0) ...[
-                                SliderTheme(
-                                  data: SliderThemeData(
-                                    trackHeight: 4,
-                                    thumbShape: const RoundSliderThumbShape(
-                                      enabledThumbRadius: 6,
-                                    ),
-                                    overlayShape:
-                                        const RoundSliderOverlayShape(
-                                          overlayRadius: 12,
-                                        ),
-                                    activeTrackColor: AppColors.primaryColor,
-                                    inactiveTrackColor: Colors.grey[300],
-                                    thumbColor: AppColors.primaryColor,
-                                    overlayColor: AppColors.primaryColor
-                                        .withOpacity(0.2),
+                      // Reciter info
+                      Row(
+                        children: [
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryColor.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primaryColor.withOpacity(
+                                    0.2,
                                   ),
-                                  child: Slider(
-                                    value: position.inSeconds
-                                        .toDouble()
-                                        .clamp(
-                                          0.0,
-                                          duration.inSeconds.toDouble(),
-                                        ),
-                                    max: duration.inSeconds.toDouble(),
-                                    onChanged: (value) async {
-                                      try {
-                                        await _audioPlayer.seek(
-                                          Duration(seconds: value.toInt()),
-                                        );
-                                      } catch (e) {
-                                        debugPrint('Error seeking: $e');
-                                      }
-                                    },
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      AppText(
-                                        '${position.inMinutes}:${(position.inSeconds % 60).toString().padLeft(2, '0')}',
-                                        fontSize: 12,
-                                        color: Colors.grey[600],
-                                      ),
-                                      AppText(
-                                        '${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}',
-                                        fontSize: 12,
-                                        color: Colors.grey[600],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ] else ...[
-                                const SizedBox(height: 20),
-                                StreamBuilder<PlayerState>(
-                                  stream: _audioPlayer.onPlayerStateChanged,
-                                  builder: (context, snapshot) {
-                                    final state = snapshot.data;
-                                    if (state == PlayerState.playing) {
-                                      return const SizedBox.shrink();
-                                    }
-                                    return Column(
-                                      children: [
-                                        const CircularProgressIndicator(),
-                                        const SizedBox(height: 16),
-                                        AppText(
-                                          'جاري تحميل التلاوة...',
-                                          fontSize: 14,
-                                          color: Colors.grey[600],
-                                        ),
-                                      ],
-                                    );
-                                  },
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
-                            ],
+                            ),
+                            child: Center(
+                              child: AppText(
+                                reciter.letter,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primaryColor,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                AppText(
+                                  reciter.name,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                const SizedBox(height: 4),
+                                AppText(
+                                  '${moshaf.name} - ${surahs[selectedSurah]}',
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _audioPlayer.stop();
+                              setState(() {
+                                _isPlaying = false;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      // Audio controls
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildControlButton(
+                            icon: Icons.replay_10,
+                            onPressed: () async {
+                              try {
+                                final position =
+                                    await _audioPlayer.getCurrentPosition();
+                                if (position != null) {
+                                  final newPosition =
+                                      position - const Duration(seconds: 10);
+                                  if (newPosition.inSeconds > 0) {
+                                    await _audioPlayer.seek(newPosition);
+                                  } else {
+                                    await _audioPlayer.seek(Duration.zero);
+                                  }
+                                }
+                              } catch (e) {
+                                debugPrint('Error seeking backward: $e');
+                              }
+                            },
+                          ),
+                          const SizedBox(width: 16),
+                          StreamBuilder<PlayerState>(
+                            stream: _audioPlayer.onPlayerStateChanged,
+                            builder: (context, snapshot) {
+                              final state = snapshot.data;
+                              final isPlaying = state == PlayerState.playing;
+
+                              return Container(
+                                width: 64,
+                                height: 64,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryColor,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.primaryColor.withOpacity(
+                                        0.3,
+                                      ),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: IconButton(
+                                  icon: Icon(
+                                    isPlaying ? Icons.pause : Icons.play_arrow,
+                                    color: Colors.white,
+                                    size: 32,
+                                  ),
+                                  onPressed: () async {
+                                    try {
+                                      if (isPlaying) {
+                                        await _audioPlayer.pause();
+                                      } else {
+                                        await _audioPlayer.resume();
+                                      }
+                                      setState(() {
+                                        _isPlaying = !isPlaying;
+                                      });
+                                    } catch (e) {
+                                      debugPrint(
+                                        'Error toggling play state: $e',
+                                      );
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: AppText(
+                                            'حدث خطأ أثناء التحكم في التشغيل',
+                                            color: Colors.white,
+                                          ),
+                                          backgroundColor: Colors.red,
+                                          duration: Duration(seconds: 3),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(width: 16),
+                          _buildControlButton(
+                            icon: Icons.forward_10,
+                            onPressed: () async {
+                              try {
+                                final position =
+                                    await _audioPlayer.getCurrentPosition();
+                                final duration =
+                                    await _audioPlayer.getDuration();
+                                if (position != null && duration != null) {
+                                  final newPosition =
+                                      position + const Duration(seconds: 10);
+                                  if (newPosition <= duration) {
+                                    await _audioPlayer.seek(newPosition);
+                                  } else {
+                                    await _audioPlayer.seek(duration);
+                                  }
+                                }
+                              } catch (e) {
+                                debugPrint('Error seeking forward: $e');
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      // Progress bar
+                      StreamBuilder<Duration?>(
+                        stream: _audioPlayer.onPositionChanged,
+                        builder: (context, snapshot) {
+                          final position = snapshot.data ?? Duration.zero;
+                          return StreamBuilder<Duration?>(
+                            stream: _audioPlayer.onDurationChanged,
+                            builder: (context, snapshot) {
+                              final duration = snapshot.data ?? Duration.zero;
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (duration.inSeconds > 0) ...[
+                                    SliderTheme(
+                                      data: SliderThemeData(
+                                        trackHeight: 4,
+                                        thumbShape: const RoundSliderThumbShape(
+                                          enabledThumbRadius: 6,
+                                        ),
+                                        overlayShape:
+                                            const RoundSliderOverlayShape(
+                                              overlayRadius: 12,
+                                            ),
+                                        activeTrackColor:
+                                            AppColors.primaryColor,
+                                        inactiveTrackColor: Colors.grey[300],
+                                        thumbColor: AppColors.primaryColor,
+                                        overlayColor: AppColors.primaryColor
+                                            .withOpacity(0.2),
+                                      ),
+                                      child: Slider(
+                                        value: position.inSeconds
+                                            .toDouble()
+                                            .clamp(
+                                              0.0,
+                                              duration.inSeconds.toDouble(),
+                                            ),
+                                        max: duration.inSeconds.toDouble(),
+                                        onChanged: (value) async {
+                                          try {
+                                            await _audioPlayer.seek(
+                                              Duration(seconds: value.toInt()),
+                                            );
+                                          } catch (e) {
+                                            debugPrint('Error seeking: $e');
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          AppText(
+                                            '${position.inMinutes}:${(position.inSeconds % 60).toString().padLeft(2, '0')}',
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                          ),
+                                          AppText(
+                                            '${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}',
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ] else ...[
+                                    const SizedBox(height: 20),
+                                    StreamBuilder<PlayerState>(
+                                      stream: _audioPlayer.onPlayerStateChanged,
+                                      builder: (context, snapshot) {
+                                        final state = snapshot.data;
+                                        if (state == PlayerState.playing ||
+                                            state == PlayerState.completed ||
+                                            state == PlayerState.paused) {
+                                          return const SizedBox.shrink();
+                                        }
+                                        return Column(
+                                          children: [
+                                            const CircularProgressIndicator(),
+                                            const SizedBox(height: 16),
+                                            AppText(
+                                              'جاري تحميل التلاوة...',
+                                              fontSize: 14,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ],
+                              );
+                            },
                           );
                         },
-                      );
-                    },
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
       );
 
       // Start playing
