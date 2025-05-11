@@ -4,6 +4,7 @@ import 'package:serat/Presentation/screens/hijri_calendar_screen.dart';
 import 'package:serat/Presentation/screens/radio_screen.dart';
 import 'package:serat/Presentation/screens/quran_video_screen.dart';
 import 'package:serat/Presentation/screens/reciters_screen.dart';
+import 'package:serat/Presentation/screens/about_screen.dart';
 import 'package:serat/imports.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -37,6 +38,7 @@ class _TimingsScreenState extends State<TimingsScreen>
   Duration _timeUntilNextPrayer = Duration.zero;
   String _nextPrayerName = '';
   DateTime? _nextPrayerTime;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -271,7 +273,9 @@ class _TimingsScreenState extends State<TimingsScreen>
         final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
         return Scaffold(
+          key: _scaffoldKey,
           backgroundColor: isDarkMode ? const Color(0xff1F1F1F) : Colors.white,
+          drawer: _buildDrawer(isDarkMode),
           endDrawer: _buildDrawer(isDarkMode),
           body: Stack(
             children: [
@@ -357,15 +361,27 @@ class _TimingsScreenState extends State<TimingsScreen>
                                                 padding: EdgeInsets.zero,
                                                 constraints:
                                                     const BoxConstraints(),
-                                                icon: const Icon(
-                                                  Icons.menu,
-                                                  color: Colors.white,
-                                                  size: 24,
+                                                icon: Container(
+                                                  padding: const EdgeInsets.all(
+                                                    8,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white
+                                                        .withOpacity(0.1),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          12,
+                                                        ),
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.menu,
+                                                    color: Colors.white,
+                                                    size: 24,
+                                                  ),
                                                 ),
                                                 onPressed: () {
-                                                  Scaffold.of(
-                                                    context,
-                                                  ).openEndDrawer();
+                                                  _scaffoldKey.currentState
+                                                      ?.openDrawer();
                                                 },
                                               ),
                                               const SizedBox(width: 12),
@@ -1166,12 +1182,10 @@ class _TimingsScreenState extends State<TimingsScreen>
   Widget _buildDrawer(bool isDarkMode) {
     return Drawer(
       backgroundColor: isDarkMode ? const Color(0xff1F1F1F) : Colors.white,
-      child: ListView(
-        shrinkWrap: true,
-        padding: EdgeInsets.zero,
-        children: <Widget>[
+      child: Column(
+        children: [
           Container(
-            height: 200,
+            height: 220,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors:
@@ -1184,140 +1198,222 @@ class _TimingsScreenState extends State<TimingsScreen>
             ),
             child: DrawerHeader(
               margin: EdgeInsets.zero,
-              padding: const EdgeInsets.all(2),
-              child: Center(
-                child: Hero(
-                  tag: 'app_logo',
-                  child: Image.asset(
-                    'assets/logo.png',
-                    width: 450,
-                    height: 450,
-                    fit: BoxFit.contain,
-                  ),
+              padding: const EdgeInsets.all(20),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Hero(
+                        tag: 'app_logo',
+                        child: Image.asset(
+                          'assets/logo.png',
+                          width: 90,
+                          height: 90,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 5,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: AppText(
+                        'تطبيق صراط',
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color:
+                            isDarkMode ? Colors.white : AppColors.primaryColor,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-          _buildDrawerItem(
-            icon: Icons.timer,
-            title: 'طريقة تحديد مواقيت الصلاة',
-            onTap: () => showMethods(context),
-            isDarkMode: isDarkMode,
-          ),
-          const CustomSpace(),
-          _buildDrawerItem(
-            icon: Icons.sunny,
-            title: 'التنبية لأذكار الصباح',
-            subtitle:
-                selectedTimeMorning != null
-                    ? DateFormat('hh:mma').format(
-                      DateTime(
-                        0,
-                        1,
-                        1,
-                        selectedTimeMorning!.hour,
-                        selectedTimeMorning!.minute,
-                      ),
-                    )
-                    : 'اختر التوقيت',
-            onTap: () async {
-              final pickedTime = await showTimePicker(
-                context: context,
-                initialTime: selectedTimeMorning ?? TimeOfDay.now(),
-              );
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                _buildDrawerSection(
+                  title: 'الإعدادات',
+                  items: [
+                    _buildDrawerItem(
+                      icon: Icons.timer,
+                      title: 'طريقة تحديد مواقيت الصلاة',
+                      onTap: () => showMethods(context),
+                      isDarkMode: isDarkMode,
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.sunny,
+                      title: 'التنبية لأذكار الصباح',
+                      subtitle:
+                          selectedTimeMorning != null
+                              ? DateFormat('hh:mma').format(
+                                DateTime(
+                                  0,
+                                  1,
+                                  1,
+                                  selectedTimeMorning!.hour,
+                                  selectedTimeMorning!.minute,
+                                ),
+                              )
+                              : 'اختر التوقيت',
+                      onTap: () async {
+                        final pickedTime = await showTimePicker(
+                          context: context,
+                          initialTime: selectedTimeMorning ?? TimeOfDay.now(),
+                        );
 
-              if (pickedTime != null) {
-                setState(() {
-                  selectedTimeMorning = pickedTime;
-                });
+                        if (pickedTime != null) {
+                          setState(() {
+                            selectedTimeMorning = pickedTime;
+                          });
 
-                CacheHelper.saveData(
-                  key: 'Morning',
-                  value:
-                      "${selectedTimeMorning!.hour}:${selectedTimeMorning!.minute}",
-                );
-              }
-            },
-            isDarkMode: isDarkMode,
-          ),
-          const CustomSpace(),
-          _buildDrawerItem(
-            icon: Icons.nightlight_round,
-            title: 'التنبية لأذكار المساء',
-            subtitle:
-                selectedTimeEvening != null
-                    ? DateFormat('hh:mma').format(
-                      DateTime(
-                        0,
-                        1,
-                        1,
-                        selectedTimeEvening!.hour,
-                        selectedTimeEvening!.minute,
-                      ),
-                    )
-                    : 'اختر التوقيت',
-            onTap: () async {
-              final pickedTime = await showTimePicker(
-                context: context,
-                initialTime: selectedTimeEvening ?? TimeOfDay.now(),
-              );
+                          CacheHelper.saveData(
+                            key: 'Morning',
+                            value:
+                                "${selectedTimeMorning!.hour}:${selectedTimeMorning!.minute}",
+                          );
+                        }
+                      },
+                      isDarkMode: isDarkMode,
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.nightlight_round,
+                      title: 'التنبية لأذكار المساء',
+                      subtitle:
+                          selectedTimeEvening != null
+                              ? DateFormat('hh:mma').format(
+                                DateTime(
+                                  0,
+                                  1,
+                                  1,
+                                  selectedTimeEvening!.hour,
+                                  selectedTimeEvening!.minute,
+                                ),
+                              )
+                              : 'اختر التوقيت',
+                      onTap: () async {
+                        final pickedTime = await showTimePicker(
+                          context: context,
+                          initialTime: selectedTimeEvening ?? TimeOfDay.now(),
+                        );
 
-              if (pickedTime != null) {
-                setState(() {
-                  selectedTimeEvening = pickedTime;
-                });
+                        if (pickedTime != null) {
+                          setState(() {
+                            selectedTimeEvening = pickedTime;
+                          });
 
-                CacheHelper.saveData(
-                  key: 'Evening',
-                  value:
-                      "${selectedTimeEvening!.hour}:${selectedTimeEvening!.minute}",
-                );
-              }
-            },
-            isDarkMode: isDarkMode,
-          ),
-          const CustomSpace(),
-          _buildDrawerItem(
-            icon: Icons.info_outline,
-            title: 'حول التطبيق',
-            onTap: () => _showAboutDialog(context, isDarkMode),
-            isDarkMode: isDarkMode,
-          ),
-          const CustomSpace(),
-          _buildDrawerItem(
-            icon: Icons.star,
-            title: 'تقييم التطبيق',
-            onTap:
-                () => launchUrl(
-                  Uri.parse(
-                    'https://play.google.com/store/apps/details?id=com.serat.app',
-                  ),
+                          CacheHelper.saveData(
+                            key: 'Evening',
+                            value:
+                                "${selectedTimeEvening!.hour}:${selectedTimeEvening!.minute}",
+                          );
+                        }
+                      },
+                      isDarkMode: isDarkMode,
+                    ),
+                  ],
+                  isDarkMode: isDarkMode,
                 ),
-            isDarkMode: isDarkMode,
-          ),
-          const CustomSpace(),
-          _buildDrawerItem(
-            icon: Icons.share,
-            title: 'مشاركة التطبيق',
-            onTap: () => _shareApp(),
-            isDarkMode: isDarkMode,
-          ),
-          const CustomSpace(),
-          _buildDrawerItem(
-            icon: Icons.code,
-            title: 'تطوير التطبيق',
-            onTap: () => launchUrl(Uri.parse('https://github.com/serat')),
-            isDarkMode: isDarkMode,
-          ),
-          const CustomSpace(),
-          _buildDrawerItem(
-            icon: Icons.favorite,
-            title: 'دعم التطبيق',
-            onTap: () => _showSupportDialog(context, isDarkMode),
-            isDarkMode: isDarkMode,
+                _buildDrawerSection(
+                  title: 'عن التطبيق',
+                  items: [
+                    _buildDrawerItem(
+                      icon: Icons.info_outline,
+                      title: 'حول التطبيق',
+                      onTap:
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AboutScreen(),
+                            ),
+                          ),
+                      isDarkMode: isDarkMode,
+                    ),
+
+                    _buildDrawerItem(
+                      icon: Icons.share,
+                      title: 'مشاركة التطبيق',
+                      onTap: () => _shareApp(),
+                      isDarkMode: isDarkMode,
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.code,
+                      title: 'تطوير التطبيق',
+                      onTap:
+                          () =>
+                              launchUrl(Uri.parse('https://github.com/serat')),
+                      isDarkMode: isDarkMode,
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.star,
+                      title: 'تقييم التطبيق',
+                      onTap:
+                          () => launchUrl(
+                            Uri.parse(
+                              'https://play.google.com/store/apps/details?id=com.serat.app',
+                            ),
+                          ),
+                      isDarkMode: isDarkMode,
+                    ),
+                  ],
+                  isDarkMode: isDarkMode,
+                ),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDrawerSection({
+    required String title,
+    required List<Widget> items,
+    required bool isDarkMode,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+          child: AppText(
+            title,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+          ),
+        ),
+        ...items,
+      ],
     );
   }
 
@@ -1328,122 +1424,101 @@ class _TimingsScreenState extends State<TimingsScreen>
     required VoidCallback onTap,
     required bool isDarkMode,
   }) {
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors:
-                isDarkMode
-                    ? [
-                      AppColors.primaryColor.withOpacity(0.3),
-                      AppColors.primaryColor.withOpacity(0.1),
-                    ]
-                    : [
-                      AppColors.primaryColor.withOpacity(0.2),
-                      AppColors.primaryColor.withOpacity(0.05),
-                    ],
-          ),
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryColor.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Icon(
-          icon,
-          color: isDarkMode ? AppColors.primaryColor : AppColors.primaryColor,
-        ),
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: isDarkMode ? AppColors.primaryColor : AppColors.primaryColor,
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          fontFamily: 'DIN',
-        ),
-      ),
-      subtitle:
-          subtitle != null
-              ? Text(
-                subtitle,
-                style: TextStyle(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors:
+                        isDarkMode
+                            ? [
+                              AppColors.primaryColor.withOpacity(0.3),
+                              AppColors.primaryColor.withOpacity(0.1),
+                            ]
+                            : [
+                              AppColors.primaryColor.withOpacity(0.2),
+                              AppColors.primaryColor.withOpacity(0.05),
+                            ],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primaryColor.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  icon,
                   color:
                       isDarkMode
-                          ? AppColors.primaryColor.withOpacity(0.7)
-                          : Colors.grey[600],
-                  fontSize: 14,
-                  fontFamily: 'DIN',
+                          ? AppColors.primaryColor
+                          : AppColors.primaryColor,
+                  size: 20,
                 ),
-              )
-              : null,
-      onTap: onTap,
-    );
-  }
-
-  void _showAboutDialog(BuildContext context, bool isDarkMode) {
-    showAboutDialog(
-      context: context,
-      applicationName: 'تطبيق تاتماعن',
-      applicationVersion: '1.0.0',
-      applicationIcon: Hero(
-        tag: 'app_logo',
-        child: Image.asset('assets/logo.png', width: 50, height: 50),
-      ),
-      children: [
-        const SizedBox(height: 20),
-        AppText(
-          'تطبيق تاتماعن هو تطبيق إسلامي شامل يحتوي على العديد من المميزات مثل:\n\n'
-          '• مواقيت الصلاة\n'
-          '• اتجاه القبلة\n'
-          '• الأذكار\n'
-          '• الأربعين النووية\n'
-          '• السبحة الإلكترونية\n\n'
-          'تم تطوير التطبيق بواسطة فريق تاتماعن',
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: isDarkMode ? Colors.white : AppColors.primaryColor,
-        ),
-      ],
-    );
-  }
-
-  void _showSupportDialog(BuildContext context, bool isDarkMode) {
-    showDialog(
-      context: context,
-      builder:
-          (BuildContext context) => AppDialog(
-            content: 'هل تود دعم التطبيق ؟',
-            okAction: AppDialogAction(
-              title: 'نعم',
-              onTap: () {
-                launchUrl(Uri.parse('https://www.paypal.com/paypalme/serat'));
-              },
-            ),
-            cancelAction: AppDialogAction(
-              title: 'لا',
-              onTap: () {
-                Navigator.of(context).pop();
-              },
-            ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppText(
+                      title,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDarkMode ? Colors.white : AppColors.primaryColor,
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 4),
+                      AppText(
+                        subtitle,
+                        fontSize: 14,
+                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ],
           ),
+        ),
+      ),
     );
   }
 
   void _shareApp() {
     Share.share(
-      'تطبيق تاتماعن هو تطبيق إسلامي شامل يحتوي على العديد من المميزات مثل:\n\n'
+      'تطبيق صراط هو تطبيق إسلامي شامل يحتوي على العديد من المميزات مثل:\n\n'
       '• مواقيت الصلاة\n'
       '• اتجاه القبلة\n'
-      '• الأذكار\n'
+      '• الأذكار الصباحية والمسائية\n'
       '• الأربعين النووية\n'
-      '• السبحة الإلكترونية\n\n'
+      '• السبحة الإلكترونية\n'
+      '• القرآن الكريم مع التفسير\n'
+      '• القراء المشهورين\n'
+      '• الراديو الإسلامي\n'
+      '• فيديوهات القرآن الكريم\n'
+      '• التقويم الهجري\n'
+      '• حاسبة الزكاة\n'
+      '• الهدف اليومي\n'
+      '• التنبيهات والإشعارات\n'
+      '• الوضع الليلي\n'
+      '• دعم اللغة العربية\n\n'
       'تحميل التطبيق من هنا:\n'
       'https://play.google.com/store/apps/details?id=com.serat.app',
     );
