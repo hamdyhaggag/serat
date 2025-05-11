@@ -13,44 +13,45 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isRTL = Directionality.of(context) == TextDirection.RTL;
 
     return AppBar(
       backgroundColor: isDarkMode ? Colors.transparent : Colors.white,
       elevation: 0,
-      title: Align(
-        alignment:
-            isHome
-                ? AlignmentDirectional.topCenter
-                : AlignmentDirectional.topStart,
-        child: Text(
-          title,
-          style: TextStyle(
-            fontSize: 23,
-            fontFamily: 'DIN',
-            fontWeight: FontWeight.w700,
-            color: isDarkMode ? Colors.white : AppColors.primaryColor,
+      title: Row(
+        mainAxisAlignment:
+            isHome ? MainAxisAlignment.center : MainAxisAlignment.start,
+        children: [
+          if (!isHome) ...[
+            IconButton(
+              onPressed: () {
+                Navigator.canPop(context) == true
+                    ? Navigator.pop(context)
+                    : () {};
+              },
+              icon: Icon(
+                isRTL
+                    ? FontAwesomeIcons.chevronRight
+                    : FontAwesomeIcons.chevronRight,
+                color: isDarkMode ? Colors.white : AppColors.primaryColor,
+              ),
+            ),
+            SizedBox(width: 5.w),
+          ],
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 23,
+              fontFamily: 'DIN',
+              fontWeight: FontWeight.w700,
+              color: isDarkMode ? Colors.white : AppColors.primaryColor,
+            ),
           ),
-        ),
+        ],
       ),
       leadingWidth: 0.0,
       leading: const SizedBox(),
-      actions:
-          !isHome
-              ? [
-                IconButton(
-                  onPressed: () {
-                    Navigator.canPop(context) == true
-                        ? Navigator.pop(context)
-                        : () {};
-                  },
-                  icon: Icon(
-                    FontAwesomeIcons.chevronLeft,
-                    color: isDarkMode ? Colors.white : AppColors.primaryColor,
-                  ),
-                ),
-                SizedBox(width: 5.w),
-              ]
-              : [],
+      actions: const [],
     );
   }
 }
