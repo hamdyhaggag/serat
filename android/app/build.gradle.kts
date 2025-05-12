@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.serat.app.serat"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 35
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -25,8 +25,8 @@ android {
         applicationId = "com.serat.app.serat"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 21 // Updated for audio playback support
-        targetSdk = flutter.targetSdkVersion
+        minSdk = 21 
+        targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -50,6 +50,7 @@ android {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     implementation("androidx.media:media:1.6.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
 }
 
 flutter {

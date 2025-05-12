@@ -1,9 +1,11 @@
-import 'package:esys_flutter_share_plus/esys_flutter_share_plus.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:serat/Presentation/Config/constants/app_text.dart';
 import 'dart:ui' as ui;
 import 'package:serat/Presentation/Config/constants/colors.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 class ShareButton extends StatelessWidget {
   final String textToShare;
@@ -110,12 +112,13 @@ class ShareButton extends StatelessWidget {
     final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
     final buffer = byteData!.buffer.asUint8List();
 
-    await Share.file(
-      'شارك النص كصورة',
-      'share.png',
-      Uint8List.fromList(buffer),
-      'image/png',
-    );
+    // Save the image to a temporary file
+    final tempDir = await getTemporaryDirectory();
+    final file = File('${tempDir.path}/share.png');
+    await file.writeAsBytes(buffer);
+
+    // Share the file
+    await Share.shareXFiles([XFile(file.path)], text: 'شارك النص كصورة');
   }
 
   Future<ui.Image?> loadImage(String imagePath) async {
@@ -130,7 +133,7 @@ class ShareButton extends StatelessWidget {
     String textWithCustomEnding =
         '$textToShare\n تمت المشاركة من خلال تطبيق تَطْمَئِن';
 
-    Share.text('شارك النص', textWithCustomEnding, 'text/plain');
+    Share.share(textWithCustomEnding, subject: 'شارك النص');
   }
 
   @override

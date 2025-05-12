@@ -88,405 +88,385 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode ? const Color(0xFF1A1A1A) : const Color(0xFFF6F7FB);
-    final cardColor = isDarkMode ? const Color(0xFF2D2D2D) : Colors.white;
-    final textColor = isDarkMode ? Colors.white : const Color(0xFF2D3142);
-    final secondaryTextColor = isDarkMode ? Colors.white70 : const Color(0xFF2D3142).withOpacity(0.7);
-    final borderColor = isDarkMode ? Colors.white24 : const Color(0xFF4CB7A5).withOpacity(0.3);
-    final accentColor = const Color(0xFF4CB7A5);
-
-    return BlocBuilder<LocationCubit, LocationState>(
-      builder: (context, state) {
-        return Scaffold(
-          backgroundColor: backgroundColor,
-          appBar: const CustomAppBar(title: 'التقويم'),
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    elevation: 4,
-                    shadowColor: isDarkMode ? Colors.black : Colors.black12,
-                    color: cardColor,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
+    final textTheme = Theme.of(context).textTheme;
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).primaryColor.withValues(alpha: 150),
+              Theme.of(context).primaryColor.withValues(alpha: 100),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Column(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 26),
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              elevation: 4,
+              shadowColor:
+                  Theme.of(context).brightness == Brightness.dark
+                      ? Colors.black
+                      : Colors.black12,
+              color: Colors.white.withValues(alpha: 26),
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).primaryColor.withValues(alpha: 10),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: accentColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
+                          Expanded(
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: accentColor,
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: const Icon(
-                                          Icons.calendar_today,
-                                          size: 18,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          _getCurrentDateString(),
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: textColor,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                          softWrap: false,
-                                          textAlign: TextAlign.start,
-                                        ),
-                                      ),
-                                    ],
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).primaryColor,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.calendar_today,
+                                    size: 18,
+                                    color: Colors.white,
                                   ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: accentColor,
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: const Icon(
-                                          Icons.calendar_today,
-                                          size: 18,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          _getAlternateDateString(),
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: textColor,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                          softWrap: false,
-                                          textAlign: TextAlign.end,
-                                        ),
-                                      ),
-                                    ],
+                                  child: Text(
+                                    _getCurrentDateString(),
+                                    style: textTheme.titleLarge,
+                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: false,
+                                    textAlign: TextAlign.start,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 24),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: cardColor,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: borderColor),
+                                    color: Theme.of(context).primaryColor,
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: DropdownButtonFormField<String>(
-                                    value: selectedMonth,
-                                    isExpanded: true,
-                                    dropdownColor: cardColor,
-                                    style: TextStyle(
-                                      color: textColor,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    decoration: InputDecoration(
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 8,
-                                      ),
-                                      border: InputBorder.none,
-                                      prefixIcon: Icon(
-                                        Icons.calendar_month,
-                                        color: accentColor,
-                                      ),
-                                    ),
-                                    items: months.map((month) => DropdownMenuItem(
-                                      value: month,
-                                      child: Text(
-                                        month,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                          color: textColor,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    )).toList(),
-                                    onChanged: (val) {
-                                      setState(() {
-                                        selectedMonth = val!;
-                                        final monthIndex = months.indexOf(val);
-                                        selectedDate = DateTime(
-                                          selectedDate.year,
-                                          monthIndex + 1,
-                                          selectedDate.day,
-                                        );
-                                      });
-                                    },
+                                  child: const Icon(
+                                    Icons.calendar_today,
+                                    size: 18,
+                                    color: Colors.white,
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: cardColor,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: borderColor),
-                                  ),
-                                  child: DropdownButtonFormField<String>(
-                                    value: selectedCalendar,
-                                    isExpanded: true,
-                                    dropdownColor: cardColor,
-                                    style: TextStyle(
-                                      color: textColor,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    decoration: InputDecoration(
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 8,
-                                      ),
-                                      border: InputBorder.none,
-                                      prefixIcon: Icon(
-                                        Icons.swap_horiz,
-                                        color: accentColor,
-                                      ),
-                                    ),
-                                    items: calendarTypes.map((type) => DropdownMenuItem(
-                                      value: type,
-                                      child: Text(
-                                        type,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                          color: textColor,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    )).toList(),
-                                    onChanged: (val) {
-                                      setState(() {
-                                        selectedCalendar = val!;
-                                        _initializeMonths();
-                                      });
-                                    },
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _getAlternateDateString(),
+                                    style: textTheme.titleLarge,
+                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: false,
+                                    textAlign: TextAlign.end,
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 24),
-                          _buildCalendarGrid(),
                         ],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    const SizedBox(height: 24),
+                    Row(
                       children: [
-                        Text(
-                          'مناسبات قادمة',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: textColor,
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 26),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: Theme.of(
+                                  context,
+                                ).primaryColor.withValues(alpha: 30),
+                              ),
+                            ),
+                            child: DropdownButtonFormField<String>(
+                              value: selectedMonth,
+                              isExpanded: true,
+                              dropdownColor: Colors.white.withValues(alpha: 26),
+                              style: textTheme.bodyLarge,
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                border: InputBorder.none,
+                                prefixIcon: Icon(
+                                  Icons.calendar_month,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ),
+                              items:
+                                  months
+                                      .map(
+                                        (month) => DropdownMenuItem(
+                                          value: month,
+                                          child: Text(
+                                            month,
+                                            style: textTheme.bodyLarge,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                              onChanged: (val) {
+                                setState(() {
+                                  selectedMonth = val!;
+                                  final monthIndex = months.indexOf(val);
+                                  selectedDate = DateTime(
+                                    selectedDate.year,
+                                    monthIndex + 1,
+                                    selectedDate.day,
+                                  );
+                                });
+                              },
+                            ),
                           ),
                         ),
-                        TextButton(
-                          onPressed: () {},
-                          child: Text(
-                            'عرض كل المناسبات',
-                            style: TextStyle(
-                              color: accentColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 26),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: Theme.of(
+                                  context,
+                                ).primaryColor.withValues(alpha: 30),
+                              ),
+                            ),
+                            child: DropdownButtonFormField<String>(
+                              value: selectedCalendar,
+                              isExpanded: true,
+                              dropdownColor: Colors.white.withValues(alpha: 26),
+                              style: textTheme.bodyLarge,
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                border: InputBorder.none,
+                                prefixIcon: Icon(
+                                  Icons.swap_horiz,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ),
+                              items:
+                                  calendarTypes
+                                      .map(
+                                        (type) => DropdownMenuItem(
+                                          value: type,
+                                          child: Text(
+                                            type,
+                                            style: textTheme.bodyLarge,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                              onChanged: (val) {
+                                setState(() {
+                                  selectedCalendar = val!;
+                                  _initializeMonths();
+                                });
+                              },
                             ),
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 24),
+                    _buildCalendarGrid(),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('مناسبات قادمة', style: textTheme.titleLarge),
+                  TextButton(
+                    onPressed: () {},
+                    child: Text('عرض كل المناسبات', style: textTheme.bodyLarge),
                   ),
-                  const SizedBox(height: 16),
-                  Card(
-                    shape: RoundedRectangleBorder(
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              elevation: 2,
+              shadowColor:
+                  Theme.of(context).brightness == Brightness.dark
+                      ? Colors.black
+                      : Colors.black12,
+              color: Colors.white.withValues(alpha: 26),
+              child: Stack(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).primaryColor.withValues(alpha: 10),
+                          Colors.white.withValues(alpha: 26),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    elevation: 2,
-                    shadowColor: isDarkMode ? Colors.black : Colors.black12,
-                    color: cardColor,
-                    child: Stack(
+                    child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                accentColor.withOpacity(0.1),
-                                cardColor,
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
+                            color: Theme.of(context).primaryColor,
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          child: Row(
+                          child: const Icon(
+                            Icons.nightlight_round,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: accentColor,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: const Icon(
-                                  Icons.nightlight_round,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
+                              Text(
+                                'عيد الفطر المبارك',
+                                style: textTheme.titleLarge,
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'عيد الفطر المبارك',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                        color: textColor,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '2025 يناير 27 الاثنين | 1446 رجب 27 الاثنين',
-                                      style: TextStyle(
-                                        color: secondaryTextColor,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '2025 يناير 27 الاثنين | 1446 رجب 27 الاثنين',
+                                style: textTheme.bodyLarge,
                               ),
                             ],
                           ),
                         ),
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: cardColor.withOpacity(0.95),
-                              borderRadius: BorderRadius.circular(20),
+                      ],
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 200),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).primaryColor.withValues(alpha: 10),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.event_available,
+                                size: 20,
+                                color: Theme.of(context).primaryColor,
+                              ),
                             ),
-                            child: SingleChildScrollView(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                            const SizedBox(height: 4),
+                            Text('قريباً', style: textTheme.bodyLarge),
+                            const SizedBox(height: 2),
+                            Text(
+                              'سيتم إضافة المناسبات قريباً',
+                              style: textTheme.bodyLarge,
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).primaryColor,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: accentColor.withOpacity(0.1),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.event_available,
-                                      size: 20,
-                                      color: accentColor,
-                                    ),
+                                  Icon(
+                                    Icons.notifications_active,
+                                    color: Colors.white,
+                                    size: 10,
                                   ),
-                                  const SizedBox(height: 4),
+                                  SizedBox(width: 2),
                                   Text(
-                                    'قريباً',
+                                    'سأخطرك عند الإطلاق',
                                     style: TextStyle(
-                                      fontSize: 14,
+                                      color: Colors.white,
                                       fontWeight: FontWeight.bold,
-                                      color: textColor,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'سيتم إضافة المناسبات قريباً',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: textColor,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: accentColor,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.notifications_active,
-                                          color: Colors.white,
-                                          size: 10,
-                                        ),
-                                        SizedBox(width: 2),
-                                        Text(
-                                          'سأخطرك عند الإطلاق',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 8,
-                                          ),
-                                        ),
-                                      ],
+                                      fontSize: 8,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 
   Widget _buildCalendarGrid() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDarkMode ? Colors.white : const Color(0xFF2D3142);
-    final secondaryTextColor = isDarkMode ? Colors.white70 : const Color(0xFF2D3142).withOpacity(0.7);
+    final secondaryTextColor =
+        isDarkMode
+            ? Colors.white70
+            : const Color(0xFF2D3142).withValues(alpha: 0.7);
     final accentColor = const Color(0xFF4CB7A5);
     final cardColor = isDarkMode ? const Color(0xFF2D2D2D) : Colors.white;
 
@@ -506,16 +486,18 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
     }
 
     final date = locationCubit.timesModel!.data.date;
-    final daysInMonth = selectedCalendar == 'هجري'
-        ? 30 // Hijri months are either 29 or 30 days
-        : DateTime(selectedDate.year, selectedDate.month + 1, 0).day;
+    final daysInMonth =
+        selectedCalendar == 'هجري'
+            ? 30 // Hijri months are either 29 or 30 days
+            : DateTime(selectedDate.year, selectedDate.month + 1, 0).day;
 
-    final firstDayOfMonth = selectedCalendar == 'هجري'
-        ? _getHijriFirstDayOfMonth(
-            int.parse(date.hijri.year),
-            date.hijri.month.number,
-          )
-        : DateTime(selectedDate.year, selectedDate.month, 1).weekday % 7;
+    final firstDayOfMonth =
+        selectedCalendar == 'هجري'
+            ? _getHijriFirstDayOfMonth(
+              int.parse(date.hijri.year),
+              date.hijri.month.number,
+            )
+            : DateTime(selectedDate.year, selectedDate.month, 1).weekday % 7;
 
     final totalCells = firstDayOfMonth + daysInMonth;
     final rowsNeeded = (totalCells / 7).ceil();
@@ -526,18 +508,23 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: daysOfWeek.map((d) => Expanded(
-                child: Center(
-                  child: Text(
-                    d,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              )).toList(),
+              children:
+                  daysOfWeek
+                      .map(
+                        (d) => Expanded(
+                          child: Center(
+                            child: Text(
+                              d,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: textColor,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
             ),
             const SizedBox(height: 12),
             Table(
@@ -564,12 +551,12 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                         child: Container(
                           height: 40,
                           decoration: BoxDecoration(
-                            color: isSelected ? accentColor : Colors.transparent,
+                            color:
+                                isSelected ? accentColor : Colors.transparent,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isSelected
-                                  ? accentColor
-                                  : secondaryTextColor,
+                              color:
+                                  isSelected ? accentColor : secondaryTextColor,
                               width: 1,
                             ),
                           ),
@@ -578,7 +565,10 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                               dayNumber.toString(),
                               style: TextStyle(
                                 color: isSelected ? Colors.white : textColor,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                fontWeight:
+                                    isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.w500,
                                 fontSize: 15,
                               ),
                             ),
@@ -595,7 +585,7 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
         Positioned.fill(
           child: Container(
             decoration: BoxDecoration(
-              color: cardColor.withOpacity(0.9),
+              color: cardColor.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Column(
@@ -604,7 +594,7 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.1),
+                    color: accentColor.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -625,10 +615,7 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'سيتم إضافة هذه الميزة قريباً',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: textColor,
-                  ),
+                  style: TextStyle(fontSize: 16, color: textColor),
                 ),
                 const SizedBox(height: 16),
                 Container(

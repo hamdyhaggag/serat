@@ -6,7 +6,6 @@ import 'package:serat/data/services/hadith_service.dart';
 import 'package:serat/data/services/bookmark_service.dart';
 import 'package:serat/domain/models/hadith_model.dart';
 import 'base_ahadith_screen.dart';
-import 'package:share_plus/share_plus.dart';
 
 class AhadithListScreen extends StatefulWidget {
   const AhadithListScreen({super.key});
@@ -26,9 +25,8 @@ class _AhadithListScreenState extends State<AhadithListScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   final TextEditingController _searchController = TextEditingController();
-  bool _isSearching = false;
   String _selectedFilter = 'الكل';
-  Map<String, bool> _bookmarkStatus = {};
+  final Map<String, bool> _bookmarkStatus = {};
   bool _isLoadingBookmarks = false;
 
   @override
@@ -97,12 +95,6 @@ class _AhadithListScreenState extends State<AhadithListScreen>
       _bookmarkStatus[hadith.id.toString()] = !isBookmarked;
     });
 
-    if (isBookmarked) {
-      await _bookmarkService.removeBookmark(hadith);
-    } else {
-      await _bookmarkService.addBookmark(hadith);
-    }
-
     // Update filtered list if we're in bookmarks view
     if (_selectedFilter == 'المحفوظات') {
       setState(() {
@@ -149,15 +141,9 @@ class _AhadithListScreenState extends State<AhadithListScreen>
     });
   }
 
-  void _shareHadith(HadithModel hadith) {
-    final text = '${hadith.hadithNumber}\n\n${hadith.hadithText}';
-    Share.share(text, subject: 'حديث من الأربعين النووية');
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       backgroundColor: isDarkMode ? const Color(0xff1F1F1F) : Colors.grey[50],
@@ -182,7 +168,8 @@ class _AhadithListScreenState extends State<AhadithListScreen>
         leading: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
+            color:
+                isDarkMode ? Colors.white.withValues(alpha: 26) : Colors.white,
             borderRadius: BorderRadius.circular(12),
           ),
           child: IconButton(
@@ -222,7 +209,8 @@ class _AhadithListScreenState extends State<AhadithListScreen>
             color: isDarkMode ? Colors.white54 : Colors.black54,
           ),
           filled: true,
-          fillColor: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
+          fillColor:
+              isDarkMode ? Colors.white.withValues(alpha: 26) : Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -265,7 +253,9 @@ class _AhadithListScreenState extends State<AhadithListScreen>
                 ),
               ),
               backgroundColor:
-                  isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
+                  isDarkMode
+                      ? Colors.white.withValues(alpha: 26)
+                      : Colors.white,
               selectedColor: AppColors.primaryColor,
               onSelected: (_) => _applyFilter(filter),
             ),
@@ -325,7 +315,7 @@ class _AhadithListScreenState extends State<AhadithListScreen>
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 0,
-      color: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
+      color: isDarkMode ? Colors.white.withValues(alpha: 26) : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: () {
@@ -356,8 +346,8 @@ class _AhadithListScreenState extends State<AhadithListScreen>
                     decoration: BoxDecoration(
                       color:
                           isDarkMode
-                              ? AppColors.primaryColor.withOpacity(0.2)
-                              : AppColors.primaryColor.withOpacity(0.1),
+                              ? AppColors.primaryColor.withValues(alpha: 51)
+                              : AppColors.primaryColor.withValues(alpha: 26),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -383,13 +373,6 @@ class _AhadithListScreenState extends State<AhadithListScreen>
                               : Colors.black54,
                     ),
                     onPressed: () => _toggleBookmark(hadith),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.share,
-                      color: isDarkMode ? Colors.white54 : Colors.black54,
-                    ),
-                    onPressed: () => _shareHadith(hadith),
                   ),
                 ],
               ),

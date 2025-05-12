@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../imports.dart';
 import 'package:serat/domain/models/hadith_model.dart';
 import 'package:serat/data/services/hadith_service.dart';
@@ -105,7 +104,6 @@ class _AhadithScreenState extends State<AhadithScreen>
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       backgroundColor: isDarkMode ? const Color(0xff1F1F1F) : Colors.grey[50],
@@ -130,7 +128,8 @@ class _AhadithScreenState extends State<AhadithScreen>
         leading: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
+            color:
+                isDarkMode ? Colors.white.withValues(alpha: 26) : Colors.white,
             borderRadius: BorderRadius.circular(12),
           ),
           child: IconButton(
@@ -183,7 +182,8 @@ class _AhadithScreenState extends State<AhadithScreen>
             color: isDarkMode ? Colors.white54 : Colors.black54,
           ),
           filled: true,
-          fillColor: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
+          fillColor:
+              isDarkMode ? Colors.white.withValues(alpha: 26) : Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -226,7 +226,9 @@ class _AhadithScreenState extends State<AhadithScreen>
                 ),
               ),
               backgroundColor:
-                  isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
+                  isDarkMode
+                      ? Colors.white.withValues(alpha: 26)
+                      : Colors.white,
               selectedColor: AppColors.primaryColor,
               onSelected: (_) => _applyFilter(filter),
             ),
@@ -302,7 +304,7 @@ class _AhadithScreenState extends State<AhadithScreen>
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Card(
       elevation: 0,
-      color: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
+      color: isDarkMode ? Colors.white.withValues(alpha: 26) : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: () {
@@ -331,8 +333,8 @@ class _AhadithScreenState extends State<AhadithScreen>
                 decoration: BoxDecoration(
                   color:
                       isDarkMode
-                          ? AppColors.primaryColor.withOpacity(0.2)
-                          : AppColors.primaryColor.withOpacity(0.1),
+                          ? AppColors.primaryColor.withValues(alpha: 26)
+                          : AppColors.primaryColor.withValues(alpha: 16),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -369,7 +371,7 @@ class _AhadithScreenState extends State<AhadithScreen>
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 0,
-      color: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
+      color: isDarkMode ? Colors.white.withValues(alpha: 26) : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: () {
@@ -400,8 +402,8 @@ class _AhadithScreenState extends State<AhadithScreen>
                     decoration: BoxDecoration(
                       color:
                           isDarkMode
-                              ? AppColors.primaryColor.withOpacity(0.2)
-                              : AppColors.primaryColor.withOpacity(0.1),
+                              ? AppColors.primaryColor.withValues(alpha: 26)
+                              : AppColors.primaryColor.withValues(alpha: 16),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
