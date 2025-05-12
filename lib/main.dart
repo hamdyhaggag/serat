@@ -15,6 +15,7 @@ import 'package:serat/Data/Web_Services/quran_video_web_services.dart';
 import 'package:serat/Presentation/screens/splash_screen.dart';
 import 'package:serat/imports.dart';
 import 'package:serat/Business_Logic/Cubit/reciters_cubit.dart';
+import 'package:serat/Business_Logic/Cubit/quran_cubit.dart';
 
 TimeOfDay? stringToTimeOfDay(String timeString) {
   if (timeString.isNotEmpty) {
@@ -93,6 +94,7 @@ class SeratApp extends StatelessWidget {
           create: (context) => QuranVideoCubit(QuranVideoWebServices()),
         ),
         BlocProvider(create: (context) => RecitersCubit()),
+        BlocProvider(create: (context) => QuranCubit()),
       ],
       child: ScreenUtilInit(
         designSize: const Size(360, 690),
