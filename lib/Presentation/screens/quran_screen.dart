@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serat/Business_Logic/Cubit/quran_cubit.dart';
 import 'package:serat/Core/models/quran_chapter.dart';
 import 'package:serat/Core/widgets/app_text.dart';
+import 'package:serat/Core/utils/app_colors.dart';
 import 'package:serat/Presentation/screens/quran_chapter_screen.dart';
+import 'package:serat/Presentation/Widgets/Shared/custom_app_bar.dart';
 
 class QuranScreen extends StatefulWidget {
   const QuranScreen({super.key});
@@ -14,7 +16,6 @@ class QuranScreen extends StatefulWidget {
 
 class _QuranScreenState extends State<QuranScreen> {
   final TextEditingController _searchController = TextEditingController();
-  List<QuranChapter> _filteredChapters = [];
 
   @override
   void initState() {
@@ -26,23 +27,6 @@ class _QuranScreenState extends State<QuranScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
-  }
-
-  void _filterChapters(String query, List<QuranChapter> chapters) {
-    setState(() {
-      _filteredChapters =
-          chapters.where((chapter) {
-            final nameLower = chapter.name.toLowerCase();
-            final englishNameLower = chapter.englishName.toLowerCase();
-            final translationLower =
-                chapter.englishNameTranslation.toLowerCase();
-            final searchLower = query.toLowerCase();
-
-            return nameLower.contains(searchLower) ||
-                englishNameLower.contains(searchLower) ||
-                translationLower.contains(searchLower);
-          }).toList();
-    });
   }
 
   @override
@@ -58,30 +42,30 @@ class _QuranScreenState extends State<QuranScreen> {
 
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.black : Colors.grey[50],
-      appBar: AppBar(
-        backgroundColor:
-            isDarkMode ? Colors.grey[900] : Theme.of(context).primaryColor,
-        title: const AppText(
-          'القرآن الكريم',
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
+      appBar: CustomAppBar(title: 'القرآن الكريم', isHome: false),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          final state = context.read<QuranCubit>().state;
+          if (state is QuranLoaded) {
+            showSearch(
+              context: context,
+              delegate: QuranSearchDelegate(
+                chapters: state.chapters,
+                onFilter:
+                    (
+                      _,
+                      __,
+                    ) {}, // Empty callback since we handle filtering in the delegate
+                isDarkMode: isDarkMode,
+              ),
+            );
+          }
+        },
+        backgroundColor: isDarkMode ? Colors.grey[900] : AppColors.primaryColor,
+        child: Icon(
+          Icons.search,
+          color: isDarkMode ? Colors.white : Colors.white,
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.white),
-            onPressed: () {
-              showSearch(
-                context: context,
-                delegate: QuranSearchDelegate(
-                  chapters: _filteredChapters,
-                  onFilter: _filterChapters,
-                  isDarkMode: isDarkMode,
-                ),
-              );
-            },
-          ),
-        ],
       ),
       body: BlocBuilder<QuranCubit, QuranState>(
         builder: (context, state) {
@@ -116,12 +100,11 @@ class _QuranScreenState extends State<QuranScreen> {
               ),
             );
           } else if (state is QuranLoaded) {
-            _filteredChapters = state.chapters;
             return ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: _filteredChapters.length,
+              itemCount: state.chapters.length,
               itemBuilder: (context, index) {
-                final chapter = _filteredChapters[index];
+                final chapter = state.chapters[index];
                 return Card(
                   elevation: 2,
                   margin: const EdgeInsets.only(bottom: 12),
@@ -193,12 +176,15 @@ class QuranSearchDelegate extends SearchDelegate {
   final List<QuranChapter> chapters;
   final Function(String, List<QuranChapter>) onFilter;
   final bool isDarkMode;
+  List<QuranChapter> _filteredChapters = [];
 
   QuranSearchDelegate({
     required this.chapters,
     required this.onFilter,
     required this.isDarkMode,
-  });
+  }) {
+    _filteredChapters = chapters;
+  }
 
   @override
   ThemeData appBarTheme(BuildContext context) {
@@ -244,14 +230,28 @@ class QuranSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildResults(BuildContext context) {
-    onFilter(query, chapters);
+    _filterChapters(query);
     return _buildSearchResults(context);
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    onFilter(query, chapters);
+    _filterChapters(query);
     return _buildSearchResults(context);
+  }
+
+  void _filterChapters(String query) {
+    _filteredChapters =
+        chapters.where((chapter) {
+          final nameLower = chapter.name.toLowerCase();
+          final englishNameLower = chapter.englishName.toLowerCase();
+          final translationLower = chapter.englishNameTranslation.toLowerCase();
+          final searchLower = query.toLowerCase();
+
+          return nameLower.contains(searchLower) ||
+              englishNameLower.contains(searchLower) ||
+              translationLower.contains(searchLower);
+        }).toList();
   }
 
   Widget _buildSearchResults(BuildContext context) {
@@ -265,9 +265,9 @@ class QuranSearchDelegate extends SearchDelegate {
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: chapters.length,
+      itemCount: _filteredChapters.length,
       itemBuilder: (context, index) {
-        final chapter = chapters[index];
+        final chapter = _filteredChapters[index];
         return Card(
           elevation: 2,
           margin: const EdgeInsets.only(bottom: 12),
