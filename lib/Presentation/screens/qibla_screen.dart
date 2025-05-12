@@ -16,12 +16,15 @@ class QiblaScreenState extends State<QiblaScreen> {
   @override
   void initState() {
     super.initState();
-    _getQiblaDirection();
+    _initializeQibla();
   }
 
-  Future<void> _getQiblaDirection() async {
+  Future<void> _initializeQibla() async {
     final locationCubit = LocationCubit.get(context);
-    if (locationCubit.position != null) {
+    if (locationCubit.position == null) {
+      await locationCubit.getMyCurrentLocation();
+    }
+    if (locationCubit.position != null && mounted) {
       await QiblaCubit.get(context).getQiblaDirection(
         latitude: locationCubit.position!.latitude,
         longitude: locationCubit.position!.longitude,
@@ -39,6 +42,10 @@ class QiblaScreenState extends State<QiblaScreen> {
       body: BlocConsumer<QiblaCubit, QiblaState>(
         listener: (context, state) {},
         builder: (context, state) {
+          if (state is GetQiblaDirectionLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
           if (QiblaCubit.get(context).directionModel == null) {
             return RefreshIndicator(
               onRefresh: () async {
@@ -77,6 +84,35 @@ class QiblaScreenState extends State<QiblaScreen> {
                                 isDarkMode
                                     ? Colors.white
                                     : AppColors.primaryColor,
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: () async {
+                              final locationCubit = LocationCubit.get(context);
+                              await locationCubit.getMyCurrentLocation();
+                              if (locationCubit.position != null && mounted) {
+                                await QiblaCubit.get(context).getQiblaDirection(
+                                  latitude: locationCubit.position!.latitude,
+                                  longitude: locationCubit.position!.longitude,
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryColor,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 30,
+                                vertical: 15,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const AppText(
+                              "إعادة المحاولة",
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -195,18 +231,12 @@ class QiblaScreenState extends State<QiblaScreen> {
                                   fontSize: 15,
                                   fontFamily: 'DIN',
                                   fontWeight: FontWeight.bold,
-                                  color:
-                                      isDarkMode
-                                          ? const Color(0xff0c8ee1)
-                                          : AppColors.primaryColor,
+                                  color: AppColors.primaryColor,
                                 ),
                                 SizedBox(width: 5.w),
                                 Icon(
                                   FontAwesomeIcons.arrowRightLong,
-                                  color:
-                                      isDarkMode
-                                          ? const Color(0xff0c8ee1)
-                                          : AppColors.primaryColor,
+                                  color: AppColors.primaryColor,
                                   size: 40,
                                 ),
                               ],
@@ -224,18 +254,12 @@ class QiblaScreenState extends State<QiblaScreen> {
                                   fontSize: 15,
                                   fontFamily: 'DIN',
                                   fontWeight: FontWeight.bold,
-                                  color:
-                                      isDarkMode
-                                          ? const Color(0xff0c8ee1)
-                                          : AppColors.primaryColor,
+                                  color: AppColors.primaryColor,
                                 ),
                                 SizedBox(width: 5.w),
                                 Icon(
                                   FontAwesomeIcons.arrowLeftLong,
-                                  color:
-                                      isDarkMode
-                                          ? const Color(0xff0c8ee1)
-                                          : AppColors.primaryColor,
+                                  color: AppColors.primaryColor,
                                   size: 40,
                                 ),
                               ],
@@ -258,10 +282,7 @@ class QiblaScreenState extends State<QiblaScreen> {
                     children: [
                       AppText(
                         'اتجاة القبلة هو  $qibla° من الشمال ',
-                        color:
-                            isDarkMode
-                                ? const Color(0xff0c8ee1)
-                                : AppColors.primaryColor,
+                        color: AppColors.primaryColor,
                         fontSize: 18,
                       ),
                     ],
