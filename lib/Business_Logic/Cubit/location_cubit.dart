@@ -22,15 +22,44 @@ class LocationCubit extends Cubit<LocationState> {
   Future<void> getMyCurrentLocation() async {
     emit(GetCurrentAddressLoading());
     try {
-      await Geolocator.requestPermission();
-      position = await Geolocator.getCurrentPosition(
-        timeLimit: const Duration(milliseconds: 3000),
-        desiredAccuracy: LocationAccuracy.high,
-      );
-      if (position != null) {
-        await _getLocationData(position!.latitude, position!.longitude);
+      // First check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw Exception(
+          'Location services are disabled. Please enable location services.',
+        );
       }
-      emit(GetCurrentLocationSuccess());
+
+      // Check current permission status
+      LocationPermission permission = await Geolocator.checkPermission();
+
+      // Handle permission states
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception('Location permissions are denied');
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception(
+          'Location permissions are permanently denied. Please enable them in app settings.',
+        );
+      }
+
+      // Only proceed if we have permission
+      if (permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always) {
+        position = await Geolocator.getCurrentPosition(
+          timeLimit: const Duration(milliseconds: 3000),
+          desiredAccuracy: LocationAccuracy.high,
+        );
+
+        if (position != null) {
+          await _getLocationData(position!.latitude, position!.longitude);
+        }
+        emit(GetCurrentLocationSuccess());
+      }
     } catch (error) {
       errorStatus = true;
       log('Error when getting location: $error');
