@@ -83,7 +83,7 @@ class AzkarPages extends StatelessWidget {
                                           ? Colors.white
                                           : const Color(0xFF2D3436),
                                   fontWeight: FontWeight.bold,
-                                  fontFamily: 'DIN',
+                                  fontFamily: 'Cairo',
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -226,6 +226,24 @@ class _AzkarCounterState extends State<AzkarCounter>
     if (!widget.isCompleted) {
       _controller.forward().then((_) => _controller.reverse());
       widget.onIncrement();
+
+      // Check if this increment completes the zikr
+      final currentValue = context.select(
+        (AzkarCubit cubit) => cubit.state.counters[widget.currentIndex] ?? 0,
+      );
+
+      if (currentValue + 1 == widget.maxValue) {
+        // Add a small delay before auto-scrolling
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (widget.currentIndex < widget.totalPages - 1) {
+            widget.pageController.animateToPage(
+              widget.currentIndex + 1,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          }
+        });
+      }
     }
   }
 
