@@ -831,8 +831,8 @@ class _TimingsScreenState extends State<TimingsScreen>
                                         },
                                       ),
                                       _buildFeatureCard(
-                                        'حاسبة الزكاة',
-                                        Icons.calculate,
+                                        'القرآن الكريم',
+                                        Icons.menu_book,
                                         isDarkMode,
                                         onTap: () {
                                           Navigator.push(
@@ -840,11 +840,12 @@ class _TimingsScreenState extends State<TimingsScreen>
                                             MaterialPageRoute(
                                               builder:
                                                   (context) =>
-                                                      const ZakahCalculatorScreen(),
+                                                      const QuranScreen(),
                                             ),
                                           );
                                         },
                                       ),
+                                      
                                       _buildFeatureCard(
                                         'القراء',
                                         Icons.record_voice_over,
@@ -905,9 +906,9 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           );
                                         },
                                       ),
-                                      _buildFeatureCard(
-                                        'القرآن الكريم',
-                                        Icons.menu_book,
+                                   _buildFeatureCard(
+                                        'حاسبة الزكاة',
+                                        Icons.calculate,
                                         isDarkMode,
                                         onTap: () {
                                           Navigator.push(
@@ -915,7 +916,7 @@ class _TimingsScreenState extends State<TimingsScreen>
                                             MaterialPageRoute(
                                               builder:
                                                   (context) =>
-                                                      const QuranScreen(),
+                                                      const ZakahCalculatorScreen(),
                                             ),
                                           );
                                         },

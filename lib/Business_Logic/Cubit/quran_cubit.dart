@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:developer' as dev;
-import 'package:shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:serat/Core/models/quran_chapter.dart';
 import 'package:serat/Core/models/quran_verse.dart';
 import 'package:serat/Core/services/quran_service.dart';
@@ -42,17 +42,42 @@ class QuranVersesError extends QuranState {
 
 // Cubit
 class QuranCubit extends Cubit<QuranState> {
-  final QuranService _quranService;
+  late final QuranService _quranService;
+  bool _isInitialized = false;
+  List<QuranChapter>? _cachedChapters;
 
-  QuranCubit() : _quranService = QuranService(
-    CacheService(SharedPreferences.getInstance() as SharedPreferences),
-  ), super(QuranInitial());
+  QuranCubit() : super(QuranInitial()) {
+    _initializeService();
+  }
+
+  Future<void> _initializeService() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _quranService = QuranService(CacheService(prefs));
+      _isInitialized = true;
+      getChapters();
+    } catch (e) {
+      dev.log('Error initializing QuranService: $e');
+      emit(QuranError('Failed to initialize Quran service'));
+    }
+  }
 
   Future<void> getChapters() async {
+    if (!_isInitialized) {
+      dev.log('QuranService not initialized yet');
+      return;
+    }
+
+    // If we have cached chapters, emit them immediately
+    if (_cachedChapters != null) {
+      emit(QuranLoaded(_cachedChapters!));
+    }
+
     emit(QuranLoading());
     try {
       dev.log('QuranCubit: Fetching chapters...');
       final chapters = await _quranService.getChapters();
+      _cachedChapters = chapters; // Cache the chapters
       dev.log('QuranCubit: Successfully fetched ${chapters.length} chapters');
       emit(QuranLoaded(chapters));
     } catch (e, stackTrace) {
@@ -63,6 +88,11 @@ class QuranCubit extends Cubit<QuranState> {
   }
 
   Future<void> getChapterVerses(int chapterNumber) async {
+    if (!_isInitialized) {
+      dev.log('QuranService not initialized yet');
+      return;
+    }
+
     emit(QuranVersesLoading(chapterNumber));
     try {
       dev.log('QuranCubit: Fetching verses for chapter $chapterNumber...');
