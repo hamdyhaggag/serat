@@ -126,6 +126,7 @@ flutter:
       - assets/azkar/
       - lib/Data/azkar/morning_azkar.json
       - assets/hadiths/
+      - assets/data/islamic_questions.json
   fonts:
     - family: Cairo
       fonts:

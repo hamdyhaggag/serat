@@ -6,6 +6,7 @@ import 'package:serat/Presentation/screens/radio_screen.dart';
 import 'package:serat/Presentation/screens/quran_video_screen.dart';
 import 'package:serat/Presentation/screens/reciters_screen.dart';
 import 'package:serat/Presentation/screens/about_screen.dart';
+import 'package:serat/Presentation/screens/islamic_quiz_screen.dart';
 import 'package:serat/imports.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -100,10 +101,9 @@ class _TimingsScreenState extends State<TimingsScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color:
-            Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xff2F2F2F)
-                : Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xff2F2F2F)
+            : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -122,10 +122,9 @@ class _TimingsScreenState extends State<TimingsScreen>
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color:
-                      Theme.of(context).brightness == Brightness.dark
-                          ? Colors.grey[800]
-                          : Colors.grey[200],
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[800]
+                      : Colors.grey[200],
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -138,10 +137,9 @@ class _TimingsScreenState extends State<TimingsScreen>
                       width: 100,
                       height: 14,
                       decoration: BoxDecoration(
-                        color:
-                            Theme.of(context).brightness == Brightness.dark
-                                ? Colors.grey[800]
-                                : Colors.grey[200],
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[800]
+                            : Colors.grey[200],
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -150,10 +148,9 @@ class _TimingsScreenState extends State<TimingsScreen>
                       width: 200,
                       height: 16,
                       decoration: BoxDecoration(
-                        color:
-                            Theme.of(context).brightness == Brightness.dark
-                                ? Colors.grey[800]
-                                : Colors.grey[200],
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[800]
+                            : Colors.grey[200],
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -171,10 +168,9 @@ class _TimingsScreenState extends State<TimingsScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color:
-            Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xff2F2F2F)
-                : Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xff2F2F2F)
+            : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -191,10 +187,9 @@ class _TimingsScreenState extends State<TimingsScreen>
             width: 150,
             height: 24,
             decoration: BoxDecoration(
-              color:
-                  Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[800]
-                      : Colors.grey[200],
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[800]
+                  : Colors.grey[200],
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -217,10 +212,9 @@ class _TimingsScreenState extends State<TimingsScreen>
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color:
-                      Theme.of(context).brightness == Brightness.dark
-                          ? Colors.grey[800]
-                          : Colors.grey[200],
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[800]
+                      : Colors.grey[200],
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
@@ -229,10 +223,9 @@ class _TimingsScreenState extends State<TimingsScreen>
                 width: 80,
                 height: 16,
                 decoration: BoxDecoration(
-                  color:
-                      Theme.of(context).brightness == Brightness.dark
-                          ? Colors.grey[800]
-                          : Colors.grey[200],
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[800]
+                      : Colors.grey[200],
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
@@ -242,10 +235,9 @@ class _TimingsScreenState extends State<TimingsScreen>
             width: 60,
             height: 16,
             decoration: BoxDecoration(
-              color:
-                  Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[800]
-                      : Colors.grey[200],
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[800]
+                  : Colors.grey[200],
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -292,16 +284,15 @@ class _TimingsScreenState extends State<TimingsScreen>
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors:
-                        isDarkMode
-                            ? [
-                              const Color(0xff1F1F1F).withOpacity(0.9),
-                              const Color(0xff2F2F2F).withOpacity(0.9),
-                            ]
-                            : [
-                              Colors.white.withOpacity(0.9),
-                              Colors.grey[50]!.withOpacity(0.9),
-                            ],
+                    colors: isDarkMode
+                        ? [
+                            const Color(0xff1F1F1F).withOpacity(0.9),
+                            const Color(0xff2F2F2F).withOpacity(0.9),
+                          ]
+                        : [
+                            Colors.white.withOpacity(0.9),
+                            Colors.grey[50]!.withOpacity(0.9),
+                          ],
                   ),
                 ),
                 child: RefreshIndicator(
@@ -323,18 +314,17 @@ class _TimingsScreenState extends State<TimingsScreen>
                               gradient: LinearGradient(
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
-                                colors:
-                                    isDarkMode
-                                        ? [
-                                          const Color(0xff1F1F1F),
-                                          const Color(0xff2F2F2F),
-                                        ]
-                                        : [
-                                          AppColors.primaryColor,
-                                          AppColors.primaryColor.withOpacity(
-                                            0.8,
-                                          ),
-                                        ],
+                                colors: isDarkMode
+                                    ? [
+                                        const Color(0xff1F1F1F),
+                                        const Color(0xff2F2F2F),
+                                      ]
+                                    : [
+                                        AppColors.primaryColor,
+                                        AppColors.primaryColor.withOpacity(
+                                          0.8,
+                                        ),
+                                      ],
                               ),
                               borderRadius: const BorderRadius.only(
                                 bottomLeft: Radius.circular(30),
@@ -371,8 +361,8 @@ class _TimingsScreenState extends State<TimingsScreen>
                                                         .withOpacity(0.1),
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                          12,
-                                                        ),
+                                                      12,
+                                                    ),
                                                   ),
                                                   child: const Icon(
                                                     Icons.menu,
@@ -403,13 +393,15 @@ class _TimingsScreenState extends State<TimingsScreen>
                                                       Container(
                                                         width: 200,
                                                         height: 14,
-                                                        decoration: BoxDecoration(
+                                                        decoration:
+                                                            BoxDecoration(
                                                           color: Colors.white
                                                               .withOpacity(0.2),
                                                           borderRadius:
-                                                              BorderRadius.circular(
-                                                                4,
-                                                              ),
+                                                              BorderRadius
+                                                                  .circular(
+                                                            4,
+                                                          ),
                                                         ),
                                                       )
                                                     else if (locationCubit
@@ -439,34 +431,17 @@ class _TimingsScreenState extends State<TimingsScreen>
                                             ],
                                           ),
                                         ),
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              padding: EdgeInsets.zero,
-                                              constraints:
-                                                  const BoxConstraints(),
-                                              icon: const Icon(
-                                                Icons.notifications_outlined,
-                                                color: Colors.white,
-                                                size: 24,
-                                              ),
-                                              onPressed: () {},
-                                            ),
-                                            const SizedBox(width: 8),
-                                            IconButton(
-                                              padding: EdgeInsets.zero,
-                                              constraints:
-                                                  const BoxConstraints(),
-                                              icon: const Icon(
-                                                Icons.settings_outlined,
-                                                color: Colors.white,
-                                                size: 24,
-                                              ),
-                                              onPressed: () {},
-                                            ),
-                                          ],
+                                        IconButton(
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(),
+                                          icon: const Icon(
+                                            Icons.notifications_outlined,
+                                            color: Colors.white,
+                                            size: 24,
+                                          ),
+                                          onPressed: () {},
                                         ),
+                                        const SizedBox(width: 8),
                                       ],
                                     ),
                                     const Spacer(),
@@ -517,15 +492,14 @@ class _TimingsScreenState extends State<TimingsScreen>
                                                     CrossAxisAlignment.start,
                                                 children: [
                                                   AppText(
-                                                    locationCubit
-                                                                .address
+                                                    locationCubit.address
                                                                 ?.locality !=
                                                             null
                                                         ? _translateLocationToArabic(
-                                                          locationCubit
-                                                              .address!
-                                                              .locality,
-                                                        )
+                                                            locationCubit
+                                                                .address!
+                                                                .locality,
+                                                          )
                                                         : 'جاري تحديد الموقع...',
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.w600,
@@ -534,14 +508,12 @@ class _TimingsScreenState extends State<TimingsScreen>
                                                     overflow:
                                                         TextOverflow.ellipsis,
                                                   ),
-                                                  if (locationCubit
-                                                          .address
+                                                  if (locationCubit.address
                                                           ?.administrativeArea !=
                                                       null)
                                                     AppText(
                                                       _translateLocationToArabic(
-                                                        locationCubit
-                                                            .address!
+                                                        locationCubit.address!
                                                             .administrativeArea,
                                                       ),
                                                       fontSize: 12,
@@ -599,10 +571,9 @@ class _TimingsScreenState extends State<TimingsScreen>
                                 ),
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
-                                  color:
-                                      isDarkMode
-                                          ? const Color(0xff2F2F2F)
-                                          : Colors.white,
+                                  color: isDarkMode
+                                      ? const Color(0xff2F2F2F)
+                                      : Colors.white,
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
@@ -623,25 +594,23 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           'مواقيت الصلاة',
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold,
-                                          color:
-                                              isDarkMode
-                                                  ? Colors.white
-                                                  : AppColors.primaryColor,
+                                          color: isDarkMode
+                                              ? Colors.white
+                                              : AppColors.primaryColor,
                                         ),
                                         Row(
                                           children: [
                                             Container(
                                               padding:
                                                   const EdgeInsets.symmetric(
-                                                    horizontal: 12,
-                                                    vertical: 6,
-                                                  ),
+                                                horizontal: 12,
+                                                vertical: 6,
+                                              ),
                                               decoration: BoxDecoration(
-                                                color:
-                                                    isDarkMode
-                                                        ? Colors.grey[800]
-                                                        : AppColors.primaryColor
-                                                            .withOpacity(0.1),
+                                                color: isDarkMode
+                                                    ? Colors.grey[800]
+                                                    : AppColors.primaryColor
+                                                        .withOpacity(0.1),
                                                 borderRadius:
                                                     BorderRadius.circular(12),
                                               ),
@@ -650,11 +619,10 @@ class _TimingsScreenState extends State<TimingsScreen>
                                                   AppText(
                                                     'متبقي حتى $_nextPrayerName',
                                                     fontSize: 12,
-                                                    color:
-                                                        isDarkMode
-                                                            ? Colors.white
-                                                            : AppColors
-                                                                .primaryColor,
+                                                    color: isDarkMode
+                                                        ? Colors.white
+                                                        : AppColors
+                                                            .primaryColor,
                                                   ),
                                                   AppText(
                                                     _formatCountdown(
@@ -662,11 +630,10 @@ class _TimingsScreenState extends State<TimingsScreen>
                                                     ),
                                                     fontSize: 14,
                                                     fontWeight: FontWeight.bold,
-                                                    color:
-                                                        isDarkMode
-                                                            ? Colors.white
-                                                            : AppColors
-                                                                .primaryColor,
+                                                    color: isDarkMode
+                                                        ? Colors.white
+                                                        : AppColors
+                                                            .primaryColor,
                                                   ),
                                                 ],
                                               ),
@@ -678,19 +645,17 @@ class _TimingsScreenState extends State<TimingsScreen>
                                                   const BoxConstraints(),
                                               icon: Icon(
                                                 Icons.list_alt,
-                                                color:
-                                                    isDarkMode
-                                                        ? Colors.white
-                                                        : AppColors
-                                                            .primaryColor,
+                                                color: isDarkMode
+                                                    ? Colors.white
+                                                    : AppColors.primaryColor,
                                                 size: 24,
                                               ),
-                                              onPressed:
-                                                  () => _showAllPrayerTimes(
-                                                    context,
-                                                    locationCubit,
-                                                    isDarkMode,
-                                                  ),
+                                              onPressed: () =>
+                                                  _showAllPrayerTimes(
+                                                context,
+                                                locationCubit,
+                                                isDarkMode,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -704,10 +669,7 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           _buildPrayerTimeItem(
                                             'الفجر',
                                             locationCubit
-                                                .timesModel!
-                                                .data
-                                                .timings
-                                                .fajr,
+                                                .timesModel!.data.timings.fajr,
                                             isDarkMode,
                                             isNext: _isNextPrayer(
                                               'الفجر',
@@ -716,11 +678,8 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           ),
                                           _buildPrayerTimeItem(
                                             'الشروق',
-                                            locationCubit
-                                                .timesModel!
-                                                .data
-                                                .timings
-                                                .sunrise,
+                                            locationCubit.timesModel!.data
+                                                .timings.sunrise,
                                             isDarkMode,
                                             isNext: _isNextPrayer(
                                               'الشروق',
@@ -730,10 +689,7 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           _buildPrayerTimeItem(
                                             'الظهر',
                                             locationCubit
-                                                .timesModel!
-                                                .data
-                                                .timings
-                                                .dhuhr,
+                                                .timesModel!.data.timings.dhuhr,
                                             isDarkMode,
                                             isNext: _isNextPrayer(
                                               'الظهر',
@@ -743,10 +699,7 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           _buildPrayerTimeItem(
                                             'العصر',
                                             locationCubit
-                                                .timesModel!
-                                                .data
-                                                .timings
-                                                .asr,
+                                                .timesModel!.data.timings.asr,
                                             isDarkMode,
                                             isNext: _isNextPrayer(
                                               'العصر',
@@ -755,11 +708,8 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           ),
                                           _buildPrayerTimeItem(
                                             'المغرب',
-                                            locationCubit
-                                                .timesModel!
-                                                .data
-                                                .timings
-                                                .maghrib,
+                                            locationCubit.timesModel!.data
+                                                .timings.maghrib,
                                             isDarkMode,
                                             isNext: _isNextPrayer(
                                               'المغرب',
@@ -769,10 +719,7 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           _buildPrayerTimeItem(
                                             'العشاء',
                                             locationCubit
-                                                .timesModel!
-                                                .data
-                                                .timings
-                                                .isha,
+                                                .timesModel!.data.timings.isha,
                                             isDarkMode,
                                             isNext: _isNextPrayer(
                                               'العشاء',
@@ -823,9 +770,8 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder:
-                                                  (context) =>
-                                                      const DailyGoalNavigationScreen(),
+                                              builder: (context) =>
+                                                  const DailyGoalNavigationScreen(),
                                             ),
                                           );
                                         },
@@ -838,14 +784,12 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder:
-                                                  (context) =>
-                                                      const QuranScreen(),
+                                              builder: (context) =>
+                                                  const QuranScreen(),
                                             ),
                                           );
                                         },
                                       ),
-                                      
                                       _buildFeatureCard(
                                         'القراء',
                                         Icons.record_voice_over,
@@ -854,9 +798,8 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder:
-                                                  (context) =>
-                                                      const RecitersScreen(),
+                                              builder: (context) =>
+                                                  const RecitersScreen(),
                                             ),
                                           );
                                         },
@@ -869,9 +812,8 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder:
-                                                  (context) =>
-                                                      const RadioScreen(),
+                                              builder: (context) =>
+                                                  const RadioScreen(),
                                             ),
                                           );
                                         },
@@ -884,9 +826,8 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder:
-                                                  (context) =>
-                                                      const QuranVideoScreen(),
+                                              builder: (context) =>
+                                                  const QuranVideoScreen(),
                                             ),
                                           );
                                         },
@@ -899,14 +840,13 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder:
-                                                  (context) =>
-                                                      const HijriCalendarScreen(),
+                                              builder: (context) =>
+                                                  const HijriCalendarScreen(),
                                             ),
                                           );
                                         },
                                       ),
-                                   _buildFeatureCard(
+                                      _buildFeatureCard(
                                         'حاسبة الزكاة',
                                         Icons.calculate,
                                         isDarkMode,
@@ -914,9 +854,22 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder:
-                                                  (context) =>
-                                                      const ZakahCalculatorScreen(),
+                                              builder: (context) =>
+                                                  const ZakahCalculatorScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _buildFeatureCard(
+                                        'اختبار إسلامي',
+                                        Icons.quiz,
+                                        isDarkMode,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const IslamicQuizScreen(),
                                             ),
                                           );
                                         },
@@ -951,42 +904,38 @@ class _TimingsScreenState extends State<TimingsScreen>
       margin: const EdgeInsets.only(left: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        gradient:
-            isNext
-                ? LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors:
-                      isDarkMode
-                          ? [
-                            AppColors.primaryColor.withOpacity(0.2),
-                            AppColors.primaryColor.withOpacity(0.1),
-                          ]
-                          : [
-                            AppColors.primaryColor.withOpacity(0.15),
-                            AppColors.primaryColor.withOpacity(0.05),
-                          ],
-                )
-                : null,
+        gradient: isNext
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDarkMode
+                    ? [
+                        AppColors.primaryColor.withOpacity(0.2),
+                        AppColors.primaryColor.withOpacity(0.1),
+                      ]
+                    : [
+                        AppColors.primaryColor.withOpacity(0.15),
+                        AppColors.primaryColor.withOpacity(0.05),
+                      ],
+              )
+            : null,
         color: isNext ? null : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color:
-              isDarkMode
-                  ? AppColors.primaryColor.withOpacity(0.3)
-                  : Colors.grey[200]!,
+          color: isDarkMode
+              ? AppColors.primaryColor.withOpacity(0.3)
+              : Colors.grey[200]!,
           width: 1,
         ),
-        boxShadow:
-            isNext
-                ? [
-                  BoxShadow(
-                    color: AppColors.primaryColor.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-                : null,
+        boxShadow: isNext
+            ? [
+                BoxShadow(
+                  color: AppColors.primaryColor.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -997,16 +946,15 @@ class _TimingsScreenState extends State<TimingsScreen>
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors:
-                    isDarkMode
-                        ? [
-                          AppColors.primaryColor.withOpacity(0.3),
-                          AppColors.primaryColor.withOpacity(0.1),
-                        ]
-                        : [
-                          AppColors.primaryColor.withOpacity(0.2),
-                          AppColors.primaryColor.withOpacity(0.05),
-                        ],
+                colors: isDarkMode
+                    ? [
+                        AppColors.primaryColor.withOpacity(0.3),
+                        AppColors.primaryColor.withOpacity(0.1),
+                      ]
+                    : [
+                        AppColors.primaryColor.withOpacity(0.2),
+                        AppColors.primaryColor.withOpacity(0.05),
+                      ],
               ),
               shape: BoxShape.circle,
             ),
@@ -1048,18 +996,16 @@ class _TimingsScreenState extends State<TimingsScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors:
-                isDarkMode
-                    ? [const Color(0xff2F2F2F), const Color(0xff252525)]
-                    : [Colors.white, Colors.grey[50]!],
+            colors: isDarkMode
+                ? [const Color(0xff2F2F2F), const Color(0xff252525)]
+                : [Colors.white, Colors.grey[50]!],
           ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color:
-                  isDarkMode
-                      ? Colors.black.withOpacity(0.2)
-                      : Colors.black.withOpacity(0.05),
+              color: isDarkMode
+                  ? Colors.black.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.05),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -1074,16 +1020,15 @@ class _TimingsScreenState extends State<TimingsScreen>
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors:
-                      isDarkMode
-                          ? [
-                            AppColors.primaryColor.withOpacity(0.3),
-                            AppColors.primaryColor.withOpacity(0.1),
-                          ]
-                          : [
-                            AppColors.primaryColor.withOpacity(0.2),
-                            AppColors.primaryColor.withOpacity(0.05),
-                          ],
+                  colors: isDarkMode
+                      ? [
+                          AppColors.primaryColor.withOpacity(0.3),
+                          AppColors.primaryColor.withOpacity(0.1),
+                        ]
+                      : [
+                          AppColors.primaryColor.withOpacity(0.2),
+                          AppColors.primaryColor.withOpacity(0.05),
+                        ],
                 ),
                 shape: BoxShape.circle,
                 boxShadow: [
@@ -1197,10 +1142,9 @@ class _TimingsScreenState extends State<TimingsScreen>
             height: 220,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors:
-                    isDarkMode
-                        ? [Colors.grey[800]!, Colors.black]
-                        : [AppColors.primaryColor, Colors.white],
+                colors: isDarkMode
+                    ? [Colors.grey[800]!, Colors.black]
+                    : [AppColors.primaryColor, Colors.white],
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
               ),
@@ -1282,18 +1226,17 @@ class _TimingsScreenState extends State<TimingsScreen>
                     _buildDrawerItem(
                       icon: Icons.sunny,
                       title: 'التنبية لأذكار الصباح',
-                      subtitle:
-                          selectedTimeMorning != null
-                              ? DateFormat('hh:mma').format(
-                                DateTime(
-                                  0,
-                                  1,
-                                  1,
-                                  selectedTimeMorning!.hour,
-                                  selectedTimeMorning!.minute,
-                                ),
-                              )
-                              : 'اختر التوقيت',
+                      subtitle: selectedTimeMorning != null
+                          ? DateFormat('hh:mma').format(
+                              DateTime(
+                                0,
+                                1,
+                                1,
+                                selectedTimeMorning!.hour,
+                                selectedTimeMorning!.minute,
+                              ),
+                            )
+                          : 'اختر التوقيت',
                       onTap: () async {
                         final pickedTime = await showTimePicker(
                           context: context,
@@ -1317,18 +1260,17 @@ class _TimingsScreenState extends State<TimingsScreen>
                     _buildDrawerItem(
                       icon: Icons.nightlight_round,
                       title: 'التنبية لأذكار المساء',
-                      subtitle:
-                          selectedTimeEvening != null
-                              ? DateFormat('hh:mma').format(
-                                DateTime(
-                                  0,
-                                  1,
-                                  1,
-                                  selectedTimeEvening!.hour,
-                                  selectedTimeEvening!.minute,
-                                ),
-                              )
-                              : 'اختر التوقيت',
+                      subtitle: selectedTimeEvening != null
+                          ? DateFormat('hh:mma').format(
+                              DateTime(
+                                0,
+                                1,
+                                1,
+                                selectedTimeEvening!.hour,
+                                selectedTimeEvening!.minute,
+                              ),
+                            )
+                          : 'اختر التوقيت',
                       onTap: () async {
                         final pickedTime = await showTimePicker(
                           context: context,
@@ -1358,16 +1300,14 @@ class _TimingsScreenState extends State<TimingsScreen>
                     _buildDrawerItem(
                       icon: Icons.info_outline,
                       title: 'حول التطبيق',
-                      onTap:
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AboutScreen(),
-                            ),
-                          ),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AboutScreen(),
+                        ),
+                      ),
                       isDarkMode: isDarkMode,
                     ),
-
                     _buildDrawerItem(
                       icon: Icons.share,
                       title: 'مشاركة التطبيق',
@@ -1377,20 +1317,18 @@ class _TimingsScreenState extends State<TimingsScreen>
                     _buildDrawerItem(
                       icon: Icons.code,
                       title: 'تطوير التطبيق',
-                      onTap:
-                          () =>
-                              launchUrl(Uri.parse('https://github.com/serat')),
+                      onTap: () =>
+                          launchUrl(Uri.parse('https://github.com/serat')),
                       isDarkMode: isDarkMode,
                     ),
                     _buildDrawerItem(
                       icon: Icons.star,
                       title: 'تقييم التطبيق',
-                      onTap:
-                          () => launchUrl(
-                            Uri.parse(
-                              'https://play.google.com/store/apps/details?id=com.serat.app',
-                            ),
-                          ),
+                      onTap: () => launchUrl(
+                        Uri.parse(
+                          'https://play.google.com/store/apps/details?id=com.serat.app',
+                        ),
+                      ),
                       isDarkMode: isDarkMode,
                     ),
                   ],
@@ -1447,16 +1385,15 @@ class _TimingsScreenState extends State<TimingsScreen>
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors:
-                        isDarkMode
-                            ? [
-                              AppColors.primaryColor.withOpacity(0.3),
-                              AppColors.primaryColor.withOpacity(0.1),
-                            ]
-                            : [
-                              AppColors.primaryColor.withOpacity(0.2),
-                              AppColors.primaryColor.withOpacity(0.05),
-                            ],
+                    colors: isDarkMode
+                        ? [
+                            AppColors.primaryColor.withOpacity(0.3),
+                            AppColors.primaryColor.withOpacity(0.1),
+                          ]
+                        : [
+                            AppColors.primaryColor.withOpacity(0.2),
+                            AppColors.primaryColor.withOpacity(0.05),
+                          ],
                   ),
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
@@ -1832,20 +1769,18 @@ class _TimingsScreenState extends State<TimingsScreen>
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color:
-                                    isDarkMode
-                                        ? Colors.grey[800]
-                                        : AppColors.primaryColor.withOpacity(
-                                          0.1,
-                                        ),
+                                color: isDarkMode
+                                    ? Colors.grey[800]
+                                    : AppColors.primaryColor.withOpacity(
+                                        0.1,
+                                      ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
                                 Icons.access_time,
-                                color:
-                                    isDarkMode
-                                        ? Colors.white
-                                        : AppColors.primaryColor,
+                                color: isDarkMode
+                                    ? Colors.white
+                                    : AppColors.primaryColor,
                                 size: 24,
                               ),
                             ),
@@ -1854,10 +1789,9 @@ class _TimingsScreenState extends State<TimingsScreen>
                               'مواقيت الصلاة',
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color:
-                                  isDarkMode
-                                      ? Colors.white
-                                      : AppColors.primaryColor,
+                              color: isDarkMode
+                                  ? Colors.white
+                                  : AppColors.primaryColor,
                             ),
                           ],
                         ),
@@ -1867,18 +1801,16 @@ class _TimingsScreenState extends State<TimingsScreen>
                           icon: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color:
-                                  isDarkMode
-                                      ? Colors.grey[800]
-                                      : Colors.grey[200],
+                              color: isDarkMode
+                                  ? Colors.grey[800]
+                                  : Colors.grey[200],
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
                               Icons.close,
-                              color:
-                                  isDarkMode
-                                      ? Colors.white
-                                      : AppColors.primaryColor,
+                              color: isDarkMode
+                                  ? Colors.white
+                                  : AppColors.primaryColor,
                               size: 20,
                             ),
                           ),
@@ -1891,10 +1823,9 @@ class _TimingsScreenState extends State<TimingsScreen>
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color:
-                              isDarkMode
-                                  ? Colors.grey[800]
-                                  : AppColors.primaryColor.withOpacity(0.1),
+                          color: isDarkMode
+                              ? Colors.grey[800]
+                              : AppColors.primaryColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Column(
@@ -1902,30 +1833,27 @@ class _TimingsScreenState extends State<TimingsScreen>
                             AppText(
                               'الصلاة القادمة',
                               fontSize: 14,
-                              color:
-                                  isDarkMode
-                                      ? Colors.white70
-                                      : AppColors.primaryColor.withOpacity(0.7),
+                              color: isDarkMode
+                                  ? Colors.white70
+                                  : AppColors.primaryColor.withOpacity(0.7),
                             ),
                             const SizedBox(height: 4),
                             AppText(
                               _nextPrayerName,
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color:
-                                  isDarkMode
-                                      ? Colors.white
-                                      : AppColors.primaryColor,
+                              color: isDarkMode
+                                  ? Colors.white
+                                  : AppColors.primaryColor,
                             ),
                             const SizedBox(height: 4),
                             AppText(
                               _formatCountdown(_timeUntilNextPrayer),
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
-                              color:
-                                  isDarkMode
-                                      ? Colors.white70
-                                      : AppColors.primaryColor.withOpacity(0.7),
+                              color: isDarkMode
+                                  ? Colors.white70
+                                  : AppColors.primaryColor.withOpacity(0.7),
                             ),
                           ],
                         ),
@@ -1944,10 +1872,7 @@ class _TimingsScreenState extends State<TimingsScreen>
                                 (
                                   'الشروق',
                                   locationCubit
-                                      .timesModel!
-                                      .data
-                                      .timings
-                                      .sunrise,
+                                      .timesModel!.data.timings.sunrise,
                                 ),
                                 (
                                   'الظهر',
@@ -1960,10 +1885,7 @@ class _TimingsScreenState extends State<TimingsScreen>
                                 (
                                   'المغرب',
                                   locationCubit
-                                      .timesModel!
-                                      .data
-                                      .timings
-                                      .maghrib,
+                                      .timesModel!.data.timings.maghrib,
                                 ),
                                 (
                                   'العشاء',
@@ -2007,42 +1929,38 @@ class _TimingsScreenState extends State<TimingsScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient:
-            isNext
-                ? LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors:
-                      isDarkMode
-                          ? [
-                            AppColors.primaryColor.withOpacity(0.2),
-                            AppColors.primaryColor.withOpacity(0.1),
-                          ]
-                          : [
-                            AppColors.primaryColor.withOpacity(0.15),
-                            AppColors.primaryColor.withOpacity(0.05),
-                          ],
-                )
-                : null,
+        gradient: isNext
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDarkMode
+                    ? [
+                        AppColors.primaryColor.withOpacity(0.2),
+                        AppColors.primaryColor.withOpacity(0.1),
+                      ]
+                    : [
+                        AppColors.primaryColor.withOpacity(0.15),
+                        AppColors.primaryColor.withOpacity(0.05),
+                      ],
+              )
+            : null,
         color: isNext ? null : Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color:
-              isDarkMode
-                  ? AppColors.primaryColor.withOpacity(0.3)
-                  : Colors.grey[200]!,
+          color: isDarkMode
+              ? AppColors.primaryColor.withOpacity(0.3)
+              : Colors.grey[200]!,
           width: 1,
         ),
-        boxShadow:
-            isNext
-                ? [
-                  BoxShadow(
-                    color: AppColors.primaryColor.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-                : null,
+        boxShadow: isNext
+            ? [
+                BoxShadow(
+                  color: AppColors.primaryColor.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
       ),
       child: Row(
         children: [
@@ -2052,16 +1970,15 @@ class _TimingsScreenState extends State<TimingsScreen>
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors:
-                    isDarkMode
-                        ? [
-                          AppColors.primaryColor.withOpacity(0.3),
-                          AppColors.primaryColor.withOpacity(0.1),
-                        ]
-                        : [
-                          AppColors.primaryColor.withOpacity(0.2),
-                          AppColors.primaryColor.withOpacity(0.05),
-                        ],
+                colors: isDarkMode
+                    ? [
+                        AppColors.primaryColor.withOpacity(0.3),
+                        AppColors.primaryColor.withOpacity(0.1),
+                      ]
+                    : [
+                        AppColors.primaryColor.withOpacity(0.2),
+                        AppColors.primaryColor.withOpacity(0.05),
+                      ],
               ),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
@@ -2105,16 +2022,15 @@ class _TimingsScreenState extends State<TimingsScreen>
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors:
-                      isDarkMode
-                          ? [
-                            AppColors.primaryColor.withOpacity(0.3),
-                            AppColors.primaryColor.withOpacity(0.1),
-                          ]
-                          : [
-                            AppColors.primaryColor.withOpacity(0.2),
-                            AppColors.primaryColor.withOpacity(0.05),
-                          ],
+                  colors: isDarkMode
+                      ? [
+                          AppColors.primaryColor.withOpacity(0.3),
+                          AppColors.primaryColor.withOpacity(0.1),
+                        ]
+                      : [
+                          AppColors.primaryColor.withOpacity(0.2),
+                          AppColors.primaryColor.withOpacity(0.05),
+                        ],
                 ),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
@@ -2145,14 +2061,12 @@ class EnhancedParticlePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color =
-              isDarkMode
-                  ? Colors.white.withOpacity(0.15)
-                  : AppColors.primaryColor.withOpacity(0.15)
-          ..strokeWidth = 2
-          ..strokeCap = StrokeCap.round;
+    final paint = Paint()
+      ..color = isDarkMode
+          ? Colors.white.withOpacity(0.15)
+          : AppColors.primaryColor.withOpacity(0.15)
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
 
     for (var particle in particles) {
       canvas.drawCircle(particle, 2, paint);
