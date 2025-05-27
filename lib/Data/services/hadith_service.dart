@@ -20,9 +20,20 @@ class HadithService {
       final String jsonString = await rootBundle.loadString(
         'assets/nawawi_hadiths.json',
       );
-      final List<dynamic> jsonData = json.decode(jsonString);
-      final hadiths =
-          jsonData.map((json) => HadithModel.fromJson(json)).toList();
+      final Map<String, dynamic> jsonData = json.decode(jsonString);
+      final List<dynamic> hadithsData = jsonData['hadiths'] ?? [];
+      
+      final List<HadithModel> hadiths = [];
+      for (var hadith in hadithsData) {
+        hadiths.add(HadithModel(
+          id: hadith['id'] ?? 0,
+          hadithNumber: 'حديث ${hadith['number'] ?? ''}',
+          hadithText: hadith['arabic'] ?? '',
+          explanation: hadith['explanation'] ?? '',
+          narrator: hadith['narrator'] ?? '',
+          chapterName: hadith['chapter']?['arabic'] ?? 'باب ${hadith['chapterId'] ?? ''}',
+        ));
+      }
 
       // Cache the new data
       await _cacheHadiths(hadiths);
@@ -112,8 +123,8 @@ class HadithService {
             id: 0, // Using 0 as a placeholder since random hadiths don't have IDs
             hadithNumber: 'حديث عشوائي',
             hadithText: hadith['text'] ?? '',
-            narrator: hadith['narrator'] ?? '',
-            book: hadith['book'] ?? '',
+            explanation: 'هذا حديث عشوائي من قاعدة بيانات الأحاديث',
+            narrator: hadith['narrator'] ?? 'مصدر: API Hadith',
           ));
         }
         

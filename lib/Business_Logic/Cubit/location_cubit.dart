@@ -18,16 +18,18 @@ class LocationCubit extends Cubit<LocationState> {
   String? country;
   String? locality;
   int radioValue = 5;
+  String? errorMessage;
 
   Future<void> getMyCurrentLocation() async {
     emit(GetCurrentAddressLoading());
+    errorMessage = null;
     try {
       // First check if location services are enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        throw Exception(
-          'Location services are disabled. Please enable location services.',
-        );
+        errorMessage = 'خدمة الموقع غير مفعلة. يرجى تفعيل خدمة الموقع.';
+        emit(GetCurrentLocationError());
+        return;
       }
 
       // Check current permission status
@@ -37,22 +39,32 @@ class LocationCubit extends Cubit<LocationState> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          throw Exception('Location permissions are denied');
+          errorMessage =
+              'تم رفض إذن الوصول للموقع. يرجى السماح بالوصول للموقع.';
+          emit(GetCurrentLocationError());
+          return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        throw Exception(
-          'Location permissions are permanently denied. Please enable them in app settings.',
-        );
+        errorMessage =
+            'تم رفض إذن الوصول للموقع بشكل دائم. يرجى تفعيله من إعدادات التطبيق.';
+        emit(GetCurrentLocationError());
+        return;
       }
 
       // Only proceed if we have permission
       if (permission == LocationPermission.whileInUse ||
           permission == LocationPermission.always) {
         position = await Geolocator.getCurrentPosition(
-          timeLimit: const Duration(milliseconds: 3000),
+          timeLimit: const Duration(seconds: 10),
           desiredAccuracy: LocationAccuracy.high,
+        ).timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            errorMessage = 'انتهت مهلة طلب الموقع. يرجى المحاولة مرة أخرى.';
+            throw TimeoutException(errorMessage);
+          },
         );
 
         if (position != null) {
@@ -63,7 +75,12 @@ class LocationCubit extends Cubit<LocationState> {
     } catch (error) {
       errorStatus = true;
       log('Error when getting location: $error');
-      emit(GetCurrentLocationError());
+      if (error is TimeoutException) {
+        emit(GetCurrentLocationError());
+      } else {
+        errorMessage = 'حدث خطأ في تحديد الموقع. يرجى المحاولة مرة أخرى.';
+        emit(GetCurrentLocationError());
+      }
     }
   }
 
@@ -73,6 +90,7 @@ class LocationCubit extends Cubit<LocationState> {
     required double longitude,
   }) async {
     emit(GetCurrentAddressLoading());
+    errorMessage = null;
     try {
       final now = DateTime.now();
       final formattedTime =
@@ -90,12 +108,8 @@ class LocationCubit extends Cubit<LocationState> {
       // Check if response is HTML (indicating a redirection or error page)
       if (response.data is String &&
           (response.data as String).contains('<!DOCTYPE html>')) {
-        log(
-          'Received HTML response instead of JSON. Possible network issue or API endpoint problem.',
-        );
-        throw Exception(
-          'Network error: Received HTML response. Please check your internet connection.',
-        );
+        errorMessage = 'خطأ في الاتصال بالإنترنت. يرجى التحقق من اتصالك.';
+        throw Exception(errorMessage);
       }
 
       if (response.data is Map<String, dynamic>) {
@@ -104,14 +118,13 @@ class LocationCubit extends Cubit<LocationState> {
           saveTimeModel(timeModel: timesModel!);
           emit(GetTimingsSuccess());
         } catch (parseError) {
-          log('Error parsing response: $parseError');
-          throw Exception('Error parsing prayer times data: $parseError');
+          errorMessage =
+              'خطأ في تحليل بيانات أوقات الصلاة. يرجى المحاولة مرة أخرى.';
+          throw Exception(errorMessage);
         }
       } else {
-        log('Invalid response type: ${response.data.runtimeType}');
-        throw Exception(
-          'Invalid response format: Expected Map<String, dynamic> but got ${response.data.runtimeType}',
-        );
+        errorMessage = 'تنسيق استجابة غير صالح. يرجى المحاولة مرة أخرى.';
+        throw Exception(errorMessage);
       }
     } catch (error) {
       log('getTimings error: $error');

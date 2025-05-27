@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:serat/Business_Logic/Cubit/qibla_cubit.dart';
 import 'package:serat/Business_Logic/Cubit/location_cubit.dart';
+import 'package:serat/Presentation/widgets/error_widget.dart';
 import 'package:serat/imports.dart';
 
 class QiblaScreen extends StatefulWidget {
@@ -65,153 +66,86 @@ class QiblaScreenState extends State<QiblaScreen>
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      backgroundColor: isDarkMode ? const Color(0xff1F1F1F) : Colors.white,
-      appBar: const CustomAppBar(title: 'القبلة', isHome: true),
-      body: BlocConsumer<QiblaCubit, QiblaState>(
-        listener: (context, state) {},
-        builder: (context, state) {
-          if (state is GetQiblaDirectionLoading) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    color: AppColors.primaryColor,
-                    strokeWidth: 3,
-                  ),
-                  const SizedBox(height: 20),
-                  AppText(
-                    "جاري تحديد اتجاه القبلة...",
-                    color: AppColors.primaryColor,
-                    fontSize: 16,
-                  ),
-                ],
+    return BlocConsumer<QiblaCubit, QiblaState>(
+      listener: (context, state) {
+        if (state is GetQiblaDirectionError) {
+          final locationCubit = LocationCubit.get(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(locationCubit.errorMessage ?? 'حدث خطأ في تحديد اتجاه القبلة'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
-            );
-          }
-
-          if (QiblaCubit.get(context).directionModel == null) {
-            return RefreshIndicator(
-              onRefresh: () async {
-                final locationCubit = LocationCubit.get(context);
-                await locationCubit.getMyCurrentLocation();
-                if (locationCubit.position != null && mounted) {
-                  await QiblaCubit.get(context).getQiblaDirection(
-                    latitude: locationCubit.position!.latitude,
-                    longitude: locationCubit.position!.longitude,
-                  );
-                }
-              },
-              child: ScrollConfiguration(
-                behavior: const ScrollBehavior().copyWith(overscroll: false),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Center(
-                      child: FadeTransition(
-                        opacity: _fadeAnimation,
-                        child: ScaleTransition(
-                          scale: _scaleAnimation,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 120,
-                                height: 120,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryColor.withOpacity(
-                                    0.1,
-                                  ),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.location_off_rounded,
-                                  size: 60,
-                                  color: AppColors.primaryColor,
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              AppText(
-                                "تأكد من الاتصال بالإنترنت \n و تفعيل الموقع",
-                                align: TextAlign.center,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color:
-                                    isDarkMode
-                                        ? Colors.white
-                                        : AppColors.primaryColor,
-                              ),
-                              const SizedBox(height: 32),
-                              ElevatedButton(
-                                onPressed: () async {
-                                  final locationCubit = LocationCubit.get(
-                                    context,
-                                  );
-                                  await locationCubit.getMyCurrentLocation();
-                                  if (locationCubit.position != null &&
-                                      mounted) {
-                                    await QiblaCubit.get(
-                                      context,
-                                    ).getQiblaDirection(
-                                      latitude:
-                                          locationCubit.position!.latitude,
-                                      longitude:
-                                          locationCubit.position!.longitude,
-                                    );
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primaryColor,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 32,
-                                    vertical: 16,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  elevation: 2,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.refresh_rounded,
-                                      color: Colors.white,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    const AppText(
-                                      "إعادة المحاولة",
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        final locationCubit = LocationCubit.get(context);
+        return Scaffold(
+          backgroundColor: isDarkMode ? const Color(0xff1F1F1F) : Colors.white,
+          appBar: AppBar(
+            systemOverlayStyle: SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness:
+                  isDarkMode ? Brightness.light : Brightness.dark,
+            ),
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            title: Text(
+              'القبلة',
+              style: TextStyle(
+                fontFamily: 'DIN',
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.white : AppColors.primaryColor,
+              ),
+            ),
+            centerTitle: true,
+          ),
+          body: state is GetQiblaDirectionLoading
+              ? const Center(child: CircularProgressIndicator())
+              : state is GetQiblaDirectionError
+                  ? AppErrorWidget(
+                      message: locationCubit.errorMessage ?? 'حدث خطأ في تحديد اتجاه القبلة\nيرجى المحاولة مرة أخرى',
+                      icon: Icons.location_off_rounded,
+                      isDarkMode: isDarkMode,
+                      onRetry: () async {
+                        await locationCubit.getMyCurrentLocation();
+                        if (locationCubit.position != null && mounted) {
+                          await QiblaCubit.get(context).getQiblaDirection(
+                            latitude: locationCubit.position!.latitude,
+                            longitude: locationCubit.position!.longitude,
+                          );
+                        }
+                      },
+                    )
+                  : QiblaCubit.get(context).directionModel == null
+                      ? AppErrorWidget(
+                          message: locationCubit.errorMessage ?? 'تأكد من الاتصال بالإنترنت\nوتفعيل الموقع',
+                          icon: Icons.location_off_rounded,
+                          isDarkMode: isDarkMode,
+                          onRetry: () async {
+                            await locationCubit.getMyCurrentLocation();
+                            if (locationCubit.position != null && mounted) {
+                              await QiblaCubit.get(context).getQiblaDirection(
+                                latitude: locationCubit.position!.latitude,
+                                longitude: locationCubit.position!.longitude,
+                              );
+                            }
+                          },
+                        )
+                      : Builder(
+                          builder: (context) {
+                            return Column(
+                              children: <Widget>[Expanded(child: _buildCompass())],
+                            );
+                          },
                         ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          } else {
-            return Builder(
-              builder: (context) {
-                return Column(
-                  children: <Widget>[Expanded(child: _buildCompass())],
-                );
-              },
-            );
-          }
-        },
-      ),
+        );
+      },
     );
   }
 

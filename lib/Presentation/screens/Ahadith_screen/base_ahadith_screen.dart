@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:serat/imports.dart';
 import 'package:serat/domain/models/hadith_model.dart';
 import 'hadith_card.dart';
+import 'package:serat/Presentation/Config/constants/colors.dart';
 
 class BaseAhadithScreen extends StatefulWidget {
   final String title;
@@ -159,7 +160,7 @@ class _BaseAhadithScreenState extends State<BaseAhadithScreen>
     final screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: isDarkMode ? const Color(0xff1F1F1F) : Colors.grey[50],
+      backgroundColor: isDarkMode ? AppColors.blackColor : AppColors.whiteColor,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         systemOverlayStyle: SystemUiOverlayStyle(
@@ -169,14 +170,29 @@ class _BaseAhadithScreenState extends State<BaseAhadithScreen>
         ),
         elevation: 0,
         backgroundColor: Colors.transparent,
-        title: Text(
-          widget.title,
-          style: TextStyle(
-            fontFamily: 'DIN',
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-            color: isDarkMode ? Colors.white : AppColors.primaryColor,
-          ),
+        title: Column(
+          children: [
+            Text(
+              widget.title,
+              style: TextStyle(
+                fontFamily: 'DIN',
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color:
+                    isDarkMode ? AppColors.whiteColor : AppColors.primaryColor,
+              ),
+            ),
+            Text(
+              widget.hadith.chapterName,
+              style: TextStyle(
+                fontFamily: 'DIN',
+                fontSize: 14,
+                color: isDarkMode
+                    ? AppColors.greyColor
+                    : AppColors.blackColor.withOpacity(0.54),
+              ),
+            ),
+          ],
         ),
         centerTitle: true,
         leading: Container(
@@ -216,110 +232,105 @@ class _BaseAhadithScreenState extends State<BaseAhadithScreen>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors:
-                isDarkMode
-                    ? [
-                      const Color(0xff1F1F1F),
-                      const Color(0xff2D2D2D),
-                      const Color(0xff1F1F1F),
-                    ]
-                    : [Colors.grey[50]!, Colors.grey[100]!, Colors.grey[50]!],
+            colors: isDarkMode
+                ? [
+                    const Color(0xff1F1F1F),
+                    const Color(0xff2D2D2D),
+                    const Color(0xff1F1F1F),
+                  ]
+                : [Colors.grey[50]!, Colors.grey[100]!, Colors.grey[50]!],
             stops: const [0.0, 0.5, 1.0],
           ),
         ),
-        child:
-            _isLoading
-                ? Center(child: _buildSkeleton())
-                : FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: CustomScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    slivers: [
-                      SliverPadding(
-                        padding: EdgeInsets.only(
-                          top: MediaQuery.of(context).padding.top + 80,
-                          left: screenSize.width * 0.05,
-                          right: screenSize.width * 0.05,
-                          bottom: screenSize.height * 0.02,
-                        ),
-                        sliver: SliverToBoxAdapter(
-                          child: Column(
-                            children: [
-                              HadithCard(
-                                hadithNumber: widget.hadith.hadithNumber,
-                                hadithText: widget.hadith.hadithText,
-                                explanation: widget.hadith.explanation,
-                                heroTag: 'hadith_${widget.hadith.id}',
-                                fontSize: _fontSize,
+        child: _isLoading
+            ? Center(child: _buildSkeleton())
+            : FadeTransition(
+                opacity: _fadeAnimation,
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    SliverPadding(
+                      padding: EdgeInsets.only(
+                        top: MediaQuery.of(context).padding.top + 80,
+                        left: screenSize.width * 0.05,
+                        right: screenSize.width * 0.05,
+                        bottom: screenSize.height * 0.02,
+                      ),
+                      sliver: SliverToBoxAdapter(
+                        child: Column(
+                          children: [
+                            HadithCard(
+                              hadithNumber: widget.hadith.hadithNumber,
+                              hadithText: widget.hadith.hadithText,
+                              explanation: widget.hadith.explanation,
+                              heroTag: 'hadith_${widget.hadith.id}',
+                              fontSize: _fontSize,
+                            ),
+                            const SizedBox(height: 24),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
                               ),
-                              const SizedBox(height: 24),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      isDarkMode
+                              decoration: BoxDecoration(
+                                color: isDarkMode
+                                    ? Colors.white.withOpacity(0.1)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.remove),
+                                    onPressed: () => _adjustFontSize(-1),
+                                    tooltip: 'تصغير الخط',
+                                    iconSize: 20,
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isDarkMode
                                           ? Colors.white.withOpacity(0.1)
-                                          : Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
+                                          : Colors.grey[100],
+                                      borderRadius: BorderRadius.circular(8),
                                     ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.remove),
-                                      onPressed: () => _adjustFontSize(-1),
-                                      tooltip: 'تصغير الخط',
-                                      iconSize: 20,
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color:
-                                            isDarkMode
-                                                ? Colors.white.withOpacity(0.1)
-                                                : Colors.grey[100],
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        'حجم الخط: ${_fontSize.toInt()}',
-                                        style: TextStyle(
-                                          color:
-                                              isDarkMode
-                                                  ? Colors.white70
-                                                  : Colors.black54,
-                                          fontSize: 14,
-                                        ),
+                                    child: Text(
+                                      'حجم الخط: ${_fontSize.toInt()}',
+                                      style: TextStyle(
+                                        color: isDarkMode
+                                            ? Colors.white70
+                                            : Colors.black54,
+                                        fontSize: 14,
                                       ),
                                     ),
-                                    IconButton(
-                                      icon: const Icon(Icons.add),
-                                      onPressed: () => _adjustFontSize(1),
-                                      tooltip: 'تكبير الخط',
-                                      iconSize: 20,
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.add),
+                                    onPressed: () => _adjustFontSize(1),
+                                    tooltip: 'تكبير الخط',
+                                    iconSize: 20,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+              ),
       ),
     );
   }

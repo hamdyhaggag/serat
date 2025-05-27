@@ -4,6 +4,7 @@ class HadithModel {
   final String hadithText;
   final String explanation;
   final String narrator;
+  final String chapterName;
 
   HadithModel({
     required this.id,
@@ -11,6 +12,7 @@ class HadithModel {
     required this.hadithText,
     required this.explanation,
     required this.narrator,
+    required this.chapterName,
   });
 
   factory HadithModel.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class HadithModel {
       hadithText: json['hadithText'] as String,
       explanation: json['explanation'] as String,
       narrator: json['narrator'] as String,
+      chapterName: json['chapterName'] as String,
     );
   }
 
@@ -30,6 +33,7 @@ class HadithModel {
       'hadithText': hadithText,
       'explanation': explanation,
       'narrator': narrator,
+      'chapterName': chapterName,
     };
   }
 }

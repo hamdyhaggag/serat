@@ -4,7 +4,12 @@ import 'package:shimmer/shimmer.dart';
 import 'package:serat/imports.dart';
 import 'package:serat/data/services/hadith_service.dart';
 import 'package:serat/data/services/bookmark_service.dart';
+import 'package:serat/data/services/hadith_database_service.dart';
 import 'package:serat/domain/models/hadith_model.dart';
+import 'package:serat/Presentation/widgets/error_widget.dart';
+import 'package:serat/shared/utils/error_mapper.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'base_ahadith_screen.dart';
 
 class AhadithListScreen extends StatefulWidget {
@@ -18,6 +23,7 @@ class _AhadithListScreenState extends State<AhadithListScreen>
     with SingleTickerProviderStateMixin {
   final HadithService _hadithService = HadithService();
   final BookmarkService _bookmarkService = BookmarkService();
+  final HadithDatabaseService _hadithDatabaseService = HadithDatabaseService();
   List<HadithModel> _hadiths = [];
   List<HadithModel> _filteredHadiths = [];
   bool _isLoading = true;
@@ -28,6 +34,20 @@ class _AhadithListScreenState extends State<AhadithListScreen>
   String _selectedFilter = 'الكل';
   final Map<String, bool> _bookmarkStatus = {};
   bool _isLoadingBookmarks = false;
+  bool _isLoadingRandom = false;
+  bool _isLoadingBooks = false;
+  String _selectedBook = 'الأربعين النووية';
+
+  // Map of book names to their API identifiers
+  final Map<String, String> _hadithBooks = {
+    'الأربعين النووية': 'nawawi',
+    'صحيح البخاري': 'bukhari',
+    'صحيح مسلم': 'muslim',
+    'سنن أبي داود': 'abudawud',
+    'سنن الترمذي': 'tirmidhi',
+    'سنن النسائي': 'nasai',
+    'سنن ابن ماجه': 'ibnmajah',
+  };
 
   @override
   void initState() {
@@ -55,20 +75,56 @@ class _AhadithListScreenState extends State<AhadithListScreen>
 
   Future<void> _loadHadiths() async {
     try {
-      final hadiths = await _hadithService.getNawawiHadiths();
+      final hadiths = await _hadithDatabaseService.getHadiths(_selectedBook);
       setState(() {
         _hadiths = hadiths;
         _filteredHadiths = hadiths;
         _isLoading = false;
+        _error = null;
       });
       _loadBookmarkStatus();
       _animationController.forward();
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = ErrorMapper.getHadithErrorMessage(e);
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _fetchRandomHadith() async {
+    setState(() {
+      _isLoadingRandom = true;
+      _error = null;
+    });
+
+    try {
+      final randomHadith = await _hadithDatabaseService.getRandomHadith(
+        _selectedBook,
+      );
+      setState(() {
+        _filteredHadiths = [randomHadith];
+        _selectedFilter = 'عشوائي';
+      });
+    } catch (e) {
+      setState(() {
+        _error = ErrorMapper.getHadithErrorMessage(e);
+      });
+    } finally {
+      setState(() {
+        _isLoadingRandom = false;
+      });
+    }
+  }
+
+  void _selectBook(String book) {
+    print('Selected book: $book'); // Debug print
+    setState(() {
+      _selectedBook = book;
+      _selectedFilter = 'الكل';
+      _searchController.clear();
+    });
+    _loadHadiths();
   }
 
   Future<void> _loadBookmarkStatus() async {
@@ -98,10 +154,9 @@ class _AhadithListScreenState extends State<AhadithListScreen>
     // Update filtered list if we're in bookmarks view
     if (_selectedFilter == 'المحفوظات') {
       setState(() {
-        _filteredHadiths =
-            _hadiths
-                .where((h) => _bookmarkStatus[h.id.toString()] ?? false)
-                .toList();
+        _filteredHadiths = _hadiths
+            .where((h) => _bookmarkStatus[h.id.toString()] ?? false)
+            .toList();
       });
     }
   }
@@ -111,18 +166,17 @@ class _AhadithListScreenState extends State<AhadithListScreen>
       if (query.isEmpty) {
         _filteredHadiths = _hadiths;
       } else {
-        _filteredHadiths =
-            _hadiths
-                .where(
-                  (hadith) =>
-                      hadith.hadithText.toLowerCase().contains(
+        _filteredHadiths = _hadiths
+            .where(
+              (hadith) =>
+                  hadith.hadithText.toLowerCase().contains(
                         query.toLowerCase(),
                       ) ||
-                      hadith.hadithNumber.toLowerCase().contains(
+                  hadith.hadithNumber.toLowerCase().contains(
                         query.toLowerCase(),
                       ),
-                )
-                .toList();
+            )
+            .toList();
       }
     });
   }
@@ -131,10 +185,11 @@ class _AhadithListScreenState extends State<AhadithListScreen>
     setState(() {
       _selectedFilter = filter;
       if (filter == 'المحفوظات') {
-        _filteredHadiths =
-            _hadiths
-                .where((h) => _bookmarkStatus[h.id.toString()] ?? false)
-                .toList();
+        _filteredHadiths = _hadiths
+            .where((h) => _bookmarkStatus[h.id.toString()] ?? false)
+            .toList();
+      } else if (filter == 'عشوائي') {
+        _fetchRandomHadith();
       } else {
         _filteredHadiths = _hadiths;
       }
@@ -156,7 +211,7 @@ class _AhadithListScreenState extends State<AhadithListScreen>
         elevation: 0,
         backgroundColor: Colors.transparent,
         title: Text(
-          'الأربعين النووية',
+          _selectedBook, // Update title to show selected book
           style: TextStyle(
             fontFamily: 'DIN',
             fontSize: 26,
@@ -170,7 +225,47 @@ class _AhadithListScreenState extends State<AhadithListScreen>
         children: [
           _buildSearchBar(isDarkMode),
           _buildFilterChips(isDarkMode),
-          Expanded(child: _buildBody()),
+          Expanded(
+            child: _isLoading
+                ? _buildShimmerLoading()
+                : _error != null
+                    ? AppErrorWidget(
+                        message: _error!,
+                        icon: Icons.error_outline_rounded,
+                        isDarkMode: isDarkMode,
+                        onRetry: () {
+                          if (_selectedFilter == 'عشوائي') {
+                            _fetchRandomHadith();
+                          } else {
+                            _loadData();
+                          }
+                        },
+                      )
+                    : _filteredHadiths.isEmpty
+                        ? Center(
+                            child: Text(
+                              'لا توجد نتائج',
+                              style: TextStyle(
+                                color: isDarkMode
+                                    ? Colors.white70
+                                    : Colors.black54,
+                                fontFamily: 'DIN',
+                                fontSize: 18,
+                              ),
+                            ),
+                          )
+                        : FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: ListView.builder(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: _filteredHadiths.length,
+                              itemBuilder: (context, index) {
+                                final hadith = _filteredHadiths[index];
+                                return _buildHadithCard(hadith, index);
+                              },
+                            ),
+                          ),
+          ),
         ],
       ),
     );
@@ -210,85 +305,87 @@ class _AhadithListScreenState extends State<AhadithListScreen>
   }
 
   Widget _buildFilterChips(bool isDarkMode) {
-    final filters = ['الكل', 'المحفوظات'];
-    return Container(
-      height: 50,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: filters.length,
-        itemBuilder: (context, index) {
-          final filter = filters[index];
-          final isSelected = filter == _selectedFilter;
-          return Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: FilterChip(
-              selected: isSelected,
-              label: Text(
-                filter,
-                style: TextStyle(
-                  color:
-                      isSelected
+    return Column(
+      children: [
+        Container(
+          height: 50,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: _hadithBooks.length,
+            itemBuilder: (context, index) {
+              final book = _hadithBooks.keys.elementAt(index);
+              final isSelected = book == _selectedBook;
+              return Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: FilterChip(
+                  selected: isSelected,
+                  label: Text(
+                    book,
+                    style: TextStyle(
+                      color: isSelected
                           ? Colors.white
                           : isDarkMode
-                          ? Colors.white70
-                          : Colors.black87,
-                  fontFamily: 'DIN',
+                              ? Colors.white70
+                              : Colors.black87,
+                      fontFamily: 'DIN',
+                    ),
+                  ),
+                  backgroundColor:
+                      isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
+                  selectedColor: AppColors.primaryColor,
+                  onSelected: (_) => _selectBook(book),
                 ),
-              ),
-              backgroundColor:
-                  isDarkMode
-                      ? Colors.white.withValues(alpha: 26)
-                      : Colors.white,
-              selectedColor: AppColors.primaryColor,
-              onSelected: (_) => _applyFilter(filter),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildBody() {
-    if (_isLoading) {
-      return _buildShimmerLoading();
-    }
-
-    if (_error != null) {
-      return Center(
-        child: Text(
-          'حدث خطأ: $_error',
-          style: const TextStyle(color: Colors.red, fontFamily: 'DIN'),
-        ),
-      );
-    }
-
-    if (_filteredHadiths.isEmpty) {
-      return Center(
-        child: Text(
-          'لا توجد نتائج',
-          style: TextStyle(
-            color:
-                Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white70
-                    : Colors.black54,
-            fontFamily: 'DIN',
-            fontSize: 18,
+              );
+            },
           ),
         ),
-      );
-    }
-
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _filteredHadiths.length,
-        itemBuilder: (context, index) {
-          final hadith = _filteredHadiths[index];
-          return _buildHadithCard(hadith, index);
-        },
-      ),
+        Container(
+          height: 50,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: 3,
+            itemBuilder: (context, index) {
+              final filters = ['الكل', 'المحفوظات', 'عشوائي'];
+              final filter = filters[index];
+              final isSelected = filter == _selectedFilter;
+              return Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: FilterChip(
+                  selected: isSelected,
+                  label: _isLoadingRandom && filter == 'عشوائي'
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : Text(
+                          filter,
+                          style: TextStyle(
+                            color: isSelected
+                                ? Colors.white
+                                : isDarkMode
+                                    ? Colors.white70
+                                    : Colors.black87,
+                            fontFamily: 'DIN',
+                          ),
+                        ),
+                  backgroundColor:
+                      isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
+                  selectedColor: AppColors.primaryColor,
+                  onSelected: (_) => _applyFilter(filter),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -299,18 +396,17 @@ class _AhadithListScreenState extends State<AhadithListScreen>
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 0,
-      color: isDarkMode ? Colors.white.withValues(alpha: 26) : Colors.white,
+      color: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder:
-                  (context) => BaseAhadithScreen(
-                    title: hadith.hadithNumber,
-                    hadith: hadith,
-                  ),
+              builder: (context) => BaseAhadithScreen(
+                title: hadith.hadithNumber,
+                hadith: hadith,
+              ),
             ),
           );
         },
@@ -322,37 +418,51 @@ class _AhadithListScreenState extends State<AhadithListScreen>
             children: [
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color:
-                          isDarkMode
-                              ? AppColors.primaryColor.withValues(alpha: 51)
-                              : AppColors.primaryColor.withValues(alpha: 26),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      hadith.hadithNumber,
-                      style: TextStyle(
-                        fontFamily: 'DIN',
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color:
-                            isDarkMode ? Colors.white : AppColors.primaryColor,
-                      ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDarkMode
+                                ? AppColors.primaryColor.withOpacity(0.2)
+                                : AppColors.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            hadith.hadithNumber,
+                            style: TextStyle(
+                              fontFamily: 'DIN',
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: isDarkMode
+                                  ? Colors.white
+                                  : AppColors.primaryColor,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          hadith.chapterName,
+                          style: TextStyle(
+                            fontFamily: 'DIN',
+                            fontSize: 14,
+                            color: isDarkMode ? Colors.white70 : Colors.black54,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const Spacer(),
                   IconButton(
                     icon: Icon(
                       isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                      color:
-                          isBookmarked
-                              ? AppColors.primaryColor
-                              : isDarkMode
+                      color: isBookmarked
+                          ? AppColors.primaryColor
+                          : isDarkMode
                               ? Colors.white54
                               : Colors.black54,
                     ),
