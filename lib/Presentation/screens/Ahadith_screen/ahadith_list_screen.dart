@@ -416,6 +416,40 @@ class _AhadithListScreenState extends State<AhadithListScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isDarkMode
+                      ? AppColors.primaryColor.withOpacity(0.1)
+                      : AppColors.primaryColor.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'كتاب: $_selectedBook',
+                      style: TextStyle(
+                        fontFamily: 'DIN',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: isDarkMode ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                    Text(
+                      'رقم الحديث: ${hadith.id}',
+                      style: TextStyle(
+                        fontFamily: 'DIN',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: isDarkMode ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(

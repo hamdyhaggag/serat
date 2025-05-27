@@ -125,6 +125,7 @@ class HadithService {
             hadithText: hadith['text'] ?? '',
             explanation: 'هذا حديث عشوائي من قاعدة بيانات الأحاديث',
             narrator: hadith['narrator'] ?? 'مصدر: API Hadith',
+            chapterName: 'حديث عشوائي',
           ));
         }
         
