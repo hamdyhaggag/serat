@@ -165,22 +165,6 @@ class _AhadithListScreenState extends State<AhadithListScreen>
           ),
         ),
         centerTitle: true,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color:
-                isDarkMode ? Colors.white.withValues(alpha: 26) : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: IconButton(
-            icon: Icon(
-              Icons.arrow_back_ios_new_rounded,
-              color: isDarkMode ? Colors.white : AppColors.primaryColor,
-              size: 20,
-            ),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
       ),
       body: Column(
         children: [

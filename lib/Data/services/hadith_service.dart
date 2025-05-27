@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:serat/domain/models/hadith_model.dart';
+import 'package:http/http.dart' as http;
 
 class HadithService {
   static const String _cacheKey = 'cached_hadiths';
@@ -92,6 +93,36 @@ class HadithService {
       await prefs.remove(_cacheKey);
     } catch (e) {
       print('Error clearing hadith cache: $e');
+    }
+  }
+
+  Future<List<HadithModel>> getRandomHadiths() async {
+    try {
+      final response = await http.get(
+        Uri.parse('https://api.alquran.cloud/v1/hadith/random'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final hadiths = <HadithModel>[];
+        
+        if (data['data'] != null) {
+          final hadith = data['data'];
+          hadiths.add(HadithModel(
+            id: 0, // Using 0 as a placeholder since random hadiths don't have IDs
+            hadithNumber: 'حديث عشوائي',
+            hadithText: hadith['text'] ?? '',
+            narrator: hadith['narrator'] ?? '',
+            book: hadith['book'] ?? '',
+          ));
+        }
+        
+        return hadiths;
+      } else {
+        throw Exception('Failed to load random hadiths');
+      }
+    } catch (e) {
+      throw Exception('Error fetching random hadiths: $e');
     }
   }
 }

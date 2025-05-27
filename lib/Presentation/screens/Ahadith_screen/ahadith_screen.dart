@@ -125,35 +125,6 @@ class _AhadithScreenState extends State<AhadithScreen>
           ),
         ),
         centerTitle: true,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color:
-                isDarkMode ? Colors.white.withValues(alpha: 26) : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: IconButton(
-            icon: Icon(
-              Icons.arrow_back_ios_new_rounded,
-              color: isDarkMode ? Colors.white : AppColors.primaryColor,
-              size: 20,
-            ),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _isGridView ? Icons.view_list : Icons.grid_view,
-              color: isDarkMode ? Colors.white : AppColors.primaryColor,
-            ),
-            onPressed: () {
-              setState(() {
-                _isGridView = !_isGridView;
-              });
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [
