@@ -47,7 +47,10 @@ class AzkarPages extends StatelessWidget {
             builder: (context, state) {
               final completedCards = state.completedCards;
               return Padding(
-                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.05,
+                  vertical: screenHeight * 0.0001,
+                ),
                 child: GestureDetector(
                   onTap: () {
                     if (!completedCards.contains(index)) {
@@ -79,10 +82,9 @@ class AzkarPages extends StatelessWidget {
                                   azkar[index],
                                   style: TextStyle(
                                     fontSize: screenWidth * 0.06,
-                                    color:
-                                        isDarkMode
-                                            ? Colors.white
-                                            : const Color(0xFF2D3436),
+                                    color: isDarkMode
+                                        ? Colors.white
+                                        : const Color(0xFF2D3436),
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'Cairo',
                                   ),
@@ -95,10 +97,9 @@ class AzkarPages extends StatelessWidget {
                                     IconButton(
                                       icon: Icon(
                                         Icons.copy,
-                                        color:
-                                            isDarkMode
-                                                ? Colors.white70
-                                                : Colors.grey[700],
+                                        color: isDarkMode
+                                            ? Colors.white70
+                                            : Colors.grey[700],
                                       ),
                                       onPressed: () {
                                         Clipboard.setData(
@@ -116,7 +117,8 @@ class AzkarPages extends StatelessWidget {
                                                 fontSize: screenWidth * 0.04,
                                               ),
                                             ),
-                                            duration: const Duration(seconds: 2),
+                                            duration:
+                                                const Duration(seconds: 2),
                                           ),
                                         );
                                       },
@@ -124,10 +126,9 @@ class AzkarPages extends StatelessWidget {
                                     IconButton(
                                       icon: Icon(
                                         Icons.share,
-                                        color:
-                                            isDarkMode
-                                                ? Colors.white70
-                                                : Colors.grey[700],
+                                        color: isDarkMode
+                                            ? Colors.white70
+                                            : Colors.grey[700],
                                       ),
                                       onPressed: () {
                                         Share.share(azkar[index]);
@@ -142,20 +143,23 @@ class AzkarPages extends StatelessWidget {
                             maxValue: maxValues[index],
                             onComplete: () {
                               context.read<AzkarCubit>().updateCompletedCards(
-                                index,
-                              );
+                                    index,
+                                  );
                             },
                             isCompleted: completedCards.contains(index),
                             pageController: pageController,
                             currentIndex: index,
                             totalPages: azkar.length,
                             onIncrement: () {
-                              context.read<AzkarCubit>().incrementCounter(index);
+                              context
+                                  .read<AzkarCubit>()
+                                  .incrementCounter(index);
                             },
                           ),
                           if (completedCards.contains(index))
                             Padding(
-                              padding: EdgeInsets.only(top: screenHeight * 0.02),
+                              padding:
+                                  EdgeInsets.only(top: screenHeight * 0.02),
                               child: Icon(
                                 Icons.check_circle,
                                 color: Colors.green,

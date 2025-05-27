@@ -45,9 +45,9 @@ class AzkarProgressIndicator extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.all(screenWidth * 0.04),
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.01),
                 child: Text(
-                  'أكملت %${(progress * 100).round()}',
+                  ' أكملت ${(progress * 100).round()}%',
                   style: TextStyle(
                     color: isDarkMode ? Colors.white : const Color(0xFF2D3436),
                     fontSize: screenWidth * 0.045,
