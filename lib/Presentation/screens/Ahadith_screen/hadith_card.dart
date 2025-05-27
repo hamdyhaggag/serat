@@ -42,10 +42,9 @@ class HadithCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color:
-                    isDarkMode
-                        ? AppColors.primaryColor.withOpacity(0.2)
-                        : AppColors.primaryColor.withOpacity(0.1),
+                color: isDarkMode
+                    ? AppColors.primaryColor.withOpacity(0.2)
+                    : AppColors.primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -70,49 +69,50 @@ class HadithCard extends StatelessWidget {
                 color: isDarkMode ? Colors.white : Colors.black87,
               ),
             ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color:
-                    isDarkMode
-                        ? Colors.white.withOpacity(0.05)
-                        : Colors.grey[50],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color:
-                      isDarkMode
-                          ? Colors.white.withOpacity(0.1)
-                          : Colors.grey[300]!,
+            if (explanation.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDarkMode
+                      ? Colors.white.withOpacity(0.05)
+                      : Colors.grey[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isDarkMode
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.grey[300]!,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'الشرح',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'DIN',
+                        fontSize: fontSize + 2,
+                        fontWeight: FontWeight.bold,
+                        color:
+                            isDarkMode ? Colors.white : AppColors.primaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      explanation,
+                      textAlign: TextAlign.justify,
+                      style: TextStyle(
+                        fontFamily: 'DIN',
+                        fontSize: fontSize,
+                        height: 1.6,
+                        color: isDarkMode ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'الشرح',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'DIN',
-                      fontSize: fontSize + 2,
-                      fontWeight: FontWeight.bold,
-                      color: isDarkMode ? Colors.white : AppColors.primaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    explanation,
-                    textAlign: TextAlign.justify,
-                    style: TextStyle(
-                      fontFamily: 'DIN',
-                      fontSize: fontSize,
-                      height: 1.6,
-                      color: isDarkMode ? Colors.white70 : Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ],
         ),
       ),

@@ -60,8 +60,8 @@ class HadithDatabaseService {
           id: hadith['id'] ?? 0,
           hadithNumber: 'حديث ${hadith['number'] ?? ''}',
           hadithText: hadith['arabic'] ?? '',
-          explanation: english?['text'] ?? '',
-          narrator: english?['narrator'] ?? '',
+          explanation: hadith['explanation'] ?? '',
+          narrator: hadith['narrator'] ?? '',
           chapterName: chapterName,
           bookId: _bookIds[bookName] ?? 'unknown',
         );
