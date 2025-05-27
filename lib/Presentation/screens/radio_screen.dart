@@ -47,10 +47,9 @@ class _RadioScreenState extends State<RadioScreen>
   Future<void> _loadBookmarks() async {
     final bookmarkedUrls = _prefs.getStringList('bookmarked_stations') ?? [];
     setState(() {
-      _bookmarkedStations =
-          _stations
-              .where((station) => bookmarkedUrls.contains(station.url))
-              .toList();
+      _bookmarkedStations = _stations
+          .where((station) => bookmarkedUrls.contains(station.url))
+          .toList();
     });
   }
 
@@ -67,10 +66,9 @@ class _RadioScreenState extends State<RadioScreen>
 
   void _filterStations(String query) {
     setState(() {
-      _filteredStations =
-          _stations.where((station) {
-            return station.name.toLowerCase().contains(query.toLowerCase());
-          }).toList();
+      _filteredStations = _stations.where((station) {
+        return station.name.toLowerCase().contains(query.toLowerCase());
+      }).toList();
     });
   }
 
@@ -193,145 +191,142 @@ class _RadioScreenState extends State<RadioScreen>
       body: SafeArea(
         child: Column(
           children: [
-            Flexible(
-              child: SingleChildScrollView(
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color:
-                        isDarkMode
-                            ? const Color(0xff2F2F2F)
-                            : AppColors.primaryColor,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(30),
-                      bottomRight: Radius.circular(30),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
+            SingleChildScrollView(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: isDarkMode
+                      ? const Color(0xff2F2F2F)
+                      : AppColors.primaryColor,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(30),
+                    bottomRight: Radius.circular(30),
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        width: 200,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            if (_isPlaying)
-                              TweenAnimationBuilder<double>(
-                                tween: Tween(begin: 0.8, end: 1.2),
-                                duration: const Duration(seconds: 1),
-                                curve: Curves.easeInOut,
-                                builder: (context, value, child) {
-                                  return Transform.scale(
-                                    scale: value,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: Colors.white.withOpacity(0.3),
-                                          width: 2,
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            Icon(
-                              _isPlaying
-                                  ? Icons.radio
-                                  : Icons.radio_button_unchecked,
-                              size: 80,
-                              color: Colors.white,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      AppText(
-                        _currentStation.isEmpty
-                            ? 'اختر محطة'
-                            : _currentStationName,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontFamily: 'Cairo',
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildControlButton(
-                            icon: _isPlaying ? Icons.pause : Icons.play_arrow,
-                            onPressed: () {
-                              if (_currentStation.isNotEmpty) {
-                                _playStation(
-                                  _currentStation,
-                                  _currentStationName,
-                                );
-                              }
-                            },
-                          ),
-                          const SizedBox(width: 20),
-                          _buildControlButton(
-                            icon: Icons.stop,
-                            onPressed: () async {
-                              await _audioPlayer.stop();
-                              setState(() {
-                                _currentStation = '';
-                                _currentStationName = '';
-                              });
-                            },
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.volume_down, color: Colors.white),
-                            Expanded(
-                              child: Slider(
-                                value: _volume,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _volume = value;
-                                  });
-                                  _audioPlayer.setVolume(value);
-                                },
-                                activeColor: Colors.white,
-                                inactiveColor: Colors.white.withOpacity(0.3),
-                              ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          if (_isPlaying)
+                            TweenAnimationBuilder<double>(
+                              tween: Tween(begin: 0.8, end: 1.2),
+                              duration: const Duration(seconds: 1),
+                              curve: Curves.easeInOut,
+                              builder: (context, value, child) {
+                                return Transform.scale(
+                                  scale: value,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.3),
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                            const Icon(Icons.volume_up, color: Colors.white),
-                          ],
-                        ),
+                          Icon(
+                            _isPlaying
+                                ? Icons.radio
+                                : Icons.radio_button_unchecked,
+                            size: 80,
+                            color: Colors.white,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 20),
+                    AppText(
+                      _currentStation.isEmpty
+                          ? 'اختر محطة'
+                          : _currentStationName,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontFamily: 'Cairo',
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildControlButton(
+                          icon: _isPlaying ? Icons.pause : Icons.play_arrow,
+                          onPressed: () {
+                            if (_currentStation.isNotEmpty) {
+                              _playStation(
+                                _currentStation,
+                                _currentStationName,
+                              );
+                            }
+                          },
+                        ),
+                        const SizedBox(width: 20),
+                        _buildControlButton(
+                          icon: Icons.stop,
+                          onPressed: () async {
+                            await _audioPlayer.stop();
+                            setState(() {
+                              _currentStation = '';
+                              _currentStationName = '';
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.volume_down, color: Colors.white),
+                          Expanded(
+                            child: Slider(
+                              value: _volume,
+                              onChanged: (value) {
+                                setState(() {
+                                  _volume = value;
+                                });
+                                _audioPlayer.setVolume(value);
+                              },
+                              activeColor: Colors.white,
+                              inactiveColor: Colors.white.withOpacity(0.3),
+                            ),
+                          ),
+                          const Icon(Icons.volume_up, color: Colors.white),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -552,10 +547,9 @@ class _RadioScreenState extends State<RadioScreen>
                 offset: const Offset(0, 5),
               ),
             ],
-            border:
-                isSelected
-                    ? Border.all(color: AppColors.primaryColor, width: 2)
-                    : null,
+            border: isSelected
+                ? Border.all(color: AppColors.primaryColor, width: 2)
+                : null,
           ),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(
@@ -566,10 +560,9 @@ class _RadioScreenState extends State<RadioScreen>
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color:
-                    isDarkMode
-                        ? Colors.grey[800]
-                        : AppColors.primaryColor.withOpacity(0.1),
+                color: isDarkMode
+                    ? Colors.grey[800]
+                    : AppColors.primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
