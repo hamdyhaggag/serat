@@ -64,24 +64,38 @@ class _IslamicQuizScreenState extends State<IslamicQuizScreen>
       });
 
       _jsonData = await IslamicQuizService.getQuestions();
+      print('Raw JSON data loaded: ${_jsonData != null}');
+
       final allQuestions = IslamicQuizService.parseQuestions(_jsonData!);
-      
+      print('Questions parsed successfully: ${allQuestions.isNotEmpty}');
       print('Total questions loaded: ${allQuestions.length}');
       print('Selected category: $_selectedCategory');
       print('Selected difficulty: $_selectedDifficulty');
-      print('Converted category: ${IslamicQuizService.convertCategoryToId(_selectedCategory)}');
-      print('Converted difficulty: ${IslamicQuizService.convertDifficultyToEnglish(_selectedDifficulty)}');
+      print(
+          'Converted category: ${IslamicQuizService.convertCategoryToId(_selectedCategory)}');
+      print(
+          'Converted difficulty: ${IslamicQuizService.convertDifficultyToEnglish(_selectedDifficulty)}');
 
       _questions = allQuestions.where((q) {
-        bool categoryMatch =
-            _selectedCategory == 'all' || q.category == IslamicQuizService.convertCategoryToId(_selectedCategory);
-        bool difficultyMatch =
-            _selectedDifficulty == 'all' || q.difficulty == IslamicQuizService.convertDifficultyToEnglish(_selectedDifficulty);
-        print('Question ${q.id}: category=${q.category}, difficulty=${q.difficulty}, matches=${categoryMatch && difficultyMatch}');
+        bool categoryMatch = _selectedCategory == 'all' ||
+            q.category ==
+                IslamicQuizService.convertCategoryToId(_selectedCategory);
+        bool difficultyMatch = _selectedDifficulty == 'all' ||
+            q.difficulty ==
+                IslamicQuizService.convertDifficultyToEnglish(
+                    _selectedDifficulty);
+        print(
+            'Question ${q.id}: category=${q.category}, difficulty=${q.difficulty}, matches=${categoryMatch && difficultyMatch}');
         return categoryMatch && difficultyMatch;
       }).toList();
 
       print('Filtered questions count: ${_questions.length}');
+      print(
+          'First question data: ${_questions.isNotEmpty ? _questions.first.toJson() : "No questions"}');
+
+      if (_questions.isEmpty) {
+        print('WARNING: No questions available after filtering!');
+      }
 
       _questions.shuffle();
 

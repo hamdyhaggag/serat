@@ -46,10 +46,14 @@ class IslamicQuizService {
         return 'quran';
       case 'السنة النبوية':
         return 'hadith';
-      case 'العقيدة':
+      case 'التاريخ الإسلامي':
         return 'history';
-      case 'الفقه':
+      case 'الفقه الإسلامي':
         return 'fiqh';
+      case 'الأنبياء والرسل':
+        return 'prophets';
+      case 'الصحابة الكرام':
+        return 'companions';
       default:
         return arabicCategory;
     }
