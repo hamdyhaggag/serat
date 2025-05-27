@@ -20,7 +20,19 @@ class _QuranScreenState extends State<QuranScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<QuranCubit>().getChapters();
+    // Only fetch chapters if they haven't been loaded yet
+    if (context.read<QuranCubit>().state is! QuranLoaded) {
+      context.read<QuranCubit>().getChapters();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Only reload if the state is not loaded
+    if (context.read<QuranCubit>().state is! QuranLoaded) {
+      context.read<QuranCubit>().getChapters();
+    }
   }
 
   @override
@@ -33,40 +45,15 @@ class _QuranScreenState extends State<QuranScreen> {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDarkMode ? Colors.white : Colors.black;
-    final subtitleColor =
-        isDarkMode
-            ? Colors.grey[400] ?? Colors.grey
-            : Colors.grey[600] ?? Colors.grey;
+    final subtitleColor = isDarkMode
+        ? Colors.grey[400] ?? Colors.grey
+        : Colors.grey[600] ?? Colors.grey;
     final cardColor =
         isDarkMode ? Colors.grey[900] ?? Colors.grey[800]! : Colors.white;
 
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.black : Colors.grey[50],
       appBar: CustomAppBar(title: 'القرآن الكريم', isHome: false),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          final state = context.read<QuranCubit>().state;
-          if (state is QuranLoaded) {
-            showSearch(
-              context: context,
-              delegate: QuranSearchDelegate(
-                chapters: state.chapters,
-                onFilter:
-                    (
-                      _,
-                      __,
-                    ) {}, // Empty callback since we handle filtering in the delegate
-                isDarkMode: isDarkMode,
-              ),
-            );
-          }
-        },
-        backgroundColor: isDarkMode ? Colors.grey[900] : AppColors.primaryColor,
-        child: Icon(
-          Icons.search,
-          color: isDarkMode ? Colors.white : Colors.white,
-        ),
-      ),
       body: BlocBuilder<QuranCubit, QuranState>(
         builder: (context, state) {
           if (state is QuranLoading) {
@@ -155,8 +142,8 @@ class _QuranScreenState extends State<QuranScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder:
-                              (context) => QuranChapterScreen(chapter: chapter),
+                          builder: (context) =>
+                              QuranChapterScreen(chapter: chapter),
                         ),
                       );
                     },
@@ -241,25 +228,23 @@ class QuranSearchDelegate extends SearchDelegate {
   }
 
   void _filterChapters(String query) {
-    _filteredChapters =
-        chapters.where((chapter) {
-          final nameLower = chapter.name.toLowerCase();
-          final englishNameLower = chapter.englishName.toLowerCase();
-          final translationLower = chapter.englishNameTranslation.toLowerCase();
-          final searchLower = query.toLowerCase();
+    _filteredChapters = chapters.where((chapter) {
+      final nameLower = chapter.name.toLowerCase();
+      final englishNameLower = chapter.englishName.toLowerCase();
+      final translationLower = chapter.englishNameTranslation.toLowerCase();
+      final searchLower = query.toLowerCase();
 
-          return nameLower.contains(searchLower) ||
-              englishNameLower.contains(searchLower) ||
-              translationLower.contains(searchLower);
-        }).toList();
+      return nameLower.contains(searchLower) ||
+          englishNameLower.contains(searchLower) ||
+          translationLower.contains(searchLower);
+    }).toList();
   }
 
   Widget _buildSearchResults(BuildContext context) {
     final textColor = isDarkMode ? Colors.white : Colors.black;
-    final subtitleColor =
-        isDarkMode
-            ? Colors.grey[400] ?? Colors.grey
-            : Colors.grey[600] ?? Colors.grey;
+    final subtitleColor = isDarkMode
+        ? Colors.grey[400] ?? Colors.grey
+        : Colors.grey[600] ?? Colors.grey;
     final cardColor =
         isDarkMode ? Colors.grey[900] ?? Colors.grey[800]! : Colors.white;
 

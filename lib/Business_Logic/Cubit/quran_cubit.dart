@@ -45,6 +45,8 @@ class QuranCubit extends Cubit<QuranState> {
   late final QuranService _quranService;
   bool _isInitialized = false;
   List<QuranChapter>? _cachedChapters;
+  List<QuranVerse>? _currentVerses;
+  int? _currentChapterNumber;
 
   QuranCubit() : super(QuranInitial()) {
     _initializeService();
@@ -73,7 +75,11 @@ class QuranCubit extends Cubit<QuranState> {
       emit(QuranLoaded(_cachedChapters!));
     }
 
-    emit(QuranLoading());
+    // Only emit loading if we don't have cached data
+    if (_cachedChapters == null) {
+      emit(QuranLoading());
+    }
+
     try {
       dev.log('QuranCubit: Fetching chapters...');
       final chapters = await _quranService.getChapters();
@@ -83,7 +89,12 @@ class QuranCubit extends Cubit<QuranState> {
     } catch (e, stackTrace) {
       dev.log('QuranCubit: Error fetching chapters: $e');
       dev.log('QuranCubit: Stack trace: $stackTrace');
-      emit(QuranError(e.toString()));
+      // If we have cached chapters, emit them even on error
+      if (_cachedChapters != null) {
+        emit(QuranLoaded(_cachedChapters!));
+      } else {
+        emit(QuranError(e.toString()));
+      }
     }
   }
 
@@ -93,16 +104,42 @@ class QuranCubit extends Cubit<QuranState> {
       return;
     }
 
+    // If we're already loading verses for this chapter, don't start another load
+    if (state is QuranVersesLoading && _currentChapterNumber == chapterNumber) {
+      return;
+    }
+
+    _currentChapterNumber = chapterNumber;
     emit(QuranVersesLoading(chapterNumber));
+
     try {
       dev.log('QuranCubit: Fetching verses for chapter $chapterNumber...');
       final verses = await _quranService.getChapterVerses(chapterNumber);
+      _currentVerses = verses;
       dev.log('QuranCubit: Successfully fetched ${verses.length} verses');
-      emit(QuranVersesLoaded(chapterNumber, verses));
+      // Only emit if we're still loading the same chapter
+      if (_currentChapterNumber == chapterNumber) {
+        emit(QuranVersesLoaded(chapterNumber, verses));
+      }
     } catch (e, stackTrace) {
       dev.log('QuranCubit: Error fetching verses: $e');
       dev.log('QuranCubit: Stack trace: $stackTrace');
-      emit(QuranVersesError(chapterNumber, e.toString()));
+      // Only emit error if we're still loading the same chapter
+      if (_currentChapterNumber == chapterNumber) {
+        emit(QuranVersesError(chapterNumber, e.toString()));
+      }
+    }
+  }
+
+  void returnToChapters() {
+    // Clear current verses and chapter number
+    _currentVerses = null;
+    _currentChapterNumber = null;
+
+    if (_cachedChapters != null) {
+      emit(QuranLoaded(_cachedChapters!));
+    } else {
+      getChapters();
     }
   }
 }
