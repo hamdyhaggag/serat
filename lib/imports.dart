@@ -78,7 +78,7 @@ export 'package:serat/Presentation/Widgets/Shared/custom_container.dart';
 export 'package:serat/Presentation/Widgets/Shared/custom_space.dart';
 export 'package:serat/Presentation/Widgets/Shared/row_with_text_and_icon.dart';
 export 'package:serat/Presentation/Widgets/Shared/widgets.dart';
-export 'package:serat/Presentation/Widgets/Azkar/azkar_list_item.dart';
+export 'package:serat/Presentation/Widgets/Azkar/sebha_list_item.dart';
 export 'package:serat/Presentation/screens/azkar_screens/add_azkar_item.dart';
 export 'package:serat/Presentation/Widgets/Azkar/azkar_model_view.dart';
 export 'package:serat/Data/utils/cache_helper.dart';
