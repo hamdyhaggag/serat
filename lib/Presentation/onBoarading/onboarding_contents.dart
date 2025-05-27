@@ -14,7 +14,7 @@ List<OnboardingContents> contents = [
   OnboardingContents(
     title: " مرحبًا بك في تطبيق صراط ",
     image: "assets/onboarding/onboarding1.png",
-    desc: "رفيقك الشامل للارتقاء بتجربتك الدينية",
+    desc: "رفيقك الشامل للإرتقاء بتجربتك الدينية",
   ),
   OnboardingContents(
     title: "مواقيت الصلاة الدقيقة",

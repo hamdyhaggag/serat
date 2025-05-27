@@ -63,8 +63,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     SizeConfig().init(context);
     double width = SizeConfig.screenW!;
+    double height = SizeConfig.screenH!;
+
+    // Calculate responsive values
     bool isSmallScreen = width <= 550;
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    bool isVerySmallScreen = width <= 360;
+    bool isLargeScreen = width > 1200;
+
+    // Responsive padding and spacing
+    double horizontalPadding =
+        isVerySmallScreen ? 16.0 : (isSmallScreen ? 24.0 : 32.0);
+    double verticalPadding =
+        isVerySmallScreen ? 16.0 : (isSmallScreen ? 24.0 : 32.0);
+    double imageHeight =
+        height * (isVerySmallScreen ? 0.20 : (isSmallScreen ? 0.25 : 0.30));
+    double titleFontSize =
+        isVerySmallScreen ? 24.0 : (isSmallScreen ? 28.0 : 32.0);
+    double descFontSize =
+        isVerySmallScreen ? 16.0 : (isSmallScreen ? 18.0 : 20.0);
+    double buttonFontSize =
+        isVerySmallScreen ? 16.0 : (isSmallScreen ? 18.0 : 20.0);
+    double buttonPadding =
+        isVerySmallScreen ? 12.0 : (isSmallScreen ? 16.0 : 20.0);
 
     return Scaffold(
       backgroundColor: colors[_currentPage],
@@ -79,45 +99,46 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 onPageChanged: (value) => setState(() => _currentPage = value),
                 itemCount: contents.length,
                 itemBuilder: (context, i) {
-                  return Padding(
-                    padding: EdgeInsets.all(isSmallScreen ? 20.0 : 40.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(height: 70.h),
-                        Image.asset(
-                          contents[i].image,
-                          height:
-                              SizeConfig.blockV! * (isSmallScreen ? 35 : 35),
-                        ),
-                        SizedBox(height: isSmallScreen ? 60 : 100),
-                        Text(
-                          contents[i].title,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: "DIN",
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primaryColor,
-                            fontSize: isSmallScreen ? 30 : 28,
+                  return SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                        vertical: verticalPadding,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SizedBox(height: height * 0.02),
+                          Image.asset(
+                            contents[i].image,
+                            height: imageHeight,
+                            fit: BoxFit.contain,
                           ),
-                        ),
-                        const SizedBox(height: 15),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            double fontSize = isSmallScreen ? 23 : 20;
-                            return Text(
-                              contents[i].desc,
-                              style: TextStyle(
-                                fontFamily: "DIN",
-                                fontWeight: FontWeight.w300,
-                                color: AppColors.primaryColor,
-                                fontSize: fontSize,
-                              ),
-                              textAlign: TextAlign.center,
-                            );
-                          },
-                        ),
-                      ],
+                          SizedBox(height: height * 0.03),
+                          Text(
+                            contents[i].title,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: "DIN",
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primaryColor,
+                              fontSize: titleFontSize,
+                            ),
+                          ),
+                          SizedBox(height: height * 0.02),
+                          Text(
+                            contents[i].desc,
+                            style: TextStyle(
+                              fontFamily: "DIN",
+                              fontWeight: FontWeight.w300,
+                              color: AppColors.primaryColor,
+                              fontSize: descFontSize,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },
@@ -128,16 +149,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      contents.length,
-                      (index) => _buildDots(index: index),
+                  Padding(
+                    padding: EdgeInsets.only(top: height * 0.02),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        contents.length,
+                        (index) => _buildDots(index: index),
+                      ),
                     ),
                   ),
                   _currentPage + 1 == contents.length
                       ? Padding(
-                        padding: EdgeInsets.all(isSmallScreen ? 38 : 40),
+                        padding: EdgeInsets.all(horizontalPadding),
                         child: ElevatedButton(
                           onPressed: () {
                             navigateTo(context, const ScreenLayout());
@@ -152,11 +176,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               borderRadius: BorderRadius.circular(50),
                             ),
                             padding: EdgeInsets.symmetric(
-                              horizontal: isSmallScreen ? 60 : width * 0.2,
-                              vertical: isSmallScreen ? 15 : 17,
+                              horizontal: width * 0.15,
+                              vertical: buttonPadding,
                             ),
                             textStyle: TextStyle(
-                              fontSize: isSmallScreen ? 20 : 23,
+                              fontSize: buttonFontSize,
                               fontFamily: 'DIN',
                             ),
                           ),
@@ -167,7 +191,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       )
                       : Padding(
-                        padding: EdgeInsets.all(isSmallScreen ? 20 : 30),
+                        padding: EdgeInsets.all(horizontalPadding),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -183,7 +207,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 elevation: 0,
                                 textStyle: TextStyle(
                                   fontWeight: FontWeight.w600,
-                                  fontSize: isSmallScreen ? 18 : 20,
+                                  fontSize: buttonFontSize,
                                   fontFamily: 'DIN',
                                 ),
                               ),
@@ -201,11 +225,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 ),
                                 elevation: 0,
                                 padding: EdgeInsets.symmetric(
-                                  horizontal: isSmallScreen ? 20 : 30,
-                                  vertical: isSmallScreen ? 15 : 25,
+                                  horizontal: width * 0.08,
+                                  vertical: buttonPadding,
                                 ),
                                 textStyle: TextStyle(
-                                  fontSize: isSmallScreen ? 18 : 20,
+                                  fontSize: buttonFontSize,
                                   fontFamily: 'DIN',
                                 ),
                               ),
