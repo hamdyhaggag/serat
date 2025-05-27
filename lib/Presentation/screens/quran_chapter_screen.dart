@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serat/Business_Logic/Cubit/quran_cubit.dart';
 import 'package:serat/Core/models/quran_chapter.dart';
-import 'package:serat/Core/models/quran_verse.dart';
+import 'package:serat/Core/models/quran_verse.dart'; // Ensure this path is correct
 
 class QuranChapterScreen extends StatefulWidget {
   final QuranChapter chapter;
@@ -16,7 +16,7 @@ class QuranChapterScreen extends StatefulWidget {
 class _QuranChapterScreenState extends State<QuranChapterScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  final int _versesPerPage = 10;
+  final int _versesPerPage = 10; // Consider making this configurable or dynamic
 
   List<List<QuranVerse>> _pagedVerses = [];
   int _totalPages = 0;
@@ -35,7 +35,7 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
     _pagedVerses = [];
     if (allVerses.isEmpty) {
       _totalPages = 0;
-      setState(() {});
+      if (mounted) setState(() {});
       return;
     }
 
@@ -43,8 +43,12 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
 
     if (widget.chapter.number != 9 && widget.chapter.number != 1) {
       final bismillahVerse = QuranVerse(
-          text: {'ar': 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'},
-          number: 0,
+          text: {
+            'ar': 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'
+          },
+          number: 0, // Special identifier for Bismillah
+          // Ensure these match your QuranVerse model's requirements for non-nullable fields
+          // If your model has an 'id', ensure it's provided or nullable.
           juz: widget.chapter.verses.isNotEmpty
               ? widget.chapter.verses.first.juz
               : 0,
@@ -73,7 +77,7 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
     } else {
       _totalPages = _pagedVerses.length;
     }
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   @override
@@ -82,16 +86,36 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
     super.dispose();
   }
 
+  String _toArabicNumbers(String number) {
+    const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    for (int i = 0; i < english.length; i++) {
+      number = number.replaceAll(english[i], arabic[i]);
+    }
+    return number;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDarkMode ? Colors.white : const Color(0xFF2C3E50);
-    final mushafPageColor =
-        isDarkMode ? Colors.grey[900] ?? Colors.grey : const Color(0xFFFBF0D9);
-    final borderColor = isDarkMode
-        ? Colors.grey[700] ?? Colors.grey[600]!
-        : Theme.of(context).primaryColor.withAlpha((0.5 * 255).round());
-    final primaryColor = Theme.of(context).primaryColor;
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    // Professional Color Palette
+    final primaryColor = theme.primaryColor; // Keep primary color from theme
+    final scaffoldBgColor = isDarkMode
+        ? const Color(0xFF121212)
+        : const Color(0xFFF0F2F5); // Slightly off-white/grey
+    final appBarColor = isDarkMode ? const Color(0xFF1E1E1E) : primaryColor;
+    final pageColor = isDarkMode
+        ? const Color(0xFF1E1E1E)
+        : const Color(0xFFFFFFFF); // White page for light, dark grey for dark
+    final mainTextColor =
+        isDarkMode ? const Color(0xFFE0E0E0) : const Color(0xFF1B2028);
+    final subtleTextColor = isDarkMode ? Colors.grey[400]! : Colors.grey[600]!;
+    final pageBorderColor =
+        isDarkMode ? Colors.grey[700]!.withAlpha(100) : Colors.grey[300]!;
+    final shadowColor =
+        isDarkMode ? Colors.black.withAlpha(100) : Colors.grey.withAlpha(70);
 
     return PopScope(
       canPop: true,
@@ -101,39 +125,54 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: isDarkMode ? Colors.black : const Color(0xFFEFE0CC),
+        backgroundColor: scaffoldBgColor,
         appBar: AppBar(
-          backgroundColor:
-              isDarkMode ? Colors.grey[900] ?? Colors.black : primaryColor,
-          elevation: 1,
-          title: Text(
-            "سورة ${widget.chapter.name['ar'] ?? ''}",
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontFamily: 'Amiri',
-            ),
-          ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () {
-              context.read<QuranCubit>().returnToChapters();
-              Navigator.of(context).pop();
-            },
-          ),
-          actions: [
-            if (_totalPages > 0)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Center(
-                  child: Text(
-                    '${_currentPage + 1} / $_totalPages',
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
-                  ),
+          backgroundColor: appBarColor,
+          elevation: isDarkMode ? 0.5 : 1.0,
+          scrolledUnderElevation: 2.0,
+          centerTitle: true,
+          title: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "سورة ${widget.chapter.name['ar'] ?? ''}",
+                style: TextStyle(
+                  fontSize: 22, // Adjusted for better balance
+                  fontWeight: FontWeight.bold,
+                  color: isDarkMode ? Colors.white : Colors.white,
+                  fontFamily: 'Amiri',
                 ),
               ),
-          ],
+              if (_totalPages > 0)
+                AnimatedOpacity(
+                  opacity: _totalPages > 0 ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 300),
+                  child: Text(
+                    '${_toArabicNumbers((_currentPage + 1).toString())} / ${_toArabicNumbers(_totalPages.toString())}',
+                    style: TextStyle(
+                      color: (isDarkMode ? Colors.white : Colors.white)
+                          .withAlpha(200),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Cairo', // Consistent font
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          leading: Center(
+            // Ensures button is centered in its space
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 22),
+              color: isDarkMode ? Colors.white : Colors.white,
+              tooltip: 'Back to Chapters',
+              onPressed: () {
+                context.read<QuranCubit>().returnToChapters();
+                Navigator.of(context).pop();
+              },
+            ),
+          ),
+          // Consider adding actions like settings or bookmarks later
         ),
         body: BlocConsumer<QuranCubit, QuranState>(
           listener: (context, state) {
@@ -155,55 +194,25 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
             if (state is QuranVersesLoading ||
                 (state is QuranInitial && widget.chapter.number > 0)) {
               return Center(
-                child: CircularProgressIndicator(color: primaryColor),
-              );
+                  child: CircularProgressIndicator(color: primaryColor));
             } else if (state is QuranVersesError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'حدث خطأ: ${state.message}',
-                      style: TextStyle(fontSize: 16, color: Colors.red[700]),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        context
-                            .read<QuranCubit>()
-                            .getChapterVerses(widget.chapter.number);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('إعادة المحاولة',
-                          style: TextStyle(fontFamily: 'Cairo')),
-                    ),
-                  ],
-                ),
-              );
+              return _buildErrorState(context, state.message, primaryColor);
             } else if (state is QuranVersesLoaded) {
               if (_pagedVerses.isEmpty) {
-                return const Center(
-                  child: Text(
-                    'لا توجد آيات لعرضها',
-                    style: TextStyle(fontSize: 18, fontFamily: 'Amiri'),
-                  ),
-                );
+                return _buildEmptyState(mainTextColor);
               }
               return Column(
                 children: [
-                  if (_currentPage == 0)
-                    _buildSurahPageHeader(context, isDarkMode, primaryColor),
+                  if (_currentPage == 0) // Show header only on the first page
+                    _buildSurahPageHeader(context, isDarkMode, primaryColor,
+                        mainTextColor, subtleTextColor, pageColor, shadowColor),
                   Expanded(
                     child: PageView.builder(
                       controller: _pageController,
                       itemCount: _totalPages,
+                      // reverse: true, // RTL page turning if desired
                       onPageChanged: (page) {
-                        setState(() {
-                          _currentPage = page;
-                        });
+                        if (mounted) setState(() => _currentPage = page);
                       },
                       itemBuilder: (context, pageIndex) {
                         final pageVerses = _pagedVerses[pageIndex];
@@ -213,10 +222,12 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
                           pageIndex,
                           _totalPages,
                           widget.chapter,
-                          textColor,
-                          mushafPageColor,
-                          borderColor,
+                          mainTextColor,
+                          pageColor,
+                          pageBorderColor,
                           primaryColor,
+                          shadowColor,
+                          subtleTextColor,
                         );
                       },
                     ),
@@ -224,57 +235,145 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
                 ],
               );
             }
-            return Center(
-              child: Text("يرجى تحديد سورة",
-                  style: TextStyle(
-                      fontFamily: 'Amiri', fontSize: 18, color: textColor)),
-            );
+            return _buildEmptyState(mainTextColor, message: "يرجى تحديد سورة");
           },
         ),
       ),
     );
   }
 
-  Widget _buildSurahPageHeader(
-      BuildContext context, bool isDarkMode, Color primaryColor) {
-    final headerBackgroundColor = isDarkMode
-        ? Colors.grey[800] ?? Colors.grey
-        : primaryColor.withAlpha((0.1 * 255).round());
-    final headerBorderColor =
-        isDarkMode ? primaryColor.withAlpha((0.5 * 255).round()) : primaryColor;
+  Widget _buildErrorState(
+      BuildContext context, String message, Color primaryColor) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline_rounded, color: Colors.red[400], size: 60),
+            const SizedBox(height: 20),
+            Text(
+              'حدث خطأ',
+              style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).textTheme.bodyLarge?.color),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: TextStyle(
+                  fontSize: 16,
+                  color: Theme.of(context).textTheme.bodyMedium?.color),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('إعادة المحاولة',
+                  style: TextStyle(
+                      fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
+              onPressed: () {
+                context
+                    .read<QuranCubit>()
+                    .getChapterVerses(widget.chapter.number);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                textStyle: const TextStyle(fontSize: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-      margin: const EdgeInsets.only(top: 8.0, left: 16, right: 16, bottom: 0),
-      decoration: BoxDecoration(
-          color: headerBackgroundColor,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(12),
-            topRight: Radius.circular(12),
-          ),
-          border: Border.all(color: headerBorderColor, width: 1.5)),
+  Widget _buildEmptyState(Color textColor,
+      {String message = 'لا توجد آيات لعرضها'}) {
+    return Center(
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.menu_book_rounded,
+              size: 80, color: textColor.withAlpha(100)),
+          const SizedBox(height: 20),
+          Text(
+            message,
+            style: TextStyle(
+                fontSize: 18,
+                fontFamily: 'Amiri',
+                color: textColor.withAlpha(150)),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSurahPageHeader(
+      BuildContext context,
+      bool isDarkMode,
+      Color primaryColor,
+      Color mainTextColor,
+      Color subtleTextColor,
+      Color headerBgColor,
+      Color shadowColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 24.0),
+      margin: const EdgeInsets.only(top: 12.0, left: 12, right: 12, bottom: 0),
+      decoration: BoxDecoration(
+          color:
+              headerBgColor, // Use the general page color or a slightly different tint
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+          ),
+          boxShadow: [
+            BoxShadow(
+                color: shadowColor, blurRadius: 10, offset: const Offset(0, 2)),
+          ],
+          border: Border.all(
+              color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+              width: 0.5)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             "سورة ${widget.chapter.name['ar'] ?? ''}",
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Amiri',
-              fontSize: 28,
+              fontSize: 30, // Prominent Surah name
               fontWeight: FontWeight.bold,
-              color: isDarkMode
-                  ? Colors.white
-                  : Theme.of(context).primaryColorDark,
+              color: primaryColor, // Use primary color for Surah name
+              height: 1.4,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            "${widget.chapter.revelationPlace == 'Meccan' ? 'مكية' : 'مدنية'} - ${widget.chapter.versesCount} آيات",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Cairo',
-              fontSize: 14,
-              color: isDarkMode ? Colors.grey[300] : Colors.black54,
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: primaryColor.withAlpha(
+                  isDarkMode ? 40 : 25), // Subtle background for info
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              // Ensure revelationPlace and versesCount exist and are valid on QuranChapter model
+              "${widget.chapter.revelationPlace == 'Meccan' ? 'مكية' : 'مدنية'} • ${_toArabicNumbers(widget.chapter.versesCount.toString())} آيات",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 14,
+                color: primaryColor.withAlpha(200),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -288,99 +387,119 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
     int pageIndex,
     int totalPages,
     QuranChapter chapter,
-    Color textColor,
-    Color pageBackgroundColorForMethod,
-    Color borderColorForMethod,
-    Color primaryColorForMethod,
+    Color mainTextColor,
+    Color pageBackgroundColor,
+    Color pageBorderColor,
+    Color primaryColor,
+    Color shadowColor,
+    Color subtleTextColor,
   ) {
+    final bool isFirstPageWithHeader = pageIndex == 0;
+
     return Container(
       margin: EdgeInsets.only(
-          left: 16.0,
-          right: 16.0,
+          left: 12.0,
+          right: 12.0,
           bottom: 16.0,
-          top: (pageIndex == 0 && _totalPages > 0 ? 0 : 8.0)),
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
+          top: (isFirstPageWithHeader
+              ? 0
+              : 12.0) // No top margin if header is shown directly above
+          ),
+      padding: const EdgeInsets.symmetric(
+          horizontal: 16.0, vertical: 20.0), // Increased padding
       decoration: BoxDecoration(
-        color: pageBackgroundColorForMethod,
-        border: Border.all(
-          color: borderColorForMethod,
-          width: 2.0,
-        ),
-        borderRadius: pageIndex == 0 && _totalPages > 0
+        color: pageBackgroundColor,
+        border:
+            Border.all(color: pageBorderColor, width: 1.0), // Thinner border
+        borderRadius: isFirstPageWithHeader
             ? const BorderRadius.only(
-                bottomLeft: Radius.circular(12),
-                bottomRight: Radius.circular(12))
-            : BorderRadius.circular(12.0),
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(16))
+            : BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
+              color: shadowColor, blurRadius: 12, offset: const Offset(0, 4)),
         ],
       ),
       child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Bismillah display
             if (pageIndex == 0 &&
                 verses.isNotEmpty &&
-                verses.first.number == 0 &&
-                chapter.number != 1 &&
-                chapter.number != 9)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
+                verses.first.number == 0 && // Is Bismillah pseudo-verse
+                chapter.number != 1 && // Not Fatiha (Bismillah is part of it)
+                chapter.number != 9) // Not Tawbah (No Bismillah)
+              Container(
+                margin: const EdgeInsets.only(bottom: 20.0, top: 4.0),
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                    border: Border(
+                        bottom: BorderSide(
+                            color: primaryColor.withAlpha(70), width: 1.0))),
                 child: Text(
                   verses.first.text['ar']!,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontFamily: 'Amiri',
-                    fontSize: 26,
-                    fontWeight: FontWeight.w600,
-                    color: textColor,
+                    fontFamily:
+                        'Amiri', // Consider a specific Bismillah font if available
+                    fontSize: 22, // Prominent Bismillah
+                    fontWeight: FontWeight.w500,
+                    color: mainTextColor,
                     height: 1.8,
                   ),
                 ),
               ),
+            // Verses display
             RichText(
-              textAlign: TextAlign.justify,
+              textAlign: TextAlign.justify, // Justified text for Mushaf feel
               textDirection: TextDirection.rtl,
               text: TextSpan(
                 style: TextStyle(
-                  fontSize: 22,
-                  color: textColor,
+                  fontSize: 23, // Slightly adjusted font size for body
+                  color: mainTextColor,
                   fontFamily: 'Amiri',
-                  height: 2.2,
-                  letterSpacing: 0.5,
-                  fontWeight: FontWeight.w500,
+                  height: 2.5, // Generous line height for readability
+                  letterSpacing: 0.3,
+                  fontWeight: FontWeight.normal, // Standard weight for reading
                 ),
                 children: verses.expand((verse) {
+                  // Skip Bismillah if it was the pseudo-verse and handled above
                   if (pageIndex == 0 &&
                       verse.number == 0 &&
                       chapter.number != 1 &&
-                      chapter.number != 9) return <InlineSpan>[];
+                      chapter.number != 9) {
+                    return <InlineSpan>[];
+                  }
 
                   return <InlineSpan>[
-                    TextSpan(text: verse.text['ar']?.toString() ?? ''),
+                    TextSpan(
+                        text:
+                            "${verse.text['ar']?.toString() ?? ''} "), // Add space after verse
                     WidgetSpan(
                       alignment: PlaceholderAlignment.middle,
+                      baseline: TextBaseline.alphabetic,
                       child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 6.0),
-                        padding: const EdgeInsets.all(5),
+                        margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 3),
                         decoration: BoxDecoration(
                           border: Border.all(
-                              color: primaryColorForMethod
-                                  .withAlpha((0.7 * 255).round()),
-                              width: 1.5),
+                              color: primaryColor.withAlpha(100), width: 1.0),
                           shape: BoxShape.circle,
+                          // color: primaryColor.withAlpha(30), // Optional: very subtle background
                         ),
                         child: Text(
                           _toArabicNumbers(verse.number.toString()),
                           style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: primaryColorForMethod,
-                            fontFamily: 'Amiri',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600, // Bolder for number
+                            color:
+                                primaryColor, // Use primary color for verse numbers
+                            fontFamily: 'Cairo', // Numeric font
                           ),
                         ),
                       ),
@@ -388,12 +507,13 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
                     if (verse.sajda?.obligatory == true)
                       WidgetSpan(
                         alignment: PlaceholderAlignment.middle,
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 4.0, left: 4.0),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
                           child: Icon(
-                            Icons.star,
-                            color: Colors.green.shade700,
-                            size: 18,
+                            Icons
+                                .star_border_purple500_outlined, // More distinct Sajda icon
+                            color: Colors.green.shade600,
+                            size: 20,
                           ),
                         ),
                       ),
@@ -405,15 +525,5 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
         ),
       ),
     );
-  }
-
-  String _toArabicNumbers(String number) {
-    const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-    const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-
-    for (int i = 0; i < english.length; i++) {
-      number = number.replaceAll(english[i], arabic[i]);
-    }
-    return number;
   }
 }
