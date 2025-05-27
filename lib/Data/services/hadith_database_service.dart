@@ -35,13 +35,22 @@ class HadithDatabaseService {
         final english = hadith['english'] as Map<String, dynamic>?;
         final chapter = hadith['chapter'] as Map<String, dynamic>?;
         
+        String chapterName;
+        if (chapter != null && chapter['arabic'] != null) {
+          chapterName = chapter['arabic'] as String;
+        } else if (chapter != null && chapter['english'] != null) {
+          chapterName = 'كتاب ${chapter['english']}';
+        } else {
+          chapterName = 'كتاب ${hadith['chapterId'] ?? ''}';
+        }
+        
         return HadithModel(
           id: hadith['id'] ?? 0,
           hadithNumber: 'حديث ${hadith['number'] ?? ''}',
           hadithText: hadith['arabic'] ?? '',
           explanation: english?['text'] ?? '',
           narrator: english?['narrator'] ?? '',
-          chapterName: chapter?['arabic'] ?? 'باب ${hadith['chapterId'] ?? ''}',
+          chapterName: chapterName,
           bookId: _bookIds[bookName] ?? 'unknown',
         );
       }).toList();
