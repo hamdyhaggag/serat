@@ -30,18 +30,30 @@ class HadithDatabaseService {
       final Map<String, dynamic> jsonData = json.decode(jsonString);
 
       final List<dynamic> hadithsData = jsonData['hadiths'] ?? [];
+      final List<dynamic> chaptersData = jsonData['chapters'] ?? [];
+
+      // Create a map of chapter IDs to their data for easier lookup
+      final Map<String, Map<String, dynamic>> chaptersMap = {};
+      for (var chapter in chaptersData) {
+        if (chapter is Map<String, dynamic>) {
+          final id = chapter['id']?.toString();
+          if (id != null) {
+            chaptersMap[id] = chapter;
+          }
+        }
+      }
 
       return hadithsData.map((hadith) {
         final english = hadith['english'] as Map<String, dynamic>?;
-        final chapter = hadith['chapter'] as Map<String, dynamic>?;
+        final chapterId = hadith['chapterId']?.toString();
         
+        // Get chapter data from chapters map
         String chapterName;
-        if (chapter != null && chapter['arabic'] != null) {
-          chapterName = chapter['arabic'] as String;
-        } else if (chapter != null && chapter['english'] != null) {
-          chapterName = 'كتاب ${chapter['english']}';
+        if (chapterId != null && chaptersMap.containsKey(chapterId)) {
+          final chapter = chaptersMap[chapterId]!;
+          chapterName = chapter['arabic'] as String? ?? 'كتاب $chapterId';
         } else {
-          chapterName = 'كتاب ${hadith['chapterId'] ?? ''}';
+          chapterName = 'كتاب ${chapterId ?? ''}';
         }
         
         return HadithModel(
@@ -71,6 +83,20 @@ class HadithDatabaseService {
       return hadiths[random];
     } catch (e) {
       print('Error getting random hadith: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<Map<String, String>>> getBooks() async {
+    try {
+      return _bookFiles.entries.map((entry) {
+        return {
+          'name': entry.key,
+          'id': _bookIds[entry.key] ?? 'unknown',
+        };
+      }).toList();
+    } catch (e) {
+      print('Error getting books: $e');
       rethrow;
     }
   }

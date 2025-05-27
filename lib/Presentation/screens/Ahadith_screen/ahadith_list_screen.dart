@@ -40,15 +40,7 @@ class _AhadithListScreenState extends State<AhadithListScreen>
   String _selectedBook = 'الأربعين النووية';
 
   // Map of book names to their API identifiers
-  final Map<String, String> _hadithBooks = {
-    'الأربعين النووية': 'nawawi',
-    'صحيح البخاري': 'bukhari',
-    'صحيح مسلم': 'muslim',
-    'سنن أبي داود': 'abudawud',
-    'سنن الترمذي': 'tirmidhi',
-    'سنن النسائي': 'nasai',
-    'سنن ابن ماجه': 'ibnmajah',
-  };
+  Map<String, String> _hadithBooks = {};
 
   @override
   void initState() {
@@ -74,6 +66,7 @@ class _AhadithListScreenState extends State<AhadithListScreen>
     await Future.wait([
       _loadHadiths(),
       _loadAllBookmarks(), // Load all bookmarks at startup
+      _loadBookNames(), // Load book names
     ]);
   }
 
@@ -297,6 +290,39 @@ class _AhadithListScreenState extends State<AhadithListScreen>
       }
       _groupHadithsByChapter();
     });
+  }
+
+  Future<void> _loadBookNames() async {
+    if (_isLoadingBooks) return;
+    _isLoadingBooks = true;
+
+    try {
+      final books = await _hadithDatabaseService.getBooks();
+      if (!mounted) return;
+
+      setState(() {
+        _hadithBooks = Map.fromEntries(
+          books.map((book) => MapEntry(book['name']!, book['id']!)),
+        );
+        if (_hadithBooks.isNotEmpty) {
+          _selectedBook = _hadithBooks.keys.first;
+        }
+      });
+    } catch (e) {
+      print('Error loading book names: $e');
+      // Fallback to default books if loading fails
+      _hadithBooks = {
+        'الأربعين النووية': 'nawawi',
+        'صحيح البخاري': 'bukhari',
+        'صحيح مسلم': 'muslim',
+        'سنن أبي داود': 'abudawud',
+        'سنن الترمذي': 'tirmidhi',
+        'سنن النسائي': 'nasai',
+        'سنن ابن ماجه': 'ibnmajah',
+      };
+    } finally {
+      _isLoadingBooks = false;
+    }
   }
 
   @override
@@ -540,9 +566,9 @@ class _AhadithListScreenState extends State<AhadithListScreen>
 
   Widget _buildChapterExpansion(
       String chapterName, List<HadithModel> hadiths, bool isDarkMode) {
-    // Extract the proper chapter name from the JSON structure
+    // Use the chapter name directly from the JSON structure
     final displayName =
-        chapterName.contains('كتاب') ? chapterName : 'كتاب $chapterName';
+        hadiths.isNotEmpty ? hadiths.first.chapterName : chapterName;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
