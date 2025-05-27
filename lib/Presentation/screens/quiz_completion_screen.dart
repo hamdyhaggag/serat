@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:serat/Business_Logic/Services/islamic_quiz_service.dart';
+import 'package:serat/Presentation/screens/islamic_quiz_screen.dart';
 import 'package:serat/Presentation/theme/app_theme.dart';
 
 class QuizCompletionScreen extends StatelessWidget {
@@ -39,7 +41,7 @@ class QuizCompletionScreen extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        backgroundColor: Color(0xff137058),
+        backgroundColor: const Color(0xff137058),
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -47,7 +49,7 @@ class QuizCompletionScreen extends StatelessWidget {
           children: [
             Container(
               padding: EdgeInsets.all(isSmallScreen ? 20 : 24),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Color(0xff137058),
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(30),
@@ -116,7 +118,7 @@ class QuizCompletionScreen extends StatelessWidget {
                         'متوسط الوقت',
                         '${averageTime.round()} ثانية',
                         Icons.timer_outlined,
-                        Color(0xff137058),
+                        const Color(0xff137058),
                       ),
                       _buildStatItem(
                         context,
@@ -157,30 +159,71 @@ class QuizCompletionScreen extends StatelessWidget {
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
               blurRadius: 10,
-              offset: Offset(0, -2),
+              offset: const Offset(0, -2),
             ),
           ],
         ),
-        child: ElevatedButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            'العودة للاختبار',
-            style: TextStyle(
-              fontFamily: 'DIN',
-              fontSize: isSmallScreen ? 14 : 16,
-              fontWeight: FontWeight.bold,
+        child: Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'العودة للرئيسية',
+                  style: TextStyle(
+                    fontFamily: 'DIN',
+                    fontSize: isSmallScreen ? 14 : 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xff137058),
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(
+                    vertical: isSmallScreen ? 12 : 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
             ),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xff137058),
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(
-              vertical: isSmallScreen ? 12 : 16,
+            SizedBox(width: isSmallScreen ? 8 : 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  // Pop all screens until we reach the quiz screen
+                  Navigator.popUntil(context, (route) => route.isFirst);
+                  // Push a new quiz screen
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const IslamicQuizScreen(),
+                    ),
+                  );
+                },
+                child: Text(
+                  'اختبار جديد',
+                  style: TextStyle(
+                    fontFamily: 'DIN',
+                    fontSize: isSmallScreen ? 14 : 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xff137058),
+                  padding: EdgeInsets.symmetric(
+                    vertical: isSmallScreen ? 12 : 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: Color(0xff137058)),
+                  ),
+                ),
+              ),
             ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+          ],
         ),
       ),
     );
@@ -258,7 +301,7 @@ class QuizCompletionScreen extends StatelessWidget {
                   color: color.withOpacity(0.7),
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
                 value,
                 style: TextStyle(
@@ -383,7 +426,7 @@ class QuizCompletionScreen extends StatelessWidget {
                           color: colorScheme.onSurface.withOpacity(0.7),
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         result['selectedAnswer'] as String,
                         style: TextStyle(
@@ -411,7 +454,7 @@ class QuizCompletionScreen extends StatelessWidget {
                             color: colorScheme.onSurface.withOpacity(0.7),
                           ),
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Text(
                           result['correctAnswer'] as String,
                           style: TextStyle(
@@ -436,7 +479,7 @@ class QuizCompletionScreen extends StatelessWidget {
                       size: isSmallScreen ? 14 : 16,
                       color: AppTheme.warningLight,
                     ),
-                    SizedBox(width: 4),
+                    const SizedBox(width: 4),
                     Text(
                       'تم استخدام تلميح',
                       style: TextStyle(

@@ -24,8 +24,6 @@ class _IslamicQuizScreenState extends State<IslamicQuizScreen>
   Timer? _questionTimer;
   int _timeElapsed = 0;
   List<Map<String, dynamic>> _questionResults = [];
-  String _selectedCategory = 'القرآن الكريم';
-  String _selectedDifficulty = 'سهل';
   Map<String, dynamic>? _jsonData;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -66,40 +64,22 @@ class _IslamicQuizScreenState extends State<IslamicQuizScreen>
       print('Loading quiz data...');
       _jsonData = await IslamicQuizService.getQuestions();
       print('Raw JSON data loaded: ${_jsonData != null}');
-      print('JSON data keys: ${_jsonData?.keys.toList()}');
 
       final allQuestions = IslamicQuizService.parseQuestions(_jsonData!);
       print('Questions parsed successfully: ${allQuestions.isNotEmpty}');
       print('Total questions loaded: ${allQuestions.length}');
-      print('Selected category: $_selectedCategory');
-      print('Selected difficulty: $_selectedDifficulty');
-      print(
-          'Converted category: ${IslamicQuizService.convertCategoryToId(_selectedCategory)}');
-      print(
-          'Converted difficulty: ${IslamicQuizService.convertDifficultyToEnglish(_selectedDifficulty)}');
 
-      _questions = allQuestions.where((q) {
-        bool categoryMatch = _selectedCategory == 'all' ||
-            q.category ==
-                IslamicQuizService.convertCategoryToId(_selectedCategory);
-        bool difficultyMatch = _selectedDifficulty == 'all' ||
-            q.difficulty ==
-                IslamicQuizService.convertDifficultyToEnglish(
-                    _selectedDifficulty);
-        print(
-            'Question ${q.id}: category=${q.category}, difficulty=${q.difficulty}, matches=${categoryMatch && difficultyMatch}');
-        return categoryMatch && difficultyMatch;
-      }).toList();
+      // Shuffle all questions and take a subset
+      allQuestions.shuffle();
+      _questions = allQuestions.take(10).toList(); // Take 10 random questions
 
-      print('Filtered questions count: ${_questions.length}');
+      print('Selected questions count: ${_questions.length}');
       print(
           'First question data: ${_questions.isNotEmpty ? _questions.first.toJson() : "No questions"}');
 
       if (_questions.isEmpty) {
-        print('WARNING: No questions available after filtering!');
+        print('WARNING: No questions available!');
       }
-
-      _questions.shuffle();
 
       setState(() {
         _isLoading = false;
@@ -202,20 +182,6 @@ class _IslamicQuizScreenState extends State<IslamicQuizScreen>
     }
   }
 
-  void _changeCategory(String category) {
-    setState(() {
-      _selectedCategory = category;
-    });
-    _loadQuizData();
-  }
-
-  void _changeDifficulty(String difficulty) {
-    setState(() {
-      _selectedDifficulty = difficulty;
-    });
-    _loadQuizData();
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -315,153 +281,6 @@ class _IslamicQuizScreenState extends State<IslamicQuizScreen>
       ),
       body: Column(
         children: [
-          Container(
-            padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
-            color: Color(0xff137058),
-            child: Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedCategory,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: isSmallScreen ? 12 : 16,
-                        vertical: isSmallScreen ? 8 : 12,
-                      ),
-                    ),
-                    items: [
-                      DropdownMenuItem<String>(
-                        value: 'القرآن الكريم',
-                        child: Text(
-                          'القرآن الكريم',
-                          style: TextStyle(
-                            fontFamily: 'DIN',
-                            fontSize: isSmallScreen ? 14 : 16,
-                          ),
-                        ),
-                      ),
-                      DropdownMenuItem<String>(
-                        value: 'السنة النبوية',
-                        child: Text(
-                          'السنة النبوية',
-                          style: TextStyle(
-                            fontFamily: 'DIN',
-                            fontSize: isSmallScreen ? 14 : 16,
-                          ),
-                        ),
-                      ),
-                      DropdownMenuItem<String>(
-                        value: 'العقيدة',
-                        child: Text(
-                          'العقيدة',
-                          style: TextStyle(
-                            fontFamily: 'DIN',
-                            fontSize: isSmallScreen ? 14 : 16,
-                          ),
-                        ),
-                      ),
-                      DropdownMenuItem<String>(
-                        value: 'الفقه',
-                        child: Text(
-                          'الفقه',
-                          style: TextStyle(
-                            fontFamily: 'DIN',
-                            fontSize: isSmallScreen ? 14 : 16,
-                          ),
-                        ),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _selectedCategory = value;
-                        });
-                        _loadQuizData();
-                      }
-                    },
-                    dropdownColor: Colors.white,
-                    style: TextStyle(
-                      fontFamily: 'DIN',
-                      fontSize: isSmallScreen ? 14 : 16,
-                      color: Colors.black87,
-                    ),
-                    icon: Icon(Icons.arrow_drop_down, color: Color(0xff137058)),
-                  ),
-                ),
-                SizedBox(width: isSmallScreen ? 6 : 8),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedDifficulty,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: isSmallScreen ? 12 : 16,
-                        vertical: isSmallScreen ? 8 : 12,
-                      ),
-                    ),
-                    items: [
-                      DropdownMenuItem<String>(
-                        value: 'سهل',
-                        child: Text(
-                          'سهل',
-                          style: TextStyle(
-                            fontFamily: 'DIN',
-                            fontSize: isSmallScreen ? 14 : 16,
-                          ),
-                        ),
-                      ),
-                      DropdownMenuItem<String>(
-                        value: 'متوسط',
-                        child: Text(
-                          'متوسط',
-                          style: TextStyle(
-                            fontFamily: 'DIN',
-                            fontSize: isSmallScreen ? 14 : 16,
-                          ),
-                        ),
-                      ),
-                      DropdownMenuItem<String>(
-                        value: 'صعب',
-                        child: Text(
-                          'صعب',
-                          style: TextStyle(
-                            fontFamily: 'DIN',
-                            fontSize: isSmallScreen ? 14 : 16,
-                          ),
-                        ),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _selectedDifficulty = value;
-                        });
-                        _loadQuizData();
-                      }
-                    },
-                    dropdownColor: Colors.white,
-                    style: TextStyle(
-                      fontFamily: 'DIN',
-                      fontSize: isSmallScreen ? 14 : 16,
-                      color: Colors.black87,
-                    ),
-                    icon: Icon(Icons.arrow_drop_down, color: Color(0xff137058)),
-                  ),
-                ),
-              ],
-            ),
-          ),
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
