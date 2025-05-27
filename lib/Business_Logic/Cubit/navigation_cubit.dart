@@ -12,20 +12,20 @@ class NavigationCubit extends Cubit<NavigationState> {
   int index = 0;
 
   List<Widget> get buildScreens => [
-    const TimingsScreen(),
-    const SebhaAzkarListScreen(),
-    const AzkarScreen(),
-    const AhadithListScreen(),
-    const QiblaScreen(),
-  ];
+        const TimingsScreen(),
+        const SebhaAzkarListScreen(),
+        const AzkarScreen(),
+        const AhadithListScreen(),
+        const QiblaScreen(),
+      ];
 
   List<BottomNavigationBarItem> get bottomItems => [
-    _buildBottomNavItem('home', 'الرئيسية', 0),
-    _buildBottomNavItem('Tasbih', 'السبحة', 1),
-    _buildBottomNavItem('Azkar', 'الأذكار', 2),
-    _buildBottomNavItem('Ahadith', 'الأربعين', 3),
-    _buildBottomNavItem('qibla', 'القبلة', 4),
-  ];
+        _buildBottomNavItem('home', 'الرئيسية', 0),
+        _buildBottomNavItem('Tasbih', 'السبحة', 1),
+        _buildBottomNavItem('Azkar', 'الأذكار', 2),
+        _buildBottomNavItem('Ahadith', 'الأحاديث', 3),
+        _buildBottomNavItem('qibla', 'القبلة', 4),
+      ];
 
   void changeIndex(int newIndex) {
     index = newIndex;
