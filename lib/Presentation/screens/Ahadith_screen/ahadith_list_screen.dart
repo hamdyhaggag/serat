@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:serat/imports.dart';
+import 'package:serat/imports.dart' hide AppColors;
 import 'package:serat/data/services/hadith_service.dart';
 import 'package:serat/data/services/bookmark_service.dart';
 import 'package:serat/data/services/hadith_database_service.dart';
 import 'package:serat/domain/models/hadith_model.dart';
+import 'package:serat/domain/models/filter_state.dart';
+import 'package:serat/domain/models/search_state.dart';
 import 'package:serat/Presentation/widgets/error_widget.dart';
+import 'package:serat/Presentation/widgets/hadith_search_bar.dart';
+import 'package:serat/Presentation/widgets/hadith_filter_chips.dart';
+import 'package:serat/Presentation/widgets/hadith_chapter_expansion.dart';
+import 'package:serat/Presentation/widgets/hadith_loading_shimmer.dart';
 import 'package:serat/shared/utils/error_mapper.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'base_ahadith_screen.dart';
+import 'package:serat/shared/constants/app_colors.dart';
 
 class AhadithListScreen extends StatefulWidget {
   const AhadithListScreen({super.key});
@@ -24,23 +27,20 @@ class _AhadithListScreenState extends State<AhadithListScreen>
   final HadithService _hadithService = HadithService();
   final BookmarkService _bookmarkService = BookmarkService();
   final HadithDatabaseService _hadithDatabaseService = HadithDatabaseService();
-  List<HadithModel> _hadiths = [];
-  List<HadithModel> _filteredHadiths = [];
-  Map<String, List<HadithModel>> _groupedHadiths = {};
-  bool _isLoading = true;
-  String? _error;
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   final TextEditingController _searchController = TextEditingController();
-  String _selectedFilter = 'الكل';
-  final Map<String, Set<String>> _bookmarkCache = {};
-  bool _isLoadingBookmarks = false;
-  bool _isLoadingRandom = false;
-  bool _isLoadingBooks = false;
-  String _selectedBook = 'الأربعين النووية';
 
-  // Map of book names to their API identifiers
+  List<HadithModel> _hadiths = [];
+  Map<String, Set<String>> _bookmarkCache = {};
   Map<String, String> _hadithBooks = {};
+
+  FilterState _filterState = const FilterState();
+  SearchState _searchState = const SearchState();
+
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -65,26 +65,29 @@ class _AhadithListScreenState extends State<AhadithListScreen>
   Future<void> _loadData() async {
     await Future.wait([
       _loadHadiths(),
-      _loadAllBookmarks(), // Load all bookmarks at startup
-      _loadBookNames(), // Load book names
+      _loadAllBookmarks(),
+      _loadBookNames(),
     ]);
   }
 
   Future<void> _loadHadiths() async {
     try {
-      final hadiths = await _hadithDatabaseService.getHadiths(_selectedBook);
-      if (!mounted) return; // Check if widget is still mounted
+      final hadiths =
+          await _hadithDatabaseService.getHadiths(_filterState.selectedBook);
+      if (!mounted) return;
 
       setState(() {
         _hadiths = hadiths;
-        _filteredHadiths = hadiths;
-        _groupHadithsByChapter();
+        _searchState = _searchState.copyWith(
+          filteredHadiths: hadiths,
+          groupedHadiths: _groupHadithsByChapter(hadiths),
+        );
         _isLoading = false;
         _error = null;
       });
       _animationController.forward();
     } catch (e) {
-      if (!mounted) return; // Check if widget is still mounted
+      if (!mounted) return;
 
       setState(() {
         _error = ErrorMapper.getHadithErrorMessage(e);
@@ -93,33 +96,28 @@ class _AhadithListScreenState extends State<AhadithListScreen>
     }
   }
 
-  void _groupHadithsByChapter() {
-    try {
-      _groupedHadiths.clear();
-      for (var hadith in _filteredHadiths) {
-        if (hadith.chapterName.isEmpty)
-          continue; // Skip hadiths without chapter name
+  Map<String, List<HadithModel>> _groupHadithsByChapter(
+      List<HadithModel> hadiths) {
+    final grouped = <String, List<HadithModel>>{};
+    for (var hadith in hadiths) {
+      if (hadith.chapterName.isEmpty) continue;
 
-        if (!_groupedHadiths.containsKey(hadith.chapterName)) {
-          _groupedHadiths[hadith.chapterName] = [];
-        }
-        _groupedHadiths[hadith.chapterName]!.add(hadith);
+      if (!grouped.containsKey(hadith.chapterName)) {
+        grouped[hadith.chapterName] = [];
       }
-    } catch (e) {
-      print('Error grouping hadiths: $e');
-      // Fallback to ungrouped list if grouping fails
-      _groupedHadiths = {'': _filteredHadiths};
+      grouped[hadith.chapterName]!.add(hadith);
     }
+    return grouped;
   }
 
   Future<void> _loadAllBookmarks() async {
-    if (_isLoadingBookmarks) return;
-    _isLoadingBookmarks = true;
+    if (_filterState.isLoadingBookmarks) return;
+    setState(() {
+      _filterState = _filterState.copyWith(isLoadingBookmarks: true);
+    });
 
     try {
       final bookmarkedHadiths = await _bookmarkService.getBookmarkedHadiths();
-
-      // Group bookmarks by book
       for (var hadith in bookmarkedHadiths) {
         final bookId = hadith.bookId;
         if (bookId == null) continue;
@@ -130,7 +128,11 @@ class _AhadithListScreenState extends State<AhadithListScreen>
         _bookmarkCache[bookId]!.add(hadith.id.toString());
       }
     } finally {
-      _isLoadingBookmarks = false;
+      if (mounted) {
+        setState(() {
+          _filterState = _filterState.copyWith(isLoadingBookmarks: false);
+        });
+      }
     }
   }
 
@@ -142,34 +144,38 @@ class _AhadithListScreenState extends State<AhadithListScreen>
 
   Future<void> _fetchRandomHadith() async {
     setState(() {
-      _isLoadingRandom = true;
+      _filterState = _filterState.copyWith(isLoadingRandom: true);
       _error = null;
     });
 
     try {
       final randomHadith = await _hadithDatabaseService.getRandomHadith(
-        _selectedBook,
+        _filterState.selectedBook,
       );
       setState(() {
-        _filteredHadiths = [randomHadith];
-        _selectedFilter = 'عشوائي';
+        _searchState = _searchState.copyWith(
+          filteredHadiths: [randomHadith],
+          groupedHadiths: _groupHadithsByChapter([randomHadith]),
+        );
+        _filterState = _filterState.copyWith(
+          selectedFilter: 'عشوائي',
+          isLoadingRandom: false,
+        );
       });
     } catch (e) {
       setState(() {
         _error = ErrorMapper.getHadithErrorMessage(e);
-      });
-    } finally {
-      setState(() {
-        _isLoadingRandom = false;
+        _filterState = _filterState.copyWith(isLoadingRandom: false);
       });
     }
   }
 
   void _selectBook(String book) {
-    print('Selected book: $book'); // Debug print
     setState(() {
-      _selectedBook = book;
-      _selectedFilter = 'الكل';
+      _filterState = _filterState.copyWith(
+        selectedBook: book,
+        selectedFilter: 'الكل',
+      );
       _searchController.clear();
     });
     _loadHadiths();
@@ -181,7 +187,6 @@ class _AhadithListScreenState extends State<AhadithListScreen>
     try {
       final isBookmarked = _isBookmarked(hadith);
 
-      // Update local cache immediately for better UX
       if (!_bookmarkCache.containsKey(hadith.bookId)) {
         _bookmarkCache[hadith.bookId!] = {};
       }
@@ -192,20 +197,20 @@ class _AhadithListScreenState extends State<AhadithListScreen>
         _bookmarkCache[hadith.bookId!]!.add(hadith.id.toString());
       }
 
-      // Update UI
       if (!mounted) return;
       setState(() {});
 
-      // Update filtered list if we're in bookmarks view
-      if (_selectedFilter == 'المحفوظات') {
+      if (_filterState.selectedFilter == 'المحفوظات') {
         if (!mounted) return;
         setState(() {
-          _filteredHadiths = _hadiths.where((h) => _isBookmarked(h)).toList();
-          _groupHadithsByChapter();
+          _searchState = _searchState.copyWith(
+            filteredHadiths: _hadiths.where((h) => _isBookmarked(h)).toList(),
+            groupedHadiths: _groupHadithsByChapter(
+                _hadiths.where((h) => _isBookmarked(h)).toList()),
+          );
         });
       }
 
-      // Persist the change
       try {
         if (isBookmarked) {
           await _bookmarkService.removeBookmark(hadith);
@@ -213,7 +218,6 @@ class _AhadithListScreenState extends State<AhadithListScreen>
           await _bookmarkService.addBookmark(hadith);
         }
       } catch (e) {
-        // Revert the cache if the operation failed
         if (isBookmarked) {
           _bookmarkCache[hadith.bookId!]!.add(hadith.id.toString());
         } else {
@@ -222,7 +226,6 @@ class _AhadithListScreenState extends State<AhadithListScreen>
         if (!mounted) return;
         setState(() {});
 
-        // Show error message to user
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -239,7 +242,6 @@ class _AhadithListScreenState extends State<AhadithListScreen>
       }
     } catch (e) {
       print('Error toggling bookmark: $e');
-      // Show error message to user
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -260,41 +262,57 @@ class _AhadithListScreenState extends State<AhadithListScreen>
   void _filterHadiths(String query) {
     setState(() {
       if (query.isEmpty) {
-        _filteredHadiths = _hadiths;
+        _searchState = _searchState.copyWith(
+          query: query,
+          filteredHadiths: _hadiths,
+          groupedHadiths: _groupHadithsByChapter(_hadiths),
+        );
       } else {
-        _filteredHadiths = _hadiths
+        final filtered = _hadiths
             .where(
               (hadith) =>
-                  hadith.hadithText.toLowerCase().contains(
-                        query.toLowerCase(),
-                      ) ||
-                  hadith.hadithNumber.toLowerCase().contains(
-                        query.toLowerCase(),
-                      ),
+                  hadith.hadithText
+                      .toLowerCase()
+                      .contains(query.toLowerCase()) ||
+                  hadith.hadithNumber
+                      .toLowerCase()
+                      .contains(query.toLowerCase()),
             )
             .toList();
+        _searchState = _searchState.copyWith(
+          query: query,
+          filteredHadiths: filtered,
+          groupedHadiths: _groupHadithsByChapter(filtered),
+        );
       }
-      _groupHadithsByChapter();
     });
   }
 
   void _applyFilter(String filter) {
     setState(() {
-      _selectedFilter = filter;
+      _filterState = _filterState.copyWith(selectedFilter: filter);
       if (filter == 'المحفوظات') {
-        _filteredHadiths = _hadiths.where((h) => _isBookmarked(h)).toList();
+        final bookmarked = _hadiths.where((h) => _isBookmarked(h)).toList();
+        _searchState = _searchState.copyWith(
+          filteredHadiths: bookmarked,
+          groupedHadiths: _groupHadithsByChapter(bookmarked),
+        );
       } else if (filter == 'عشوائي') {
         _fetchRandomHadith();
       } else {
-        _filteredHadiths = _hadiths;
+        _searchState = _searchState.copyWith(
+          filteredHadiths: _hadiths,
+          groupedHadiths: _groupHadithsByChapter(_hadiths),
+        );
       }
-      _groupHadithsByChapter();
     });
   }
 
   Future<void> _loadBookNames() async {
-    if (_isLoadingBooks) return;
-    _isLoadingBooks = true;
+    if (_filterState.isLoadingBooks) return;
+    setState(() {
+      _filterState = _filterState.copyWith(isLoadingBooks: true);
+    });
 
     try {
       final books = await _hadithDatabaseService.getBooks();
@@ -305,12 +323,14 @@ class _AhadithListScreenState extends State<AhadithListScreen>
           books.map((book) => MapEntry(book['name']!, book['id']!)),
         );
         if (_hadithBooks.isNotEmpty) {
-          _selectedBook = _hadithBooks.keys.first;
+          _filterState = _filterState.copyWith(
+            selectedBook: _hadithBooks.keys.first,
+            isLoadingBooks: false,
+          );
         }
       });
     } catch (e) {
       print('Error loading book names: $e');
-      // Fallback to default books if loading fails
       _hadithBooks = {
         'الأربعين النووية': 'nawawi',
         'صحيح البخاري': 'bukhari',
@@ -321,7 +341,11 @@ class _AhadithListScreenState extends State<AhadithListScreen>
         'سنن ابن ماجه': 'ibnmajah',
       };
     } finally {
-      _isLoadingBooks = false;
+      if (mounted) {
+        setState(() {
+          _filterState = _filterState.copyWith(isLoadingBooks: false);
+        });
+      }
     }
   }
 
@@ -330,7 +354,9 @@ class _AhadithListScreenState extends State<AhadithListScreen>
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDarkMode ? const Color(0xff1F1F1F) : Colors.grey[50],
+      backgroundColor: isDarkMode
+          ? AppColors.darkBackgroundColor
+          : AppColors.backgroundColor,
       appBar: AppBar(
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
@@ -340,7 +366,7 @@ class _AhadithListScreenState extends State<AhadithListScreen>
         elevation: 0,
         backgroundColor: Colors.transparent,
         title: Text(
-          _selectedBook,
+          _filterState.selectedBook,
           style: TextStyle(
             fontFamily: 'DIN',
             fontSize: 26,
@@ -351,28 +377,39 @@ class _AhadithListScreenState extends State<AhadithListScreen>
         centerTitle: true,
       ),
       body: SafeArea(
-        // Add SafeArea
         child: Column(
           children: [
-            _buildSearchBar(isDarkMode),
-            _buildFilterChips(isDarkMode),
+            HadithSearchBar(
+              controller: _searchController,
+              onChanged: _filterHadiths,
+              isDarkMode: isDarkMode,
+            ),
+            HadithFilterChips(
+              books: _hadithBooks,
+              selectedBook: _filterState.selectedBook,
+              selectedFilter: _filterState.selectedFilter,
+              isLoadingRandom: _filterState.isLoadingRandom,
+              isDarkMode: isDarkMode,
+              onBookSelected: _selectBook,
+              onFilterSelected: _applyFilter,
+            ),
             Expanded(
               child: _isLoading
-                  ? _buildShimmerLoading()
+                  ? const HadithLoadingShimmer()
                   : _error != null
                       ? AppErrorWidget(
                           message: _error!,
                           icon: Icons.error_outline_rounded,
                           isDarkMode: isDarkMode,
                           onRetry: () {
-                            if (_selectedFilter == 'عشوائي') {
+                            if (_filterState.selectedFilter == 'عشوائي') {
                               _fetchRandomHadith();
                             } else {
                               _loadData();
                             }
                           },
                         )
-                      : _filteredHadiths.isEmpty
+                      : _searchState.filteredHadiths.isEmpty
                           ? Center(
                               child: Text(
                                 'لا توجد نتائج',
@@ -389,15 +426,21 @@ class _AhadithListScreenState extends State<AhadithListScreen>
                               opacity: _fadeAnimation,
                               child: ListView.builder(
                                 padding: const EdgeInsets.all(16),
-                                itemCount: _groupedHadiths.length,
+                                itemCount: _searchState.groupedHadiths.length,
                                 itemBuilder: (context, index) {
                                   try {
-                                    final chapterName =
-                                        _groupedHadiths.keys.elementAt(index);
-                                    final hadiths =
-                                        _groupedHadiths[chapterName]!;
-                                    return _buildChapterExpansion(
-                                        chapterName, hadiths, isDarkMode);
+                                    final chapterName = _searchState
+                                        .groupedHadiths.keys
+                                        .elementAt(index);
+                                    final hadiths = _searchState
+                                        .groupedHadiths[chapterName]!;
+                                    return HadithChapterExpansion(
+                                      chapterName: chapterName,
+                                      hadiths: hadiths,
+                                      isDarkMode: isDarkMode,
+                                      onBookmarkToggle: _toggleBookmark,
+                                      isBookmarked: _isBookmarked,
+                                    );
                                   } catch (e) {
                                     print('Error building chapter: $e');
                                     return const SizedBox.shrink();
@@ -409,365 +452,6 @@ class _AhadithListScreenState extends State<AhadithListScreen>
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildSearchBar(bool isDarkMode) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: TextField(
-        controller: _searchController,
-        onChanged: _filterHadiths,
-        decoration: InputDecoration(
-          hintText: 'ابحث عن حديث...',
-          hintStyle: TextStyle(
-            color: isDarkMode ? Colors.white54 : Colors.black54,
-            fontFamily: 'DIN',
-          ),
-          prefixIcon: Icon(
-            Icons.search,
-            color: isDarkMode ? Colors.white54 : Colors.black54,
-          ),
-          filled: true,
-          fillColor:
-              isDarkMode ? Colors.white.withValues(alpha: 26) : Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-        ),
-        style: TextStyle(
-          color: isDarkMode ? Colors.white : Colors.black,
-          fontFamily: 'DIN',
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterChips(bool isDarkMode) {
-    return Column(
-      children: [
-        Container(
-          height: 50,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _hadithBooks.length,
-            itemBuilder: (context, index) {
-              final book = _hadithBooks.keys.elementAt(index);
-              final isSelected = book == _selectedBook;
-              return Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: FilterChip(
-                  selected: isSelected,
-                  label: Text(
-                    book,
-                    style: TextStyle(
-                      color: isSelected
-                          ? Colors.white
-                          : isDarkMode
-                              ? Colors.white70
-                              : Colors.black87,
-                      fontFamily: 'DIN',
-                    ),
-                  ),
-                  backgroundColor:
-                      isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
-                  selectedColor: AppColors.primaryColor,
-                  onSelected: (_) => _selectBook(book),
-                ),
-              );
-            },
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color:
-                isDarkMode ? Colors.white.withOpacity(0.1) : Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              _buildFilterSegment(
-                'الكل',
-                _selectedFilter == 'الكل',
-                isDarkMode,
-                () => _applyFilter('الكل'),
-              ),
-              _buildFilterSegment(
-                'المحفوظات',
-                _selectedFilter == 'المحفوظات',
-                isDarkMode,
-                () => _applyFilter('المحفوظات'),
-              ),
-              _buildFilterSegment(
-                'عشوائي',
-                _selectedFilter == 'عشوائي',
-                isDarkMode,
-                () => _applyFilter('عشوائي'),
-                isLoading: _isLoadingRandom,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFilterSegment(
-    String label,
-    bool isSelected,
-    bool isDarkMode,
-    VoidCallback onTap, {
-    bool isLoading = false,
-  }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.all(4),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primaryColor : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Center(
-            child: isLoading
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Text(
-                    label,
-                    style: TextStyle(
-                      color: isSelected
-                          ? Colors.white
-                          : isDarkMode
-                              ? Colors.white70
-                              : Colors.black87,
-                      fontFamily: 'DIN',
-                      fontSize: 14,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                  ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildChapterExpansion(
-      String chapterName, List<HadithModel> hadiths, bool isDarkMode) {
-    // Use the chapter name directly from the JSON structure
-    final displayName =
-        hadiths.isNotEmpty ? hadiths.first.chapterName : chapterName;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      elevation: 0,
-      color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isDarkMode
-              ? Colors.white.withOpacity(0.1)
-              : Colors.grey.withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: Theme(
-        data: Theme.of(context).copyWith(
-          dividerColor: Colors.transparent,
-        ),
-        child: ExpansionTile(
-          initiallyExpanded: false,
-          backgroundColor: Colors.transparent,
-          collapsedBackgroundColor: Colors.transparent,
-          iconColor: isDarkMode ? Colors.white70 : AppColors.primaryColor,
-          collapsedIconColor:
-              isDarkMode ? Colors.white70 : AppColors.primaryColor,
-          textColor: isDarkMode ? Colors.white : AppColors.primaryColor,
-          collapsedTextColor:
-              isDarkMode ? Colors.white : AppColors.primaryColor,
-          title: Text(
-            displayName,
-            style: TextStyle(
-              fontFamily: 'DIN',
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          children: [
-            const Divider(height: 1),
-            ...hadiths
-                .map((hadith) =>
-                    _buildHadithCard(hadith, hadiths.indexOf(hadith)))
-                .toList(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHadithCard(HadithModel hadith, int index) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final isBookmarked = _isBookmarked(hadith);
-
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      elevation: 0,
-      color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isDarkMode
-              ? Colors.white.withOpacity(0.1)
-              : Colors.grey.withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => BaseAhadithScreen(
-                title: hadith.hadithNumber,
-                hadith: hadith,
-              ),
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isDarkMode
-                                ? AppColors.primaryColor.withOpacity(0.2)
-                                : AppColors.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            hadith.hadithNumber,
-                            style: TextStyle(
-                              fontFamily: 'DIN',
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: isDarkMode
-                                  ? Colors.white
-                                  : AppColors.primaryColor,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                      color: isBookmarked
-                          ? AppColors.primaryColor
-                          : isDarkMode
-                              ? Colors.white54
-                              : Colors.black54,
-                    ),
-                    onPressed: () => _toggleBookmark(hadith),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                hadith.hadithText,
-                style: TextStyle(
-                  fontFamily: 'DIN',
-                  fontSize: 16,
-                  height: 1.5,
-                  color: isDarkMode ? Colors.white70 : Colors.black87,
-                ),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShimmerLoading() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: 5,
-      itemBuilder: (context, index) {
-        return Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
-          highlightColor: Colors.grey[100]!,
-          child: Card(
-            margin: const EdgeInsets.only(bottom: 16),
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Container(
-              height: 120,
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 100,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    width: double.infinity,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }
