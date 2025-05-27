@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serat/Business_Logic/Cubit/quran_cubit.dart';
 import 'package:serat/Core/models/quran_chapter.dart';
-import 'package:serat/Core/utils/app_colors.dart';
-import 'package:serat/Core/widgets/app_text.dart';
+import 'package:serat/Core/widgets/app_text.dart' as core;
 
 class QuranChapterScreen extends StatefulWidget {
   final QuranChapter chapter;
@@ -32,7 +31,6 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
 
   @override
   void dispose() {
-    // Remove the problematic state check in dispose
     super.dispose();
   }
 
@@ -45,9 +43,6 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
         : Colors.grey[600] ?? Colors.grey;
     final cardColor =
         isDarkMode ? Colors.grey[900] ?? Colors.grey[800]! : Colors.white;
-    final dividerColor = isDarkMode
-        ? Colors.grey[800] ?? Colors.grey[700]!
-        : Colors.grey[200] ?? Colors.grey[300]!;
 
     return PopScope(
       canPop: true,
@@ -61,12 +56,14 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
         appBar: AppBar(
           backgroundColor:
               isDarkMode ? Colors.grey[900] : Theme.of(context).primaryColor,
-          title: AppText(
-            widget.chapter.name,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            fontFamily: 'Cairo',
+          title: Text(
+            widget.chapter.name['ar']?.toString() ?? '',
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontFamily: 'Cairo',
+            ),
           ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -97,10 +94,12 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    AppText(
+                    Text(
                       'حدث خطأ: ${state.message}',
-                      color: Colors.red,
-                      fontSize: 16,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.red,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
@@ -113,8 +112,8 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
                         backgroundColor: Theme.of(context).primaryColor,
                         foregroundColor: Colors.white,
                       ),
-                      child:
-                          const AppText('إعادة المحاولة', fontFamily: 'Cairo'),
+                      child: const Text('إعادة المحاولة',
+                          style: TextStyle(fontFamily: 'Cairo')),
                     ),
                   ],
                 ),
@@ -143,15 +142,16 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
                               CircleAvatar(
                                 backgroundColor: Theme.of(context).primaryColor,
                                 radius: 16,
-                                child: AppText(
-                                  verse.numberInSurah.toString(),
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Cairo',
+                                child: Text(
+                                  verse.number.toString(),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
-                              if (verse.sajda)
+                              if (verse.sajda?.obligatory == true)
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 8,
@@ -161,38 +161,48 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
                                     color: Theme.of(context).primaryColor,
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: const AppText(
+                                  child: const Text(
                                     'سجدة',
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontFamily: 'Cairo',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      fontFamily: 'Cairo',
+                                    ),
                                   ),
                                 ),
                             ],
                           ),
                           const SizedBox(height: 12),
-                          AppText(
-                            verse.text,
-                            fontSize: 24,
+                          Text(
+                            verse.text['ar']?.toString() ?? '',
                             textAlign: TextAlign.right,
-                            color: textColor,
-                            fontFamily: 'Cairo',
+                            style: TextStyle(
+                              fontSize: 28,
+                              color: textColor,
+                              fontFamily: 'Amiri',
+                              height: 1.5,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              AppText(
+                              Text(
                                 'جزء ${verse.juz}',
-                                fontSize: 14,
-                                color: subtitleColor,
-                                fontFamily: 'Cairo',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: subtitleColor,
+                                  fontFamily: 'Cairo',
+                                ),
                               ),
-                              AppText(
+                              Text(
                                 'صفحة ${verse.page}',
-                                fontSize: 14,
-                                color: subtitleColor,
-                                fontFamily: 'Cairo',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: subtitleColor,
+                                  fontFamily: 'Cairo',
+                                ),
                               ),
                             ],
                           ),

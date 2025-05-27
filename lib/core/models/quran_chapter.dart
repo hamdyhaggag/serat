@@ -1,28 +1,40 @@
+import 'quran_verse.dart';
+
 class QuranChapter {
   final int number;
-  final String name;
-  final String englishName;
-  final String englishNameTranslation;
+  final Map<String, String> name;
+  final Map<String, String> revelationPlace;
   final int versesCount;
-  final String revelationType;
+  final int wordsCount;
+  final int lettersCount;
+  final List<QuranVerse> verses;
+  final List<Audio> audio;
 
   QuranChapter({
     required this.number,
     required this.name,
-    required this.englishName,
-    required this.englishNameTranslation,
+    required this.revelationPlace,
     required this.versesCount,
-    required this.revelationType,
+    required this.wordsCount,
+    required this.lettersCount,
+    required this.verses,
+    required this.audio,
   });
 
   factory QuranChapter.fromJson(Map<String, dynamic> json) {
     return QuranChapter(
-      number: json['number'],
-      name: json['name'],
-      englishName: json['englishName'],
-      englishNameTranslation: json['englishNameTranslation'],
-      versesCount: json['numberOfAyahs'],
-      revelationType: json['revelationType'],
+      number: json['number'] ?? 0,
+      name: Map<String, String>.from(json['name'] ?? {}),
+      revelationPlace: Map<String, String>.from(json['revelation_place'] ?? {}),
+      versesCount: json['verses_count'] ?? 0,
+      wordsCount: json['words_count'] ?? 0,
+      lettersCount: json['letters_count'] ?? 0,
+      verses: (json['verses'] as List? ?? [])
+          .map((verse) => QuranVerse.fromJson(verse))
+          .toList(),
+      audio: (json['audio'] as List? ?? [])
+          .map((audio) => Audio.fromJson(audio))
+          .toList(),
     );
   }
 
@@ -30,10 +42,48 @@ class QuranChapter {
     return {
       'number': number,
       'name': name,
-      'englishName': englishName,
-      'englishNameTranslation': englishNameTranslation,
-      'numberOfAyahs': versesCount,
-      'revelationType': revelationType,
+      'revelation_place': revelationPlace,
+      'verses_count': versesCount,
+      'words_count': wordsCount,
+      'letters_count': lettersCount,
+      'verses': verses.map((verse) => verse.toJson()).toList(),
+      'audio': audio.map((audio) => audio.toJson()).toList(),
+    };
+  }
+}
+
+class Audio {
+  final int id;
+  final Map<String, String> reciter;
+  final Map<String, String> rewaya;
+  final String server;
+  final String link;
+
+  Audio({
+    required this.id,
+    required this.reciter,
+    required this.rewaya,
+    required this.server,
+    required this.link,
+  });
+
+  factory Audio.fromJson(Map<String, dynamic> json) {
+    return Audio(
+      id: json['id'],
+      reciter: Map<String, String>.from(json['reciter']),
+      rewaya: Map<String, String>.from(json['rewaya']),
+      server: json['server'],
+      link: json['link'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'reciter': reciter,
+      'rewaya': rewaya,
+      'server': server,
+      'link': link,
     };
   }
 }

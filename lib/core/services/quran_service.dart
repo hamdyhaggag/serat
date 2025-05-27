@@ -1,12 +1,12 @@
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'dart:developer' as dev;
 import '../models/quran_chapter.dart';
 import '../models/quran_verse.dart';
 import 'cache_service.dart';
 
 class QuranService {
-  static const String _baseUrl = 'https://api.alquran.cloud/v1';
+  static const String _quranPath = 'assets/data/quran.json';
   final CacheService _cacheService;
 
   QuranService(this._cacheService);
@@ -20,34 +20,21 @@ class QuranService {
         return cachedChapters;
       }
 
-      dev.log('Fetching Quran chapters from $_baseUrl/surah');
-      final response = await http.get(Uri.parse('$_baseUrl/surah'));
+      dev.log('Loading Quran data from $_quranPath');
+      final String jsonString = await rootBundle.loadString(_quranPath);
+      final List<dynamic> jsonData = json.decode(jsonString);
 
-      dev.log('Response status code: ${response.statusCode}');
-      dev.log('Response body: ${response.body}');
+      final chaptersList =
+          jsonData.map((chapter) => QuranChapter.fromJson(chapter)).toList();
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['code'] == 200 && data['status'] == 'OK') {
-          final List<dynamic> chapters = data['data'];
-          final chaptersList = chapters
-              .map((chapter) => QuranChapter.fromJson(chapter))
-              .toList();
-          
-          // Cache the chapters
-          await _cacheService.cacheChapters(chaptersList);
-          
-          return chaptersList;
-        } else {
-          throw Exception('API returned an error: ${data['status']}');
-        }
-      } else {
-        throw Exception('Failed to load chapters: ${response.statusCode}');
-      }
+      // Cache the chapters
+      await _cacheService.cacheChapters(chaptersList);
+
+      return chaptersList;
     } catch (e, stackTrace) {
-      dev.log('Error fetching Quran chapters: $e');
+      dev.log('Error loading Quran data: $e');
       dev.log('Stack trace: $stackTrace');
-      throw Exception('Error fetching Quran chapters: $e');
+      throw Exception('Error loading Quran data: $e');
     }
   }
 
@@ -60,36 +47,28 @@ class QuranService {
         return cachedVerses;
       }
 
-      dev.log(
-        'Fetching verses for chapter $chapterNumber from $_baseUrl/surah/$chapterNumber/ar.alafasy',
-      );
-      final response = await http.get(
-        Uri.parse('$_baseUrl/surah/$chapterNumber/ar.alafasy'),
+      dev.log('Loading Quran data from $_quranPath');
+      final String jsonString = await rootBundle.loadString(_quranPath);
+      final List<dynamic> jsonData = json.decode(jsonString);
+
+      // Find the chapter with the matching number
+      final chapter = jsonData.firstWhere(
+        (chapter) => chapter['number'] == chapterNumber,
+        orElse: () => throw Exception('Chapter $chapterNumber not found'),
       );
 
-      dev.log('Response status code: ${response.statusCode}');
-      dev.log('Response body: ${response.body}');
+      final verses = (chapter['verses'] as List)
+          .map((verse) => QuranVerse.fromJson(verse))
+          .toList();
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['code'] == 200 && data['status'] == 'OK') {
-          final List<dynamic> verses = data['data']['ayahs'];
-          final versesList = verses.map((verse) => QuranVerse.fromJson(verse)).toList();
-          
-          // Cache the verses
-          await _cacheService.cacheChapterVerses(chapterNumber, versesList);
-          
-          return versesList;
-        } else {
-          throw Exception('API returned an error: ${data['status']}');
-        }
-      } else {
-        throw Exception('Failed to load verses: ${response.statusCode}');
-      }
+      // Cache the verses
+      await _cacheService.cacheChapterVerses(chapterNumber, verses);
+
+      return verses;
     } catch (e, stackTrace) {
-      dev.log('Error fetching Quran verses: $e');
+      dev.log('Error loading Quran verses: $e');
       dev.log('Stack trace: $stackTrace');
-      throw Exception('Error fetching Quran verses: $e');
+      throw Exception('Error loading Quran verses: $e');
     }
   }
 }

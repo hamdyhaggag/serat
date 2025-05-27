@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serat/Business_Logic/Cubit/quran_cubit.dart';
 import 'package:serat/Core/models/quran_chapter.dart';
-import 'package:serat/Core/widgets/app_text.dart';
-import 'package:serat/Core/utils/app_colors.dart';
+import 'package:serat/Core/widgets/app_text.dart' as core;
 import 'package:serat/Presentation/screens/quran_chapter_screen.dart';
 import 'package:serat/Presentation/Widgets/Shared/custom_app_bar.dart';
 
@@ -53,7 +52,7 @@ class _QuranScreenState extends State<QuranScreen> {
 
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.black : Colors.grey[50],
-      appBar: CustomAppBar(title: 'القرآن الكريم', isHome: false),
+      appBar: const CustomAppBar(title: 'القرآن الكريم', isHome: false),
       body: BlocBuilder<QuranCubit, QuranState>(
         builder: (context, state) {
           if (state is QuranLoading) {
@@ -67,7 +66,7 @@ class _QuranScreenState extends State<QuranScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  AppText(
+                  core.AppText(
                     'حدث خطأ: ${state.message}',
                     color: Colors.red,
                     fontSize: 16,
@@ -81,7 +80,8 @@ class _QuranScreenState extends State<QuranScreen> {
                       backgroundColor: Theme.of(context).primaryColor,
                       foregroundColor: Colors.white,
                     ),
-                    child: const AppText('إعادة المحاولة', fontFamily: 'Cairo'),
+                    child: const core.AppText('إعادة المحاولة',
+                        fontFamily: 'Cairo'),
                   ),
                 ],
               ),
@@ -104,7 +104,7 @@ class _QuranScreenState extends State<QuranScreen> {
                     leading: CircleAvatar(
                       backgroundColor: Theme.of(context).primaryColor,
                       radius: 24,
-                      child: AppText(
+                      child: core.AppText(
                         chapter.number.toString(),
                         color: Colors.white,
                         fontSize: 16,
@@ -112,8 +112,8 @@ class _QuranScreenState extends State<QuranScreen> {
                         fontFamily: 'Cairo',
                       ),
                     ),
-                    title: AppText(
-                      chapter.name,
+                    title: core.AppText(
+                      chapter.name['ar'] ?? '',
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: textColor,
@@ -123,17 +123,17 @@ class _QuranScreenState extends State<QuranScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 4),
-                        AppText(
-                          '${chapter.englishName} - ${chapter.englishNameTranslation}',
+                        core.AppText(
+                          '${chapter.name['en'] ?? ''} - ${chapter.name['transliteration'] ?? ''}',
                           fontSize: 14,
-                          color: subtitleColor ?? Colors.grey,
+                          color: subtitleColor,
                           fontFamily: 'Cairo',
                         ),
                         const SizedBox(height: 4),
-                        AppText(
+                        core.AppText(
                           '${chapter.versesCount} آية',
                           fontSize: 14,
-                          color: subtitleColor ?? Colors.grey,
+                          color: subtitleColor,
                           fontFamily: 'Cairo',
                         ),
                       ],
@@ -199,6 +199,7 @@ class QuranSearchDelegate extends SearchDelegate {
             close(context, null);
           } else {
             query = '';
+            showResults(context);
           }
         },
       ),
@@ -209,105 +210,59 @@ class QuranSearchDelegate extends SearchDelegate {
   Widget buildLeading(BuildContext context) {
     return IconButton(
       icon: const Icon(Icons.arrow_back, color: Colors.white),
-      onPressed: () {
-        close(context, null);
-      },
+      onPressed: () => close(context, null),
     );
   }
 
   @override
   Widget buildResults(BuildContext context) {
-    _filterChapters(query);
-    return _buildSearchResults(context);
+    return _buildSearchResults();
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    _filterChapters(query);
-    return _buildSearchResults(context);
+    return _buildSearchResults();
   }
 
-  void _filterChapters(String query) {
+  Widget _buildSearchResults() {
+    if (query.isEmpty) {
+      return ListView.builder(
+        itemCount: chapters.length,
+        itemBuilder: (context, index) {
+          final chapter = chapters[index];
+          return ListTile(
+            title: Text(chapter.name['ar'] ?? ''),
+            subtitle: Text(chapter.name['en'] ?? ''),
+            onTap: () {
+              close(context, chapter);
+            },
+          );
+        },
+      );
+    }
+
     _filteredChapters = chapters.where((chapter) {
-      final nameLower = chapter.name.toLowerCase();
-      final englishNameLower = chapter.englishName.toLowerCase();
-      final translationLower = chapter.englishNameTranslation.toLowerCase();
-      final searchLower = query.toLowerCase();
+      final arabicName = (chapter.name['ar'] ?? '').toLowerCase();
+      final englishName = (chapter.name['en'] ?? '').toLowerCase();
+      final transliteration =
+          (chapter.name['transliteration'] ?? '').toLowerCase();
+      final searchQuery = query.toLowerCase();
 
-      return nameLower.contains(searchLower) ||
-          englishNameLower.contains(searchLower) ||
-          translationLower.contains(searchLower);
+      return arabicName.contains(searchQuery) ||
+          englishName.contains(searchQuery) ||
+          transliteration.contains(searchQuery);
     }).toList();
-  }
-
-  Widget _buildSearchResults(BuildContext context) {
-    final textColor = isDarkMode ? Colors.white : Colors.black;
-    final subtitleColor = isDarkMode
-        ? Colors.grey[400] ?? Colors.grey
-        : Colors.grey[600] ?? Colors.grey;
-    final cardColor =
-        isDarkMode ? Colors.grey[900] ?? Colors.grey[800]! : Colors.white;
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
       itemCount: _filteredChapters.length,
       itemBuilder: (context, index) {
         final chapter = _filteredChapters[index];
-        return Card(
-          elevation: 2,
-          margin: const EdgeInsets.only(bottom: 12),
-          color: cardColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            leading: CircleAvatar(
-              backgroundColor: Theme.of(context).primaryColor,
-              radius: 24,
-              child: AppText(
-                chapter.number.toString(),
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Cairo',
-              ),
-            ),
-            title: AppText(
-              chapter.name,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: textColor,
-              fontFamily: 'Cairo',
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 4),
-                AppText(
-                  '${chapter.englishName} - ${chapter.englishNameTranslation}',
-                  fontSize: 14,
-                  color: subtitleColor ?? Colors.grey,
-                  fontFamily: 'Cairo',
-                ),
-                const SizedBox(height: 4),
-                AppText(
-                  '${chapter.versesCount} آية',
-                  fontSize: 14,
-                  color: subtitleColor ?? Colors.grey,
-                  fontFamily: 'Cairo',
-                ),
-              ],
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => QuranChapterScreen(chapter: chapter),
-                ),
-              );
-            },
-          ),
+        return ListTile(
+          title: Text(chapter.name['ar'] ?? ''),
+          subtitle: Text(chapter.name['en'] ?? ''),
+          onTap: () {
+            close(context, chapter);
+          },
         );
       },
     );

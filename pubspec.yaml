@@ -127,13 +127,17 @@ flutter:
       - lib/Data/azkar/morning_azkar.json
       - assets/hadiths/
       - assets/data/islamic_questions.json
+      - assets/data/quran.json
   fonts:
     - family: Cairo
       fonts:
         - asset: assets/fonts/Cairo-Regular.ttf
         - asset: assets/fonts/Cairo-Bold.ttf
         - asset: assets/fonts/Cairo-SemiBold.ttf
-
+    - family: Amiri
+      fonts:
+        - asset: assets/fonts/Amiri-Bold.ttf
+        - asset: assets/fonts/Amiri-Regular.ttf
 
     - family: DIN
       fonts:

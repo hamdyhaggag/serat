@@ -22,8 +22,14 @@ class CacheService {
     final chaptersJson = _prefs.getString(_chaptersKey);
     if (chaptersJson == null) return null;
 
-    final List<dynamic> decoded = jsonDecode(chaptersJson);
-    return decoded.map((json) => QuranChapter.fromJson(json)).toList();
+    try {
+      final List<dynamic> decoded = jsonDecode(chaptersJson);
+      return decoded.map((json) => QuranChapter.fromJson(json)).toList();
+    } catch (e) {
+      // If corrupted data is detected, clear the cache
+      clearQuranCache();
+      return null;
+    }
   }
 
   // Cache verses for a specific chapter
