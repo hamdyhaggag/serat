@@ -139,50 +139,57 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              CircleAvatar(
-                                backgroundColor: Theme.of(context).primaryColor,
-                                radius: 16,
+                              Expanded(
                                 child: Text(
-                                  verse.number.toString(),
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                  verse.text['ar']?.toString() ?? '',
+                                  textAlign: TextAlign.right,
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    color: textColor,
+                                    fontFamily: 'Amiri',
+                                    height: 1.5,
                                   ),
                                 ),
                               ),
-                              if (verse.sajda?.obligatory == true)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).primaryColor,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Text(
-                                    'سجدة',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      fontFamily: 'Cairo',
+                              const SizedBox(width: 8),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).primaryColor,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      verse.number.toString(),
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
-                                ),
+                                  if (verse.sajda?.obligatory == true)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 4.0),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context).primaryColor,
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: const Icon(
+                                          Icons.star,
+                                          color: Colors.white,
+                                          size: 16,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            verse.text['ar']?.toString() ?? '',
-                            textAlign: TextAlign.right,
-                            style: TextStyle(
-                              fontSize: 28,
-                              color: textColor,
-                              fontFamily: 'Amiri',
-                              height: 1.5,
-                            ),
                           ),
                           const SizedBox(height: 12),
                           Row(
