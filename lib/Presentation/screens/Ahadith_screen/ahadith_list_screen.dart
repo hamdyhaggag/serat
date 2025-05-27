@@ -32,7 +32,7 @@ class _AhadithListScreenState extends State<AhadithListScreen>
   late Animation<double> _fadeAnimation;
   final TextEditingController _searchController = TextEditingController();
   String _selectedFilter = 'الكل';
-  final Map<String, bool> _bookmarkStatus = {};
+  final Map<String, Set<String>> _bookmarkCache = {};
   bool _isLoadingBookmarks = false;
   bool _isLoadingRandom = false;
   bool _isLoadingBooks = false;
@@ -70,7 +70,10 @@ class _AhadithListScreenState extends State<AhadithListScreen>
   }
 
   Future<void> _loadData() async {
-    await _loadHadiths();
+    await Future.wait([
+      _loadHadiths(),
+      _loadAllBookmarks(), // Load all bookmarks at startup
+    ]);
   }
 
   Future<void> _loadHadiths() async {
@@ -82,7 +85,6 @@ class _AhadithListScreenState extends State<AhadithListScreen>
         _isLoading = false;
         _error = null;
       });
-      _loadBookmarkStatus();
       _animationController.forward();
     } catch (e) {
       setState(() {
@@ -90,6 +92,34 @@ class _AhadithListScreenState extends State<AhadithListScreen>
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _loadAllBookmarks() async {
+    if (_isLoadingBookmarks) return;
+    _isLoadingBookmarks = true;
+
+    try {
+      final bookmarkedHadiths = await _bookmarkService.getBookmarkedHadiths();
+
+      // Group bookmarks by book
+      for (var hadith in bookmarkedHadiths) {
+        final bookId = hadith.bookId;
+        if (bookId == null) continue;
+
+        if (!_bookmarkCache.containsKey(bookId)) {
+          _bookmarkCache[bookId] = {};
+        }
+        _bookmarkCache[bookId]!.add(hadith.id.toString());
+      }
+    } finally {
+      _isLoadingBookmarks = false;
+    }
+  }
+
+  bool _isBookmarked(HadithModel hadith) {
+    if (hadith.bookId == null) return false;
+    return _bookmarkCache[hadith.bookId]?.contains(hadith.id.toString()) ??
+        false;
   }
 
   Future<void> _fetchRandomHadith() async {
@@ -127,37 +157,48 @@ class _AhadithListScreenState extends State<AhadithListScreen>
     _loadHadiths();
   }
 
-  Future<void> _loadBookmarkStatus() async {
-    if (_isLoadingBookmarks) return;
-    _isLoadingBookmarks = true;
-
-    try {
-      final bookmarkedHadiths = await _bookmarkService.getBookmarkedHadiths();
-      setState(() {
-        for (var hadith in _hadiths) {
-          _bookmarkStatus[hadith.id.toString()] = bookmarkedHadiths.any(
-            (h) => h.id == hadith.id,
-          );
-        }
-      });
-    } finally {
-      _isLoadingBookmarks = false;
-    }
-  }
-
   Future<void> _toggleBookmark(HadithModel hadith) async {
-    final isBookmarked = _bookmarkStatus[hadith.id.toString()] ?? false;
-    setState(() {
-      _bookmarkStatus[hadith.id.toString()] = !isBookmarked;
-    });
+    if (hadith.bookId == null) return;
+
+    final isBookmarked = _isBookmarked(hadith);
+
+    // Update local cache immediately for better UX
+    if (!_bookmarkCache.containsKey(hadith.bookId)) {
+      _bookmarkCache[hadith.bookId!] = {};
+    }
+
+    if (isBookmarked) {
+      _bookmarkCache[hadith.bookId!]!.remove(hadith.id.toString());
+    } else {
+      _bookmarkCache[hadith.bookId!]!.add(hadith.id.toString());
+    }
+
+    // Update UI
+    setState(() {});
 
     // Update filtered list if we're in bookmarks view
     if (_selectedFilter == 'المحفوظات') {
       setState(() {
-        _filteredHadiths = _hadiths
-            .where((h) => _bookmarkStatus[h.id.toString()] ?? false)
-            .toList();
+        _filteredHadiths = _hadiths.where((h) => _isBookmarked(h)).toList();
       });
+    }
+
+    // Persist the change
+    try {
+      if (isBookmarked) {
+        await _bookmarkService.removeBookmark(hadith);
+      } else {
+        await _bookmarkService.addBookmark(hadith);
+      }
+    } catch (e) {
+      // Revert the cache if the operation failed
+      if (isBookmarked) {
+        _bookmarkCache[hadith.bookId!]!.add(hadith.id.toString());
+      } else {
+        _bookmarkCache[hadith.bookId!]!.remove(hadith.id.toString());
+      }
+      setState(() {});
+      // You might want to show an error message to the user here
     }
   }
 
@@ -185,9 +226,7 @@ class _AhadithListScreenState extends State<AhadithListScreen>
     setState(() {
       _selectedFilter = filter;
       if (filter == 'المحفوظات') {
-        _filteredHadiths = _hadiths
-            .where((h) => _bookmarkStatus[h.id.toString()] ?? false)
-            .toList();
+        _filteredHadiths = _hadiths.where((h) => _isBookmarked(h)).toList();
       } else if (filter == 'عشوائي') {
         _fetchRandomHadith();
       } else {
@@ -341,57 +380,91 @@ class _AhadithListScreenState extends State<AhadithListScreen>
           ),
         ),
         Container(
-          height: 50,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: 3,
-            itemBuilder: (context, index) {
-              final filters = ['الكل', 'المحفوظات', 'عشوائي'];
-              final filter = filters[index];
-              final isSelected = filter == _selectedFilter;
-              return Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: FilterChip(
-                  selected: isSelected,
-                  label: _isLoadingRandom && filter == 'عشوائي'
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
-                            ),
-                          ),
-                        )
-                      : Text(
-                          filter,
-                          style: TextStyle(
-                            color: isSelected
-                                ? Colors.white
-                                : isDarkMode
-                                    ? Colors.white70
-                                    : Colors.black87,
-                            fontFamily: 'DIN',
-                          ),
-                        ),
-                  backgroundColor:
-                      isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
-                  selectedColor: AppColors.primaryColor,
-                  onSelected: (_) => _applyFilter(filter),
-                ),
-              );
-            },
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color:
+                isDarkMode ? Colors.white.withOpacity(0.1) : Colors.grey[100],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              _buildFilterSegment(
+                'الكل',
+                _selectedFilter == 'الكل',
+                isDarkMode,
+                () => _applyFilter('الكل'),
+              ),
+              _buildFilterSegment(
+                'المحفوظات',
+                _selectedFilter == 'المحفوظات',
+                isDarkMode,
+                () => _applyFilter('المحفوظات'),
+              ),
+              _buildFilterSegment(
+                'عشوائي',
+                _selectedFilter == 'عشوائي',
+                isDarkMode,
+                () => _applyFilter('عشوائي'),
+                isLoading: _isLoadingRandom,
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
+  Widget _buildFilterSegment(
+    String label,
+    bool isSelected,
+    bool isDarkMode,
+    VoidCallback onTap, {
+    bool isLoading = false,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.all(4),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primaryColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: isLoading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : Text(
+                    label,
+                    style: TextStyle(
+                      color: isSelected
+                          ? Colors.white
+                          : isDarkMode
+                              ? Colors.white70
+                              : Colors.black87,
+                      fontFamily: 'DIN',
+                      fontSize: 14,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildHadithCard(HadithModel hadith, int index) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final isBookmarked = _bookmarkStatus[hadith.id.toString()] ?? false;
+    final isBookmarked = _isBookmarked(hadith);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),

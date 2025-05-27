@@ -22,7 +22,7 @@ class HadithService {
       );
       final Map<String, dynamic> jsonData = json.decode(jsonString);
       final List<dynamic> hadithsData = jsonData['hadiths'] ?? [];
-      
+
       final List<HadithModel> hadiths = [];
       for (var hadith in hadithsData) {
         hadiths.add(HadithModel(
@@ -31,7 +31,9 @@ class HadithService {
           hadithText: hadith['arabic'] ?? '',
           explanation: hadith['explanation'] ?? '',
           narrator: hadith['narrator'] ?? '',
-          chapterName: hadith['chapter']?['arabic'] ?? 'باب ${hadith['chapterId'] ?? ''}',
+          chapterName: hadith['chapter']?['arabic'] ??
+              'باب ${hadith['chapterId'] ?? ''}',
+          bookId: 'nawawi',
         ));
       }
 
@@ -116,7 +118,7 @@ class HadithService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final hadiths = <HadithModel>[];
-        
+
         if (data['data'] != null) {
           final hadith = data['data'];
           hadiths.add(HadithModel(
@@ -126,9 +128,10 @@ class HadithService {
             explanation: 'هذا حديث عشوائي من قاعدة بيانات الأحاديث',
             narrator: hadith['narrator'] ?? 'مصدر: API Hadith',
             chapterName: 'حديث عشوائي',
+            bookId: 'random',
           ));
         }
-        
+
         return hadiths;
       } else {
         throw Exception('Failed to load random hadiths');

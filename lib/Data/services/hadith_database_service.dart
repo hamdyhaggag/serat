@@ -13,6 +13,16 @@ class HadithDatabaseService {
     'سنن ابن ماجه': 'assets/hadiths/ibnmajah.json',
   };
 
+  static const Map<String, String> _bookIds = {
+    'الأربعين النووية': 'nawawi',
+    'صحيح البخاري': 'bukhari',
+    'صحيح مسلم': 'muslim',
+    'سنن أبي داود': 'abudawud',
+    'سنن الترمذي': 'tirmidhi',
+    'سنن النسائي': 'nasai',
+    'سنن ابن ماجه': 'ibnmajah',
+  };
+
   Future<List<HadithModel>> getHadiths(String bookName) async {
     try {
       final String filePath = _bookFiles[bookName]!;
@@ -32,6 +42,7 @@ class HadithDatabaseService {
           explanation: english?['text'] ?? '',
           narrator: english?['narrator'] ?? '',
           chapterName: chapter?['arabic'] ?? 'باب ${hadith['chapterId'] ?? ''}',
+          bookId: _bookIds[bookName] ?? 'unknown',
         );
       }).toList();
     } catch (e) {
