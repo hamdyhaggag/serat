@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:serat/imports.dart';
+import 'package:serat/Presentation/Widgets/Azkar/azkar_item.dart';
 
-class AzkarListItem extends StatelessWidget {
+class SebhaListItem extends StatelessWidget {
   final AzkarItem item;
   final int index;
   final VoidCallback? onDelete;
 
-  const AzkarListItem({
+  const SebhaListItem({
     super.key,
     required this.item,
     required this.index,
@@ -16,6 +17,7 @@ class AzkarListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final screenSize = MediaQuery.of(context).size;
 
     return Dismissible(
       key: Key(item.text),
@@ -29,59 +31,88 @@ class AzkarListItem extends StatelessWidget {
       },
       child: Card(
         color: isDarkMode ? Colors.black12 : Colors.grey.shade100,
-        margin: EdgeInsets.symmetric(vertical: 15.0.h),
-        child: ListTile(
-          contentPadding: const EdgeInsets.all(16.0),
-          title: Text(
-            item.text,
-            textAlign: TextAlign.right,
-            style: _textStyle(
-              isDarkMode,
-              fontSize: 21.sp,
-              fontWeight: FontWeight.w600,
+        margin: EdgeInsets.symmetric(
+          vertical: screenSize.height * 0.015,
+          horizontal: screenSize.width * 0.02,
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(screenSize.width * 0.02),
+          child: InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => Sebha(
+                        title: item.text,
+                        subtitle: item.reward,
+                        beadCount: item.count,
+                        maxCounter: item.count,
+                      ),
+                ),
+              );
+            },
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.text,
+                        textAlign: TextAlign.right,
+                        style: _textStyle(
+                          isDarkMode,
+                          fontSize: screenSize.width * 0.045,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(height: screenSize.height * 0.008),
+                      Text(
+                        item.reward,
+                        textAlign: TextAlign.right,
+                        style: _textStyle(
+                          isDarkMode,
+                          fontSize: screenSize.width * 0.035,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: screenSize.width * 0.02),
+                _buildTrailing(isDarkMode, screenSize),
+              ],
             ),
           ),
-          subtitle: Text(
-            item.reward,
-            textAlign: TextAlign.right,
-            style: _textStyle(isDarkMode, fontSize: 16.sp),
-          ),
-          trailing: _buildTrailing(isDarkMode),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (context) => Sebha(
-                      title: item.text,
-                      subtitle: item.reward,
-                      beadCount: item.count,
-                      maxCounter: item.count,
-                    ),
-              ),
-            );
-          },
         ),
       ),
     );
   }
 
-  Widget _buildTrailing(bool isDarkMode) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          '${item.count}',
-          textAlign: TextAlign.left,
-          style: _textStyle(isDarkMode, fontSize: 22.sp),
-        ),
-        SizedBox(width: 26.w),
-        Text(
-          'مرة',
-          textAlign: TextAlign.left,
-          style: _textStyle(isDarkMode, fontSize: 18.sp),
-        ),
-      ],
+  Widget _buildTrailing(bool isDarkMode, Size screenSize) {
+    return Container(
+      constraints: BoxConstraints(
+        minWidth: screenSize.width * 0.15,
+        maxWidth: screenSize.width * 0.2,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            '${item.count}',
+            textAlign: TextAlign.center,
+            style: _textStyle(isDarkMode, fontSize: screenSize.width * 0.045),
+          ),
+          SizedBox(height: screenSize.height * 0.004),
+          Text(
+            'مرة',
+            textAlign: TextAlign.center,
+            style: _textStyle(isDarkMode, fontSize: screenSize.width * 0.035),
+          ),
+        ],
+      ),
     );
   }
 

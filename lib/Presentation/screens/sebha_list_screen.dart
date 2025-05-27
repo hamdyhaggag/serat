@@ -102,7 +102,7 @@ class _SebhaAzkarListScreenState extends State<SebhaAzkarListScreen> {
           itemCount: azkar.length,
           itemBuilder: (context, index) {
             final item = azkar[index];
-            return AzkarListItem(
+            return SebhaListItem(
               item: item,
               index: index,
               onDelete: () async {
