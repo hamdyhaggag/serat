@@ -63,8 +63,10 @@ class _IslamicQuizScreenState extends State<IslamicQuizScreen>
         _isLoading = true;
       });
 
+      print('Loading quiz data...');
       _jsonData = await IslamicQuizService.getQuestions();
       print('Raw JSON data loaded: ${_jsonData != null}');
+      print('JSON data keys: ${_jsonData?.keys.toList()}');
 
       final allQuestions = IslamicQuizService.parseQuestions(_jsonData!);
       print('Questions parsed successfully: ${allQuestions.isNotEmpty}');
@@ -112,6 +114,7 @@ class _IslamicQuizScreenState extends State<IslamicQuizScreen>
       _startTimer();
       _animationController.forward();
     } catch (e) {
+      print('Error loading quiz data: $e');
       setState(() {
         _isLoading = false;
       });
