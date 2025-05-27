@@ -67,101 +67,103 @@ class AzkarPages extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.all(screenWidth * 0.05),
-                          child: Column(
-                            children: [
-                              Text(
-                                azkar[index],
-                                style: TextStyle(
-                                  fontSize: screenWidth * 0.06,
-                                  color:
-                                      isDarkMode
-                                          ? Colors.white
-                                          : const Color(0xFF2D3436),
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Cairo',
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: screenHeight * 0.02),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.copy,
-                                      color:
-                                          isDarkMode
-                                              ? Colors.white70
-                                              : Colors.grey[700],
-                                    ),
-                                    onPressed: () {
-                                      Clipboard.setData(
-                                        ClipboardData(text: azkar[index]),
-                                      );
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'تم نسخ الذكر',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontFamily: 'DIN',
-                                              fontSize: screenWidth * 0.04,
-                                            ),
-                                          ),
-                                          duration: const Duration(seconds: 2),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.share,
-                                      color:
-                                          isDarkMode
-                                              ? Colors.white70
-                                              : Colors.grey[700],
-                                    ),
-                                    onPressed: () {
-                                      Share.share(azkar[index]);
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        AzkarCounter(
-                          maxValue: maxValues[index],
-                          onComplete: () {
-                            context.read<AzkarCubit>().updateCompletedCards(
-                              index,
-                            );
-                          },
-                          isCompleted: completedCards.contains(index),
-                          pageController: pageController,
-                          currentIndex: index,
-                          totalPages: azkar.length,
-                          onIncrement: () {
-                            context.read<AzkarCubit>().incrementCounter(index);
-                          },
-                        ),
-                        if (completedCards.contains(index))
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
                           Padding(
-                            padding: EdgeInsets.only(top: screenHeight * 0.02),
-                            child: Icon(
-                              Icons.check_circle,
-                              color: Colors.green,
-                              size: screenWidth * 0.08,
+                            padding: EdgeInsets.all(screenWidth * 0.05),
+                            child: Column(
+                              children: [
+                                Text(
+                                  azkar[index],
+                                  style: TextStyle(
+                                    fontSize: screenWidth * 0.06,
+                                    color:
+                                        isDarkMode
+                                            ? Colors.white
+                                            : const Color(0xFF2D3436),
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Cairo',
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: screenHeight * 0.02),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.copy,
+                                        color:
+                                            isDarkMode
+                                                ? Colors.white70
+                                                : Colors.grey[700],
+                                      ),
+                                      onPressed: () {
+                                        Clipboard.setData(
+                                          ClipboardData(text: azkar[index]),
+                                        );
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'تم نسخ الذكر',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontFamily: 'DIN',
+                                                fontSize: screenWidth * 0.04,
+                                              ),
+                                            ),
+                                            duration: const Duration(seconds: 2),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.share,
+                                        color:
+                                            isDarkMode
+                                                ? Colors.white70
+                                                : Colors.grey[700],
+                                      ),
+                                      onPressed: () {
+                                        Share.share(azkar[index]);
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
-                      ],
+                          AzkarCounter(
+                            maxValue: maxValues[index],
+                            onComplete: () {
+                              context.read<AzkarCubit>().updateCompletedCards(
+                                index,
+                              );
+                            },
+                            isCompleted: completedCards.contains(index),
+                            pageController: pageController,
+                            currentIndex: index,
+                            totalPages: azkar.length,
+                            onIncrement: () {
+                              context.read<AzkarCubit>().incrementCounter(index);
+                            },
+                          ),
+                          if (completedCards.contains(index))
+                            Padding(
+                              padding: EdgeInsets.only(top: screenHeight * 0.02),
+                              child: Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                                size: screenWidth * 0.08,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
