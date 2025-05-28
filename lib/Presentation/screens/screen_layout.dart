@@ -51,10 +51,9 @@ class ScreenLayout extends StatelessWidget {
             iconSize: 28,
             elevation: 8,
             enableFeedback: false,
-            unselectedItemColor:
-                isDarkMode
-                    ? Colors.grey.withOpacity(0.5)
-                    : Colors.grey.shade600,
+            unselectedItemColor: isDarkMode
+                ? Colors.grey.withOpacity(0.5)
+                : Colors.grey.shade600,
             selectedItemColor: AppColors.primaryColor,
             backgroundColor:
                 isDarkMode ? const Color(0xb01f1f1f) : Colors.white,
@@ -76,11 +75,125 @@ class ScreenLayout extends StatelessWidget {
           ),
           body: WillPopScope(
             onWillPop: () async {
-              if (cubit.index != 4) {
-                cubit.changeIndex(4);
+              if (cubit.index != 0) {
+                cubit.changeIndex(0);
                 return false;
               }
-              return true;
+              // Show exit confirmation dialog
+              final shouldPop = await showDialog<bool>(
+                context: context,
+                builder: (context) => Dialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  elevation: 0,
+                  backgroundColor: Colors.transparent,
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color:
+                          isDarkMode ? const Color(0xff2F2F2F) : Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(15),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryColor.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.exit_to_app_rounded,
+                            size: 30,
+                            color: AppColors.primaryColor,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          'تأكيد الخروج',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode
+                                ? Colors.white
+                                : AppColors.primaryColor,
+                            fontFamily: 'DIN',
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'هل أنت متأكد من رغبتك في الخروج من التطبيق؟',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: isDarkMode
+                                ? Colors.grey[300]
+                                : Colors.grey[700],
+                            fontFamily: 'DIN',
+                          ),
+                        ),
+                        const SizedBox(height: 25),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: Text(
+                                'إلغاء',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: isDarkMode
+                                      ? Colors.grey[300]
+                                      : Colors.grey[700],
+                                  fontFamily: 'DIN',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 15),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryColor,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: const Text(
+                                'خروج',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontFamily: 'DIN',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+              return shouldPop ?? false;
             },
             child: IndexedStack(
               index: cubit.index,
