@@ -16,6 +16,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serat/Business_Logic/Cubit/navigation_cubit.dart';
 import 'package:serat/Presentation/screens/dailygoal_screens/daily_goal_navigation_screen.dart';
 import 'package:serat/Presentation/screens/zakah_calculator_screen.dart';
+import 'package:serat/features/quran/routes/quran_routes.dart';
 import 'dart:math';
 import 'dart:async';
 
@@ -1310,6 +1311,19 @@ class _TimingsScreenState extends State<TimingsScreen>
                           'https://play.google.com/store/apps/details?id=com.serat.app',
                         ),
                       ),
+                      isDarkMode: isDarkMode,
+                    ),
+                  ],
+                  isDarkMode: isDarkMode,
+                ),
+                _buildDrawerSection(
+                  title: 'القرآن الكريم',
+                  items: [
+                    _buildDrawerItem(
+                      icon: Icons.menu_book,
+                      title: 'سور القرآن',
+                      onTap: () =>
+                          Navigator.pushNamed(context, QuranRoutes.surahList),
                       isDarkMode: isDarkMode,
                     ),
                   ],

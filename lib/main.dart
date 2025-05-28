@@ -18,6 +18,7 @@ import 'package:serat/Business_Logic/Cubit/reciters_cubit.dart';
 import 'package:serat/Business_Logic/Cubit/quran_cubit.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io' show Platform;
+import 'package:serat/features/quran/routes/quran_routes.dart';
 
 TimeOfDay? stringToTimeOfDay(String timeString) {
   if (timeString.isNotEmpty) {
@@ -153,6 +154,9 @@ class SeratApp extends StatelessWidget {
               themeMode: ThemeMode.system,
               debugShowCheckedModeBanner: false,
               home: const SplashScreen(),
+              routes: {
+                ...QuranRoutes.getRoutes(),
+              },
             );
           },
         ),
