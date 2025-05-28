@@ -773,6 +773,13 @@ class _TimingsScreenState extends State<TimingsScreen>
                                         },
                                       ),
                                       _buildFeatureCard(
+                                        'بطاقات القرآن',
+                                        Icons.book,
+                                        isDarkMode,
+                                        onTap: () => Navigator.pushNamed(
+                                            context, QuranRoutes.surahList),
+                                      ),
+                                      _buildFeatureCard(
                                         'القراء',
                                         Icons.record_voice_over,
                                         isDarkMode,
@@ -1311,19 +1318,6 @@ class _TimingsScreenState extends State<TimingsScreen>
                           'https://play.google.com/store/apps/details?id=com.serat.app',
                         ),
                       ),
-                      isDarkMode: isDarkMode,
-                    ),
-                  ],
-                  isDarkMode: isDarkMode,
-                ),
-                _buildDrawerSection(
-                  title: 'القرآن الكريم',
-                  items: [
-                    _buildDrawerItem(
-                      icon: Icons.menu_book,
-                      title: 'سور القرآن',
-                      onTap: () =>
-                          Navigator.pushNamed(context, QuranRoutes.surahList),
                       isDarkMode: isDarkMode,
                     ),
                   ],
