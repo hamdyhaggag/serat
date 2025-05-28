@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:serat/imports.dart';
+import 'package:serat/Data/services/azkar_service.dart';
+import 'package:serat/Data/models/azkar_model.dart';
+import 'package:serat/Presentation/Widgets/Azkar/azkar_model_view.dart';
+import 'package:serat/Business_Logic/Cubit/azkar_cubit.dart';
+import 'package:serat/Presentation/Widgets/Shared/custom_app_bar.dart';
 
 class IconConstants {
   static const IconData morningAzkarIcon = Icons.wb_sunny;
@@ -27,8 +32,10 @@ class AzkarScreen extends StatefulWidget {
 
 class _AzkarScreenState extends State<AzkarScreen> {
   String _lastOpenedTitle = 'أذكار الصباح';
-  double _progress = 0.20;
+  double _progress = 0.0;
   IconData _lastOpenedIcon = IconConstants.morningAzkarIcon;
+  List<AzkarModel> _azkarList = [];
+  bool _isLoading = true;
 
   AzkarState _azkarState = AzkarState(
     currentIndex: 0,
@@ -36,96 +43,30 @@ class _AzkarScreenState extends State<AzkarScreen> {
     totalCards: 0,
   );
 
-  final List<AzkarScreenItem> azkarItems = [
-    const AzkarScreenItem(
-      title: 'أذكار الصباح',
-      screen: MorningAzkar(title: 'أذكار الصباح'),
-      icon: IconConstants.morningAzkarIcon,
-    ),
-    const AzkarScreenItem(
-      title: 'أذكار المساء',
-      screen: EveningAzkar(title: 'أذكار المساء'),
-      icon: IconConstants.eveningAzkarIcon,
-    ),
-    const AzkarScreenItem(
-      title: 'أذكار الصلاة',
-      screen: PrayAzkar(title: 'أذكار الصلاة'),
-      icon: IconConstants.prayAzkarIcon,
-    ),
-    const AzkarScreenItem(
-      title: 'أذكار النوم',
-      screen: SleepAzkar(title: 'أذكار النوم'),
-      icon: IconConstants.sleepAzkarIcon,
-    ),
-    const AzkarScreenItem(
-      title: 'أذكار الإستيقاظ',
-      screen: WakeUpAzkar(title: 'أذكار الإستيقاظ'),
-      icon: IconConstants.wakeUpAzkarIcon,
-    ),
-    const AzkarScreenItem(
-      title: 'أذكار متفرقة',
-      screen: CollectionAzkar(title: 'أذكار متفرقة'),
-      icon: IconConstants.collectionAzkarIcon,
-    ),
-    const AzkarScreenItem(
-      title: 'أذكار الطعام',
-      screen: FoodAzkar(title: 'أذكار الطعام'),
-      icon: IconConstants.foodAzkarIcon,
-    ),
-    const AzkarScreenItem(
-      title: 'أذكار السفر',
-      screen: TravelAzkar(title: 'الْأدْعِيَةُ النبوية'),
-      icon: IconConstants.travelAzkarIcon,
-    ),
-    const AzkarScreenItem(
-      title: 'الأدعية القرآنية',
-      screen: QuranAzkar(title: 'الأدعية القراّنية'),
-      icon: IconConstants.quranAzkarIcon,
-    ),
-    const AzkarScreenItem(
-      title: 'الأدعية النبوية',
-      screen: NabawiAzkar(title: 'الْأدْعِيَةُ النبوية'),
-      icon: IconConstants.nabawiAzkarIcon,
-    ),
-    const AzkarScreenItem(
-      title: 'تسبيحات',
-      screen: Tasabeh(title: 'تسبيحات'),
-      icon: IconConstants.tasabehIcon,
-    ),
-    const AzkarScreenItem(
-      title: 'جوامع الدعاء',
-      screen: PlusAzkar(title: 'جوامع الدعاء'),
-      icon: IconConstants.plusAzkarIcon,
-    ),
-    const AzkarScreenItem(
-      title: 'أدعية للميت',
-      screen: DeadAzkar(title: 'أدعية للميت'),
-      icon: IconConstants.deadAzkarIcon,
-    ),
-    const AzkarScreenItem(
-      title: 'الرقية الشرعية',
-      screen: RoqiaScreen(title: 'الرقية الشرعية'),
-      icon: IconConstants.roqiaIcon,
-    ),
-  ];
-
-  final TextEditingController _searchController = TextEditingController();
-  String searchQuery = '';
-
   @override
   void initState() {
     super.initState();
     _loadState();
-    _searchController.addListener(() {
+    _loadAzkarData();
+  }
+
+  Future<void> _loadAzkarData() async {
+    try {
+      final azkarList = await AzkarService.loadAzkar();
       setState(() {
-        searchQuery = _searchController.text;
+        _azkarList = azkarList;
+        _isLoading = false;
       });
-    });
+    } catch (e) {
+      print('Error loading Azkar data: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -133,15 +74,13 @@ class _AzkarScreenState extends State<AzkarScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _lastOpenedTitle = prefs.getString('lastOpenedTitle') ?? 'أذكار الصباح';
-      _progress = prefs.getDouble('progress') ?? 0.34;
+      _progress = prefs.getDouble('progress') ?? 0.0;
 
-      int iconCode =
-          prefs.getInt('lastOpenedIcon') ??
+      int iconCode = prefs.getInt('lastOpenedIcon') ??
           IconConstants.morningAzkarIcon.codePoint;
       _lastOpenedIcon = IconData(iconCode, fontFamily: 'MaterialIcons');
 
-      final completedCards =
-          prefs
+      final completedCards = prefs
               .getStringList('completedCards')
               ?.map((e) => int.parse(e))
               .toList() ??
@@ -238,11 +177,27 @@ class _AzkarScreenState extends State<AzkarScreen> {
                 color: isDarkMode ? Colors.white : AppColors.primaryColor,
                 size: 28,
               ),
-              onPressed: () {
-                showSearch(
+              onPressed: () async {
+                final Zikr? selectedZikr = await showSearch<Zikr?>(
                   context: context,
-                  delegate: AzkarSearchDelegate(azkarItems),
+                  delegate:
+                      AzkarSearchDelegate(_azkarList.cast<AzkarScreenItem>())
+                          as SearchDelegate<Zikr?>,
                 );
+
+                if (selectedZikr != null) {
+                  // Find the category that contains this zikr
+                  final category = _azkarList.firstWhere(
+                    (azkar) => azkar.array.contains(selectedZikr),
+                    orElse: () => _azkarList.first,
+                  );
+
+                  // Navigate to the category screen and highlight the selected zikr
+                  updateHeader(category.category, _azkarState,
+                      _getIconForCategory(category.category));
+                  _navigateToScreen(
+                      context, _buildAzkarScreen(category), _azkarState);
+                }
               },
             ),
             Text(
@@ -254,7 +209,7 @@ class _AzkarScreenState extends State<AzkarScreen> {
                 color: isDarkMode ? Colors.white : AppColors.primaryColor,
               ),
             ),
-            const SizedBox(width: 40), // For balance
+            const SizedBox(width: 40),
           ],
         ),
       ),
@@ -263,26 +218,27 @@ class _AzkarScreenState extends State<AzkarScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors:
-                isDarkMode
-                    ? [const Color(0xff1F1F1F), const Color(0xff2D2D2D)]
-                    : [Colors.grey[50]!, Colors.grey[100]!],
+            colors: isDarkMode
+                ? [const Color(0xff1F1F1F), const Color(0xff2D2D2D)]
+                : [Colors.grey[50]!, Colors.grey[100]!],
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                const SizedBox(height: 16.0),
-                _buildHeaderCard(context),
-                const SizedBox(height: 24.0),
-                _buildGrid(context),
-                const SizedBox(height: 24.0),
-              ],
-            ),
-          ),
-        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 16.0),
+                      _buildHeaderCard(context),
+                      const SizedBox(height: 24.0),
+                      _buildGrid(context),
+                      const SizedBox(height: 24.0),
+                    ],
+                  ),
+                ),
+              ),
       ),
     );
   }
@@ -430,13 +386,14 @@ class _AzkarScreenState extends State<AzkarScreen> {
         mainAxisSpacing: 16.0,
         childAspectRatio: 1.1,
       ),
-      itemCount: azkarItems.length,
+      itemCount: _azkarList.length,
       itemBuilder: (context, index) {
-        final item = azkarItems[index];
+        final azkar = _azkarList[index];
         return GestureDetector(
           onTap: () {
-            updateHeader(item.title, _azkarState, item.icon);
-            _navigateToScreen(context, item.screen, _azkarState);
+            updateHeader(azkar.category, _azkarState,
+                _getIconForCategory(azkar.category));
+            _navigateToScreen(context, _buildAzkarScreen(azkar), _azkarState);
           },
           child: Container(
             decoration: BoxDecoration(
@@ -460,14 +417,14 @@ class _AzkarScreenState extends State<AzkarScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(
-                    item.icon,
+                    _getIconForCategory(azkar.category),
                     color: AppColors.primaryColor,
                     size: 32,
                   ),
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  item.title,
+                  azkar.category,
                   style: TextStyle(
                     fontFamily: 'DIN',
                     fontSize: 16,
@@ -481,6 +438,39 @@ class _AzkarScreenState extends State<AzkarScreen> {
           ),
         );
       },
+    );
+  }
+
+  IconData _getIconForCategory(String category) {
+    switch (category) {
+      case 'أذكار الصباح والمساء':
+        return IconConstants.morningAzkarIcon;
+      case 'أذكار النوم':
+        return IconConstants.sleepAzkarIcon;
+      // Add more cases for other categories
+      default:
+        return IconConstants.collectionAzkarIcon;
+    }
+  }
+
+  Widget _buildAzkarScreen(AzkarModel azkar) {
+    final azkarList = azkar.array.map((z) => z.text).toList();
+    final maxValues = azkar.array.map((z) => z.count).toList();
+
+    return BlocProvider(
+      create: (context) => AzkarCubit(),
+      child: Scaffold(
+        appBar: CustomAppBar(title: azkar.category),
+        body: AzkarModelView(
+          title: azkar.category,
+          azkarList: azkarList,
+          maxValues: maxValues,
+          onProgressChanged: (AzkarState newState) {
+            updateHeader(
+                azkar.category, newState, _getIconForCategory(azkar.category));
+          },
+        ),
+      ),
     );
   }
 }
