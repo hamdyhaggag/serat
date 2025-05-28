@@ -495,28 +495,6 @@ class _SurahListScreenState extends State<SurahListScreen>
                                                 ],
                                               ),
                                             ),
-                                            Container(
-                                              width: 40,
-                                              height: 40,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: Theme.of(context)
-                                                    .primaryColor
-                                                    .withOpacity(0.1),
-                                              ),
-                                              child: IconButton(
-                                                icon: Icon(
-                                                  Icons.play_arrow_rounded,
-                                                  color: Theme.of(context)
-                                                      .primaryColor,
-                                                  size: 24,
-                                                ),
-                                                onPressed: () {
-                                                  // TODO: Implement audio playback
-                                                },
-                                                padding: EdgeInsets.zero,
-                                              ),
-                                            ),
                                           ],
                                         ),
                                       ),
