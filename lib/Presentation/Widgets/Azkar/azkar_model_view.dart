@@ -82,10 +82,9 @@ class AzkarModelViewState extends State<AzkarModelView> {
   Future<AzkarState> _loadAzkarState() async {
     final prefs = await SharedPreferences.getInstance();
     final currentIndex = prefs.getInt('currentIndex') ?? 0;
-    final completedCards =
-        (prefs.getStringList('completedCards') ?? [])
-            .map((e) => int.parse(e))
-            .toList();
+    final completedCards = (prefs.getStringList('completedCards') ?? [])
+        .map((e) => int.parse(e))
+        .toList();
     final totalCards = prefs.getInt('totalCards') ?? 0;
     final cachedProgress = prefs.getDouble('cachedProgress') ?? 0.0;
 
@@ -171,6 +170,14 @@ class AzkarModelViewState extends State<AzkarModelView> {
                 TextButton(
                   onPressed: () {
                     Navigator.of(dialogContext).pop();
+                    // Find the last completed adhkar index
+                    final lastCompletedIndex = state.completedCards.isEmpty
+                        ? 0
+                        : state.completedCards.reduce((a, b) => a > b ? a : b);
+                    // Update the page controller to the next uncompleted adhkar
+                    _pageController.jumpToPage(lastCompletedIndex + 1);
+                    // Update the cubit state to match
+                    cubit.updateIndex(lastCompletedIndex + 1);
                   },
                   child: Text(
                     'استمرار',
@@ -244,28 +251,27 @@ class AzkarModelViewState extends State<AzkarModelView> {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  gradient:
-                      isDarkMode
-                          ? const LinearGradient(
-                            colors: [
-                              Color(0xFF1A1A1A),
-                              Color(0xFF2D2D2D),
-                              Color(0xFF1A1A1A),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            stops: [0.0, 0.5, 1.0],
-                          )
-                          : const LinearGradient(
-                            colors: [
-                              Color(0xFFF8F9FA),
-                              Color(0xFFE9ECEF),
-                              Color(0xFFF8F9FA),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            stops: [0.0, 0.5, 1.0],
-                          ),
+                  gradient: isDarkMode
+                      ? const LinearGradient(
+                          colors: [
+                            Color(0xFF1A1A1A),
+                            Color(0xFF2D2D2D),
+                            Color(0xFF1A1A1A),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          stops: [0.0, 0.5, 1.0],
+                        )
+                      : const LinearGradient(
+                          colors: [
+                            Color(0xFFF8F9FA),
+                            Color(0xFFE9ECEF),
+                            Color(0xFFF8F9FA),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          stops: [0.0, 0.5, 1.0],
+                        ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withAlpha(26),
