@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 import 'package:serat/imports.dart' hide AppColors;
 import 'package:serat/data/services/hadith_service.dart';
 import 'package:serat/data/services/bookmark_service.dart';
@@ -42,6 +43,12 @@ class _AhadithListScreenState extends State<AhadithListScreen>
   bool _isLoading = true;
   String? _error;
 
+  // Search optimization variables
+  Timer? _debounce;
+  String _lastSearchQuery = '';
+  Map<String, Map<String, List<HadithModel>>> _searchCache = {};
+  final int _debounceMilliseconds = 300;
+
   @override
   void initState() {
     super.initState();
@@ -59,6 +66,7 @@ class _AhadithListScreenState extends State<AhadithListScreen>
   void dispose() {
     _animationController.dispose();
     _searchController.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
@@ -170,6 +178,88 @@ class _AhadithListScreenState extends State<AhadithListScreen>
     }
   }
 
+  void _filterHadiths(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+    _debounce = Timer(Duration(milliseconds: _debounceMilliseconds), () {
+      if (query == _lastSearchQuery) return;
+      _lastSearchQuery = query;
+
+      setState(() {
+        if (query.isEmpty) {
+          _searchState = _searchState.copyWith(
+            query: query,
+            filteredHadiths: _hadiths,
+            groupedHadiths: _groupHadithsByChapter(_hadiths),
+          );
+        } else {
+          // Check cache first
+          final cacheKey = '${_filterState.selectedBook}_$query';
+          if (_searchCache.containsKey(_filterState.selectedBook) &&
+              _searchCache[_filterState.selectedBook]!.containsKey(query)) {
+            final cachedResults =
+                _searchCache[_filterState.selectedBook]![query]!;
+            _searchState = _searchState.copyWith(
+              query: query,
+              filteredHadiths: cachedResults,
+              groupedHadiths: _groupHadithsByChapter(cachedResults),
+            );
+          } else {
+            // Optimize string matching by converting to lowercase once
+            final queryLower = query.toLowerCase();
+            final filtered = _hadiths.where((hadith) {
+              final textLower = hadith.hadithText.toLowerCase();
+              final numberLower = hadith.hadithNumber.toLowerCase();
+              final explanationLower = hadith.explanation.toLowerCase();
+
+              // Search in hadith text, number, and explanation
+              if (textLower.contains(queryLower) ||
+                  numberLower.contains(queryLower) ||
+                  explanationLower.contains(queryLower)) {
+                return true;
+              }
+
+              // Extract chapter name from explanation if it exists
+              final chapterMatch = RegExp(r'هذا الحديث يبين أن (.*?)،')
+                  .firstMatch(explanationLower);
+              if (chapterMatch != null) {
+                final chapterName = chapterMatch.group(1)?.toLowerCase() ?? '';
+                if (chapterName.contains(queryLower)) {
+                  return true;
+                }
+              }
+
+              // Fallback to word boundary matching for better results
+              final words = queryLower.split(' ');
+              return words.every((word) =>
+                  textLower.contains(word) ||
+                  numberLower.contains(word) ||
+                  explanationLower.contains(word));
+            }).toList();
+
+            // Cache the results
+            if (!_searchCache.containsKey(_filterState.selectedBook)) {
+              _searchCache[_filterState.selectedBook] = {};
+            }
+            _searchCache[_filterState.selectedBook]![query] = filtered;
+
+            // Limit cache size to prevent memory issues
+            if (_searchCache[_filterState.selectedBook]!.length > 100) {
+              _searchCache[_filterState.selectedBook]!
+                  .remove(_searchCache[_filterState.selectedBook]!.keys.first);
+            }
+
+            _searchState = _searchState.copyWith(
+              query: query,
+              filteredHadiths: filtered,
+              groupedHadiths: _groupHadithsByChapter(filtered),
+            );
+          }
+        }
+      });
+    });
+  }
+
   void _selectBook(String book) {
     setState(() {
       _filterState = _filterState.copyWith(
@@ -177,6 +267,7 @@ class _AhadithListScreenState extends State<AhadithListScreen>
         selectedFilter: 'الكل',
       );
       _searchController.clear();
+      _lastSearchQuery = ''; // Reset last search query
     });
     _loadHadiths();
   }
@@ -257,35 +348,6 @@ class _AhadithListScreenState extends State<AhadithListScreen>
         ),
       );
     }
-  }
-
-  void _filterHadiths(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        _searchState = _searchState.copyWith(
-          query: query,
-          filteredHadiths: _hadiths,
-          groupedHadiths: _groupHadithsByChapter(_hadiths),
-        );
-      } else {
-        final filtered = _hadiths
-            .where(
-              (hadith) =>
-                  hadith.hadithText
-                      .toLowerCase()
-                      .contains(query.toLowerCase()) ||
-                  hadith.hadithNumber
-                      .toLowerCase()
-                      .contains(query.toLowerCase()),
-            )
-            .toList();
-        _searchState = _searchState.copyWith(
-          query: query,
-          filteredHadiths: filtered,
-          groupedHadiths: _groupHadithsByChapter(filtered),
-        );
-      }
-    });
   }
 
   void _applyFilter(String filter) {

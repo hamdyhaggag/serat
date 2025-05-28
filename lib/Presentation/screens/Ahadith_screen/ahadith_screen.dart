@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shimmer/shimmer.dart';
+import 'dart:async';
 import '../../../imports.dart';
 import 'package:serat/domain/models/hadith_model.dart';
 import 'package:serat/data/services/hadith_service.dart';
@@ -26,6 +27,12 @@ class _AhadithScreenState extends State<AhadithScreen>
   bool _isGridView = true;
   String _selectedFilter = 'الكل';
 
+  // Search optimization variables
+  Timer? _debounce;
+  String _lastSearchQuery = '';
+  Map<String, List<HadithModel>> _searchCache = {};
+  final int _debounceMilliseconds = 300;
+
   @override
   void initState() {
     super.initState();
@@ -43,6 +50,7 @@ class _AhadithScreenState extends State<AhadithScreen>
   void dispose() {
     _animationController.dispose();
     _searchController.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
@@ -68,23 +76,62 @@ class _AhadithScreenState extends State<AhadithScreen>
   }
 
   void _filterAhadith(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        _filteredAhadith = _ahadith;
-      } else {
-        _filteredAhadith =
-            _ahadith
-                .where(
-                  (hadith) =>
-                      hadith.hadithText.toLowerCase().contains(
-                        query.toLowerCase(),
-                      ) ||
-                      hadith.hadithNumber.toLowerCase().contains(
-                        query.toLowerCase(),
-                      ),
-                )
-                .toList();
-      }
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+    _debounce = Timer(Duration(milliseconds: _debounceMilliseconds), () {
+      if (query == _lastSearchQuery) return;
+      _lastSearchQuery = query;
+
+      setState(() {
+        if (query.isEmpty) {
+          _filteredAhadith = _ahadith;
+        } else {
+          // Check cache first
+          if (_searchCache.containsKey(query)) {
+            _filteredAhadith = _searchCache[query]!;
+          } else {
+            // Optimize string matching by converting to lowercase once
+            final queryLower = query.toLowerCase();
+            _filteredAhadith = _ahadith.where((hadith) {
+              final textLower = hadith.hadithText.toLowerCase();
+              final numberLower = hadith.hadithNumber.toLowerCase();
+              final explanationLower = hadith.explanation.toLowerCase();
+
+              // Search in hadith text, number, and explanation
+              if (textLower.contains(queryLower) ||
+                  numberLower.contains(queryLower) ||
+                  explanationLower.contains(queryLower)) {
+                return true;
+              }
+
+              // Extract chapter name from explanation if it exists
+              final chapterMatch = RegExp(r'هذا الحديث يبين أن (.*?)،')
+                  .firstMatch(explanationLower);
+              if (chapterMatch != null) {
+                final chapterName = chapterMatch.group(1)?.toLowerCase() ?? '';
+                if (chapterName.contains(queryLower)) {
+                  return true;
+                }
+              }
+
+              // Fallback to word boundary matching for better results
+              final words = queryLower.split(' ');
+              return words.every((word) =>
+                  textLower.contains(word) ||
+                  numberLower.contains(word) ||
+                  explanationLower.contains(word));
+            }).toList();
+
+            // Cache the results
+            _searchCache[query] = _filteredAhadith;
+
+            // Limit cache size to prevent memory issues
+            if (_searchCache.length > 100) {
+              _searchCache.remove(_searchCache.keys.first);
+            }
+          }
+        }
+      });
     });
   }
 
@@ -187,19 +234,17 @@ class _AhadithScreenState extends State<AhadithScreen>
               label: Text(
                 filter,
                 style: TextStyle(
-                  color:
-                      isSelected
-                          ? Colors.white
-                          : isDarkMode
+                  color: isSelected
+                      ? Colors.white
+                      : isDarkMode
                           ? Colors.white70
                           : Colors.black87,
                   fontFamily: 'DIN',
                 ),
               ),
-              backgroundColor:
-                  isDarkMode
-                      ? Colors.white.withValues(alpha: 26)
-                      : Colors.white,
+              backgroundColor: isDarkMode
+                  ? Colors.white.withValues(alpha: 26)
+                  : Colors.white,
               selectedColor: AppColors.primaryColor,
               onSelected: (_) => _applyFilter(filter),
             ),
@@ -228,10 +273,9 @@ class _AhadithScreenState extends State<AhadithScreen>
         child: Text(
           'لا توجد نتائج',
           style: TextStyle(
-            color:
-                Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white70
-                    : Colors.black54,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white70
+                : Colors.black54,
             fontFamily: 'DIN',
             fontSize: 18,
           ),
@@ -282,11 +326,10 @@ class _AhadithScreenState extends State<AhadithScreen>
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder:
-                  (context) => BaseAhadithScreen(
-                    title: hadith.hadithNumber,
-                    hadith: hadith,
-                  ),
+              builder: (context) => BaseAhadithScreen(
+                title: hadith.hadithNumber,
+                hadith: hadith,
+              ),
             ),
           );
         },
@@ -302,10 +345,9 @@ class _AhadithScreenState extends State<AhadithScreen>
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color:
-                      isDarkMode
-                          ? AppColors.primaryColor.withValues(alpha: 26)
-                          : AppColors.primaryColor.withValues(alpha: 16),
+                  color: isDarkMode
+                      ? AppColors.primaryColor.withValues(alpha: 26)
+                      : AppColors.primaryColor.withValues(alpha: 16),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -349,11 +391,10 @@ class _AhadithScreenState extends State<AhadithScreen>
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder:
-                  (context) => BaseAhadithScreen(
-                    title: hadith.hadithNumber,
-                    hadith: hadith,
-                  ),
+              builder: (context) => BaseAhadithScreen(
+                title: hadith.hadithNumber,
+                hadith: hadith,
+              ),
             ),
           );
         },
@@ -371,10 +412,9 @@ class _AhadithScreenState extends State<AhadithScreen>
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color:
-                          isDarkMode
-                              ? AppColors.primaryColor.withValues(alpha: 26)
-                              : AppColors.primaryColor.withValues(alpha: 16),
+                      color: isDarkMode
+                          ? AppColors.primaryColor.withValues(alpha: 26)
+                          : AppColors.primaryColor.withValues(alpha: 16),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -412,113 +452,113 @@ class _AhadithScreenState extends State<AhadithScreen>
   Widget _buildShimmerLoading() {
     return _isGridView
         ? GridView.builder(
-          padding: const EdgeInsets.all(16),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 0.8,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-          ),
-          itemCount: 6,
-          itemBuilder: (context, index) {
-            return Shimmer.fromColors(
-              baseColor: Colors.grey[300]!,
-              highlightColor: Colors.grey[100]!,
-              child: Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 100,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.8,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: 6,
+            itemBuilder: (context, index) {
+              return Shimmer.fromColors(
+                baseColor: Colors.grey[300]!,
+                highlightColor: Colors.grey[100]!,
+                child: Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 100,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        width: double.infinity,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        width: double.infinity,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
-        )
+              );
+            },
+          )
         : ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: 5,
-          itemBuilder: (context, index) {
-            return Shimmer.fromColors(
-              baseColor: Colors.grey[300]!,
-              highlightColor: Colors.grey[100]!,
-              child: Card(
-                margin: const EdgeInsets.only(bottom: 16),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Container(
-                  height: 120,
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 100,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
+            padding: const EdgeInsets.all(16),
+            itemCount: 5,
+            itemBuilder: (context, index) {
+              return Shimmer.fromColors(
+                baseColor: Colors.grey[300]!,
+                highlightColor: Colors.grey[100]!,
+                child: Card(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Container(
+                    height: 120,
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 100,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        width: double.infinity,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        width: double.infinity,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
-        );
+              );
+            },
+          );
   }
 }
 
