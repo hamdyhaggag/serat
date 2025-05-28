@@ -128,6 +128,8 @@ flutter:
       - assets/hadiths/
       - assets/data/islamic_questions.json
       - assets/data/quran.json
+      - assets/data/adhkar.json
+
   fonts:
     - family: Cairo
       fonts:
