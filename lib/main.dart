@@ -19,6 +19,7 @@ import 'package:serat/Business_Logic/Cubit/quran_cubit.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io' show Platform;
 import 'package:serat/features/quran/routes/quran_routes.dart';
+import 'package:serat/Business_Logic/Cubit/theme_cubit.dart';
 
 TimeOfDay? stringToTimeOfDay(String timeString) {
   if (timeString.isNotEmpty) {
@@ -115,47 +116,54 @@ class SeratApp extends StatelessWidget {
         ),
         BlocProvider(create: (context) => RecitersCubit()),
         BlocProvider(create: (context) => QuranCubit()),
+        BlocProvider(create: (context) => ThemeCubit()),
       ],
       child: ScreenUtilInit(
         designSize: const Size(360, 690),
         child: BlocConsumer<AppCubit, AppStates>(
           listener: (context, state) {},
           builder: (context, state) {
-            return MaterialApp(
-              navigatorKey: navigatorKey,
-              title: "Serat - صراط",
-              locale: const Locale('ar', 'SA'),
-              localizationsDelegates: const [
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              supportedLocales: const [Locale('ar', 'SA')],
-              theme: lightThemeData.copyWith(
-                textTheme: const TextTheme(
-                  titleMedium: TextStyle(fontSize: 25, fontFamily: 'DIN'),
-                  bodyMedium: TextStyle(fontSize: 30, fontFamily: 'DIN'),
-                ),
-              ),
-              darkTheme: darkThemeData.copyWith(
-                textTheme: const TextTheme(
-                  titleMedium: TextStyle(
-                    fontSize: 25,
-                    fontFamily: 'DIN',
-                    color: Colors.white,
+            return BlocBuilder<ThemeCubit, ThemeState>(
+              builder: (context, themeState) {
+                return MaterialApp(
+                  navigatorKey: navigatorKey,
+                  title: "Serat - صراط",
+                  locale: const Locale('ar', 'SA'),
+                  localizationsDelegates: const [
+                    GlobalMaterialLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate,
+                    GlobalCupertinoLocalizations.delegate,
+                  ],
+                  supportedLocales: const [Locale('ar', 'SA')],
+                  theme: lightThemeData.copyWith(
+                    textTheme: const TextTheme(
+                      titleMedium: TextStyle(fontSize: 25, fontFamily: 'DIN'),
+                      bodyMedium: TextStyle(fontSize: 30, fontFamily: 'DIN'),
+                    ),
                   ),
-                  bodyMedium: TextStyle(
-                    fontSize: 30,
-                    fontFamily: 'DIN',
-                    color: Colors.white,
+                  darkTheme: darkThemeData.copyWith(
+                    textTheme: const TextTheme(
+                      titleMedium: TextStyle(
+                        fontSize: 25,
+                        fontFamily: 'DIN',
+                        color: Colors.white,
+                      ),
+                      bodyMedium: TextStyle(
+                        fontSize: 30,
+                        fontFamily: 'DIN',
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              themeMode: ThemeMode.system,
-              debugShowCheckedModeBanner: false,
-              home: const SplashScreen(),
-              routes: {
-                ...QuranRoutes.getRoutes(),
+                  themeMode: ThemeCubit.get(context).isLightMode
+                      ? ThemeMode.light
+                      : ThemeMode.dark,
+                  debugShowCheckedModeBanner: false,
+                  home: const SplashScreen(),
+                  routes: {
+                    ...QuranRoutes.getRoutes(),
+                  },
+                );
               },
             );
           },

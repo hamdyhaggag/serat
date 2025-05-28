@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:serat/Business_Logic/Cubit/location_cubit.dart' as location;
+import 'package:serat/Business_Logic/Cubit/theme_cubit.dart';
 import 'package:serat/Presentation/screens/hijri_calendar_screen.dart';
 import 'package:serat/Presentation/screens/quran_screen.dart';
 import 'package:serat/Presentation/screens/radio_screen.dart';
@@ -1210,6 +1211,16 @@ class _TimingsScreenState extends State<TimingsScreen>
                       icon: Icons.timer,
                       title: 'طريقة تحديد مواقيت الصلاة',
                       onTap: () => showMethods(context),
+                      isDarkMode: isDarkMode,
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.brightness_6,
+                      title: 'المظهر',
+                      subtitle: isDarkMode ? 'الوضع الليلي' : 'الوضع النهاري',
+                      onTap: () {
+                        ThemeCubit.get(context)
+                            .changeAppMode(isLight: !isDarkMode);
+                      },
                       isDarkMode: isDarkMode,
                     ),
                     _buildDrawerItem(
