@@ -209,8 +209,34 @@ class _SurahListScreenState extends State<SurahListScreen>
     );
   }
 
+  Color _getBackgroundColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? Colors.grey[900]!
+        : Colors.white;
+  }
+
+  Color _getCardColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? Colors.grey[800]!
+        : Colors.white;
+  }
+
+  Color _getTextColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : Colors.black87;
+  }
+
+  Color _getSecondaryTextColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? Colors.grey[300]!
+        : Colors.grey[600]!;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: CustomScrollView(
         controller: _scrollController,
@@ -295,7 +321,7 @@ class _SurahListScreenState extends State<SurahListScreen>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: _getBackgroundColor(context),
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(20),
                   ),
@@ -309,7 +335,7 @@ class _SurahListScreenState extends State<SurahListScreen>
                 ),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: isDark ? Colors.grey[700] : Colors.grey[100],
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
@@ -317,19 +343,21 @@ class _SurahListScreenState extends State<SurahListScreen>
                     decoration: InputDecoration(
                       hintText: 'ابحث عن سورة...',
                       hintStyle: TextStyle(
-                        color: Colors.grey[600],
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
                         fontSize: 16,
                         fontFamily: 'Din',
                       ),
                       prefixIcon: Icon(
                         Icons.search,
-                        color: Colors.grey[600],
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
                       ),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
                               icon: Icon(
                                 Icons.clear,
-                                color: Colors.grey[600],
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                               ),
                               onPressed: () {
                                 _searchController.clear();
@@ -344,9 +372,9 @@ class _SurahListScreenState extends State<SurahListScreen>
                       ),
                     ),
                     textAlign: TextAlign.right,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
-                      color: Colors.black87,
+                      color: _getTextColor(context),
                     ),
                   ),
                 ),
@@ -361,16 +389,17 @@ class _SurahListScreenState extends State<SurahListScreen>
                   end: Alignment.bottomCenter,
                   colors: [
                     Theme.of(context).primaryColor.withOpacity(0.05),
-                    Colors.white,
+                    _getBackgroundColor(context),
                   ],
                 ),
               ),
               child: _isLoading
-                  ? const Center(
+                  ? Center(
                       child: Padding(
-                        padding: EdgeInsets.all(20.0),
+                        padding: const EdgeInsets.all(20.0),
                         child: CircularProgressIndicator(
                           strokeWidth: 3,
+                          color: Theme.of(context).primaryColor,
                         ),
                       ),
                     )
@@ -384,14 +413,16 @@ class _SurahListScreenState extends State<SurahListScreen>
                                 Icon(
                                   Icons.search_off_rounded,
                                   size: 64,
-                                  color: Colors.grey[400],
+                                  color: isDark
+                                      ? Colors.grey[600]
+                                      : Colors.grey[400],
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
                                   'لم يتم العثور على نتائج',
                                   style: TextStyle(
                                     fontSize: 18,
-                                    color: Colors.grey[600],
+                                    color: _getSecondaryTextColor(context),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -400,7 +431,7 @@ class _SurahListScreenState extends State<SurahListScreen>
                                   'حاول البحث بكلمات مختلفة',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Colors.grey[500],
+                                    color: _getSecondaryTextColor(context),
                                   ),
                                 ),
                               ],
@@ -424,7 +455,7 @@ class _SurahListScreenState extends State<SurahListScreen>
                                 child: Container(
                                   margin: const EdgeInsets.only(bottom: 12),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: _getCardColor(context),
                                     borderRadius: BorderRadius.circular(20),
                                     boxShadow: [
                                       BoxShadow(
@@ -477,11 +508,12 @@ class _SurahListScreenState extends State<SurahListScreen>
                                                 children: [
                                                   Text(
                                                     surah.surah,
-                                                    style: const TextStyle(
+                                                    style: TextStyle(
                                                       fontSize: 20,
                                                       fontWeight:
                                                           FontWeight.bold,
-                                                      color: Colors.black87,
+                                                      color: _getTextColor(
+                                                          context),
                                                     ),
                                                   ),
                                                   const SizedBox(height: 4),
@@ -489,7 +521,9 @@ class _SurahListScreenState extends State<SurahListScreen>
                                                     surah.ayaatiha,
                                                     style: TextStyle(
                                                       fontSize: 15,
-                                                      color: Colors.grey[600],
+                                                      color:
+                                                          _getSecondaryTextColor(
+                                                              context),
                                                     ),
                                                   ),
                                                 ],
@@ -513,6 +547,8 @@ class _SurahListScreenState extends State<SurahListScreen>
   }
 
   void _showSurahDetails(BuildContext context, SurahModel surah) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -523,9 +559,9 @@ class _SurahListScreenState extends State<SurahListScreen>
         minChildSize: 0.5,
         expand: false,
         builder: (context, scrollController) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: BoxDecoration(
+            color: _getBackgroundColor(context),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Column(
             children: [
@@ -534,7 +570,7 @@ class _SurahListScreenState extends State<SurahListScreen>
                 height: 4,
                 margin: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: isDark ? Colors.grey[600] : Colors.grey[300],
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -549,10 +585,10 @@ class _SurahListScreenState extends State<SurahListScreen>
                         tag: 'surah_${surah.surah}',
                         child: Text(
                           surah.surah,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: _getTextColor(context),
                           ),
                         ),
                       ),
@@ -579,14 +615,16 @@ class _SurahListScreenState extends State<SurahListScreen>
   }
 
   Widget _buildDetailSection(String title, dynamic content) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: isDark ? Colors.grey[800] : Colors.grey[50],
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.grey[200]!,
+          color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
           width: 1,
         ),
       ),
@@ -618,9 +656,9 @@ class _SurahListScreenState extends State<SurahListScreen>
                       Expanded(
                         child: Text(
                           item,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
-                            color: Colors.black87,
+                            color: _getTextColor(context),
                             height: 1.5,
                           ),
                         ),
@@ -631,9 +669,9 @@ class _SurahListScreenState extends State<SurahListScreen>
           else
             Text(
               content.toString(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
-                color: Colors.black87,
+                color: _getTextColor(context),
                 height: 1.5,
               ),
             ),
