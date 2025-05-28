@@ -72,7 +72,8 @@ class QiblaScreenState extends State<QiblaScreen>
           final locationCubit = LocationCubit.get(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(locationCubit.errorMessage ?? 'حدث خطأ في تحديد اتجاه القبلة'),
+              content: Text(locationCubit.errorMessage ??
+                  'حدث خطأ في تحديد اتجاه القبلة'),
               backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -109,7 +110,8 @@ class QiblaScreenState extends State<QiblaScreen>
               ? const Center(child: CircularProgressIndicator())
               : state is GetQiblaDirectionError
                   ? AppErrorWidget(
-                      message: locationCubit.errorMessage ?? 'حدث خطأ في تحديد اتجاه القبلة\nيرجى المحاولة مرة أخرى',
+                      message: locationCubit.errorMessage ??
+                          'حدث خطأ في تحديد اتجاه القبلة\nيرجى المحاولة مرة أخرى',
                       icon: Icons.location_off_rounded,
                       isDarkMode: isDarkMode,
                       onRetry: () async {
@@ -124,7 +126,8 @@ class QiblaScreenState extends State<QiblaScreen>
                     )
                   : QiblaCubit.get(context).directionModel == null
                       ? AppErrorWidget(
-                          message: locationCubit.errorMessage ?? 'تأكد من الاتصال بالإنترنت\nوتفعيل الموقع',
+                          message: locationCubit.errorMessage ??
+                              'تأكد من الاتصال بالإنترنت\nوتفعيل الموقع',
                           icon: Icons.location_off_rounded,
                           isDarkMode: isDarkMode,
                           onRetry: () async {
@@ -140,7 +143,9 @@ class QiblaScreenState extends State<QiblaScreen>
                       : Builder(
                           builder: (context) {
                             return Column(
-                              children: <Widget>[Expanded(child: _buildCompass())],
+                              children: <Widget>[
+                                Expanded(child: _buildCompass())
+                              ],
                             );
                           },
                         ),
@@ -253,39 +258,33 @@ class QiblaScreenState extends State<QiblaScreen>
                     ),
                     child: Stack(
                       children: [
-                        // Compass Points
-                        ...['ش', 'غ', 'ج', 'ش'].asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final point = entry.value;
-                          final angle = index * 90.0 * (math.pi / 180);
-                          return Positioned(
-                            left:
-                                width * 0.4 + (width * 0.35) * math.sin(angle),
-                            top: width * 0.4 - (width * 0.35) * math.cos(angle),
-                            child: Transform.rotate(
-                              angle: -(rotatedAngle ?? 0),
-                              child: AppText(
-                                point,
-                                color: AppColors.primaryColor,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          );
-                        }).toList(),
                         // Qibla Indicator
                         if (qibla != null)
                           Positioned(
                             left: width * 0.4,
                             top: width * 0.4,
                             child: Transform.rotate(
-                              angle:
-                                  (qibla * (math.pi / 180)) -
+                              angle: (qibla * (math.pi / 180)) -
                                   (rotatedAngle ?? 0),
-                              child: Container(
-                                width: 2,
-                                height: width * 0.35,
-                                color: AppColors.primaryColor,
+                              child: Column(
+                                children: [
+                                  Container(
+                                    width: 4,
+                                    height: width * 0.35,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryColor,
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                  Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryColor,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
