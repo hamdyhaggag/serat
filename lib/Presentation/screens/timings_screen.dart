@@ -14,7 +14,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:serat/Business_Logic/Cubit/navigation_cubit.dart';
+import 'package:serat/Business_Logic/Cubit/navigation_cubit.dart' as navigation;
 import 'package:serat/Presentation/screens/dailygoal_screens/daily_goal_navigation_screen.dart';
 import 'package:serat/Presentation/screens/zakah_calculator_screen.dart';
 import 'package:serat/features/quran/routes/quran_routes.dart';
@@ -60,6 +60,19 @@ class _TimingsScreenState extends State<TimingsScreen>
     _startCountdownTimer();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       location.LocationCubit.get(context).getMyCurrentLocation();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Add listener to NavigationCubit
+    context.read<navigation.NavigationCubit>().stream.listen((state) {
+      if (state is navigation.ChangeBottomNavState) {
+        if (_scaffoldKey.currentState?.isDrawerOpen ?? false) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      }
     });
   }
 
