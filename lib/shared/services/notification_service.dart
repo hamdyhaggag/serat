@@ -89,7 +89,7 @@ class NotificationService {
         details,
       );
     } catch (e) {
-      print('[NotificationService] Error showing notification: $e');
+      // Error handling without logging
     }
   }
 
