@@ -437,6 +437,10 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
     final chapterEndPage = pageRange[1];
     final chapterPageCount = chapterEndPage - chapterStartPage + 1;
 
+    // Calculate the actual page number for display
+    final actualPageNumber = chapterStartPage + _currentPage;
+    final isWithinChapter = _currentPage < chapterPageCount;
+
     return PopScope(
       canPop: true,
       onPopInvoked: (didPop) {
@@ -456,7 +460,9 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                "سورة ${widget.chapter.name['ar'] ?? ''}",
+                isWithinChapter
+                    ? "سورة ${widget.chapter.name['ar'] ?? ''}"
+                    : "صفحة ${_toArabicNumbers(actualPageNumber.toString())}",
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -465,10 +471,10 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
                 ),
               ),
               AnimatedOpacity(
-                opacity: chapterPageCount > 0 ? 1.0 : 0.0,
+                opacity: 1.0,
                 duration: const Duration(milliseconds: 300),
                 child: Text(
-                  '${_toArabicNumbers((_currentPage + 1).toString())} / ${_toArabicNumbers(chapterPageCount.toString())}',
+                  '${_toArabicNumbers(actualPageNumber.toString())} / ${_toArabicNumbers(_totalPages.toString())}',
                   style: TextStyle(
                     color: (isDarkMode ? Colors.white : Colors.white)
                         .withAlpha(200),
@@ -495,7 +501,9 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
           builder: (context, constraints) {
             return PageView.builder(
               controller: _pageController,
-              itemCount: chapterPageCount,
+              itemCount: _totalPages -
+                  chapterStartPage +
+                  1, // Allow navigation to end of Quran
               onPageChanged: (page) {
                 if (mounted) {
                   setState(() => _currentPage = page);
@@ -503,10 +511,10 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
                 }
               },
               itemBuilder: (context, pageIndex) {
-                final actualPageNumber = chapterStartPage + pageIndex;
+                final pageNumber = chapterStartPage + pageIndex;
                 return Center(
                   child: Image.asset(
-                    _quranService!.getPageImagePath(actualPageNumber),
+                    _quranService!.getPageImagePath(pageNumber),
                     fit: BoxFit.contain,
                     width: constraints.maxWidth,
                     height: constraints.maxHeight,
