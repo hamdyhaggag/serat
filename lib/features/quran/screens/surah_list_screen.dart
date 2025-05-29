@@ -764,7 +764,7 @@ class _FullScreenImageViewState extends State<_FullScreenImageView> {
                         color: Theme.of(context).primaryColor,
                       ),
                     ),
-                    errorWidget: (context, url, error) => Center(
+                    errorWidget: (context, url, error) => const Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -773,7 +773,7 @@ class _FullScreenImageViewState extends State<_FullScreenImageView> {
                             color: Colors.white,
                             size: 48,
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: 16),
                           Text(
                             'فشل تحميل الصورة',
                             style: TextStyle(

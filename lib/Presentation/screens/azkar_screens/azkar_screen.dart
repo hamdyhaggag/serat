@@ -5,6 +5,8 @@ import 'package:serat/Data/models/azkar_model.dart';
 import 'package:serat/Presentation/Widgets/Azkar/azkar_model_view.dart';
 import 'package:serat/Business_Logic/Cubit/azkar_cubit.dart';
 import 'package:serat/Presentation/Widgets/Shared/custom_app_bar.dart';
+import 'package:serat/Presentation/screens/azkar_screens/azkar_search_delegate.dart'
+    as search;
 
 class IconConstants {
   static const IconData morningAzkarIcon = Icons.wb_sunny;
@@ -180,9 +182,7 @@ class _AzkarScreenState extends State<AzkarScreen> {
               onPressed: () async {
                 final Zikr? selectedZikr = await showSearch<Zikr?>(
                   context: context,
-                  delegate:
-                      AzkarSearchDelegate(_azkarList.cast<AzkarScreenItem>())
-                          as SearchDelegate<Zikr?>,
+                  delegate: search.AzkarSearchDelegate(_azkarList),
                 );
 
                 if (selectedZikr != null) {
