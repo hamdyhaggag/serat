@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:serat/features/azkar/domain/azkar_model.dart';
 import 'package:serat/imports.dart';
-import 'package:serat/Data/services/azkar_service.dart';
-import 'package:serat/Data/models/azkar_model.dart';
+
 import 'package:serat/Presentation/Widgets/Azkar/azkar_model_view.dart';
 import 'package:serat/Business_Logic/Cubit/azkar_cubit.dart';
 import 'package:serat/Presentation/Widgets/Shared/custom_app_bar.dart';
 import 'package:serat/Presentation/screens/azkar_screens/azkar_search_delegate.dart'
     as search;
+import 'package:serat/Data/services/azkar_service.dart' show AzkarService;
 
 class IconConstants {
   static const IconData morningAzkarIcon = Icons.wb_sunny_outlined;
@@ -44,7 +45,7 @@ class _AzkarScreenState extends State<AzkarScreen> {
   String _lastOpenedTitle = 'أذكار الصباح';
   double _progress = 0.0;
   IconData _lastOpenedIcon = IconConstants.morningAzkarIcon;
-  List<AzkarModel> _azkarList = [];
+  List<AzkarCategory> _categories = [];
   bool _isLoading = true;
 
   AzkarState _azkarState = AzkarState(
@@ -62,9 +63,9 @@ class _AzkarScreenState extends State<AzkarScreen> {
 
   Future<void> _loadAzkarData() async {
     try {
-      final azkarList = await AzkarService.loadAzkar();
+      final categories = await AzkarService.loadAzkar();
       setState(() {
-        _azkarList = azkarList;
+        _categories = categories;
         _isLoading = false;
       });
     } catch (e) {
@@ -157,7 +158,6 @@ class _AzkarScreenState extends State<AzkarScreen> {
         },
       );
     }
-    // TODO: Repeat for other Azkar screens if needed
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -188,21 +188,23 @@ class _AzkarScreenState extends State<AzkarScreen> {
                 size: 28,
               ),
               onPressed: () async {
-                final Zikr? selectedZikr = await showSearch<Zikr?>(
+                // Flatten all azkar for search
+                final allAzkar =
+                    _categories.expand((category) => category.azkar).toList();
+                final Azkar? selectedAzkar = await showSearch<Azkar?>(
                   context: context,
-                  delegate: search.AzkarSearchDelegate(_azkarList),
+                  delegate: search.AzkarSearchDelegate(allAzkar),
                 );
 
-                if (selectedZikr != null) {
-                  // Find the category that contains this zikr
-                  final category = _azkarList.firstWhere(
-                    (azkar) => azkar.array.contains(selectedZikr),
-                    orElse: () => _azkarList.first,
+                if (selectedAzkar != null) {
+                  // Find the category that contains this azkar
+                  final category = _categories.firstWhere(
+                    (category) => category.azkar.contains(selectedAzkar),
+                    orElse: () => _categories.first,
                   );
 
-                  // Navigate to the category screen and highlight the selected zikr
-                  updateHeader(category.category, _azkarState,
-                      _getIconForCategory(category.category));
+                  updateHeader(category.folderName, _azkarState,
+                      _getIconForCategory(category.folderName));
                   _navigateToScreen(
                       context, _buildAzkarScreen(category), _azkarState);
                 }
@@ -394,14 +396,15 @@ class _AzkarScreenState extends State<AzkarScreen> {
         mainAxisSpacing: 16.0,
         childAspectRatio: 1.1,
       ),
-      itemCount: _azkarList.length,
+      itemCount: _categories.length,
       itemBuilder: (context, index) {
-        final azkar = _azkarList[index];
+        final category = _categories[index];
         return GestureDetector(
           onTap: () {
-            updateHeader(azkar.category, _azkarState,
-                _getIconForCategory(azkar.category));
-            _navigateToScreen(context, _buildAzkarScreen(azkar), _azkarState);
+            updateHeader(category.folderName, _azkarState,
+                _getIconForCategory(category.folderName));
+            _navigateToScreen(
+                context, _buildAzkarScreen(category), _azkarState);
           },
           child: Container(
             decoration: BoxDecoration(
@@ -425,14 +428,14 @@ class _AzkarScreenState extends State<AzkarScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(
-                    _getIconForCategory(azkar.category),
+                    _getIconForCategory(category.folderName),
                     color: AppColors.primaryColor,
                     size: 32,
                   ),
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  azkar.category,
+                  category.folderName,
                   style: TextStyle(
                     fontFamily: 'DIN',
                     fontSize: 16,
@@ -494,21 +497,21 @@ class _AzkarScreenState extends State<AzkarScreen> {
     }
   }
 
-  Widget _buildAzkarScreen(AzkarModel azkar) {
-    final azkarList = azkar.array.map((z) => z.text).toList();
-    final maxValues = azkar.array.map((z) => z.count).toList();
+  Widget _buildAzkarScreen(AzkarCategory category) {
+    final azkarList = category.azkar.map((a) => a.text).toList();
+    final maxValues = category.azkar.map((a) => a.count).toList();
 
     return BlocProvider(
       create: (context) => AzkarCubit(),
       child: Scaffold(
-        appBar: CustomAppBar(title: azkar.category),
+        appBar: CustomAppBar(title: category.folderName),
         body: AzkarModelView(
-          title: azkar.category,
+          title: category.folderName,
           azkarList: azkarList,
           maxValues: maxValues,
           onProgressChanged: (AzkarState newState) {
-            updateHeader(
-                azkar.category, newState, _getIconForCategory(azkar.category));
+            updateHeader(category.folderName, newState,
+                _getIconForCategory(category.folderName));
           },
         ),
       ),

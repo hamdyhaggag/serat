@@ -122,8 +122,7 @@ flutter:
       - assets/
       - assets/icon/
       - assets/onboarding/
-      - assets/images/
-      - assets/icons/
+   
       - assets/nawawi_hadiths.json
       - assets/logo.png
       - assets/azkar/

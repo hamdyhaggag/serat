@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:serat/Data/models/azkar_model.dart';
+import 'package:serat/features/azkar/domain/azkar_model.dart';
 import 'package:serat/Presentation/Config/constants/colors.dart';
 
-class AzkarSearchDelegate extends SearchDelegate<Zikr?> {
-  final List<AzkarModel> azkarList;
-  final Map<String, List<Zikr>> _searchCache = {};
+class AzkarSearchDelegate extends SearchDelegate<Azkar?> {
+  final List<Azkar> azkarList;
+  final Map<String, List<Azkar>> _searchCache = {};
   static const int _maxCacheSize = 100;
 
   AzkarSearchDelegate(this.azkarList);
@@ -75,8 +75,8 @@ class AzkarSearchDelegate extends SearchDelegate<Zikr?> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       itemCount: results.length,
       itemBuilder: (context, index) {
-        final zikr = results[index];
-        return _buildZikrCard(context, zikr);
+        final azkar = results[index];
+        return _buildAzkarCard(context, azkar);
       },
     );
   }
@@ -108,7 +108,7 @@ class AzkarSearchDelegate extends SearchDelegate<Zikr?> {
     );
   }
 
-  Widget _buildZikrCard(BuildContext context, Zikr zikr) {
+  Widget _buildAzkarCard(BuildContext context, Azkar azkar) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Card(
@@ -120,7 +120,7 @@ class AzkarSearchDelegate extends SearchDelegate<Zikr?> {
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         title: Text(
-          zikr.text,
+          azkar.text,
           style: TextStyle(
             fontFamily: 'DIN',
             fontSize: 16,
@@ -142,7 +142,7 @@ class AzkarSearchDelegate extends SearchDelegate<Zikr?> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'عدد المرات: ${zikr.count}',
+                  'عدد المرات: ${azkar.count}',
                   style: TextStyle(
                     fontFamily: 'DIN',
                     fontSize: 14,
@@ -154,26 +154,24 @@ class AzkarSearchDelegate extends SearchDelegate<Zikr?> {
           ),
         ),
         onTap: () {
-          close(context, zikr);
+          close(context, azkar);
         },
       ),
     );
   }
 
-  List<Zikr> _performSearch() {
+  List<Azkar> _performSearch() {
     // Check cache first
     if (_searchCache.containsKey(query)) {
       return _searchCache[query]!;
     }
 
-    final results = <Zikr>[];
+    final results = <Azkar>[];
     final queryLower = query.toLowerCase();
 
     for (var azkar in azkarList) {
-      for (var zikr in azkar.array) {
-        if (_matchesSearch(zikr, queryLower)) {
-          results.add(zikr);
-        }
+      if (_matchesSearch(azkar, queryLower)) {
+        results.add(azkar);
       }
     }
 
@@ -188,9 +186,10 @@ class AzkarSearchDelegate extends SearchDelegate<Zikr?> {
     return results;
   }
 
-  bool _matchesSearch(Zikr zikr, String queryLower) {
-    final textLower = zikr.text.toLowerCase();
-    final countStr = zikr.count.toString();
+  bool _matchesSearch(Azkar azkar, String queryLower) {
+    final textLower = azkar.text.toLowerCase();
+    final countStr = azkar.count.toString();
+    final categoryLower = azkar.category?.toLowerCase() ?? '';
 
     // Direct text match
     if (textLower.contains(queryLower)) {
@@ -202,8 +201,14 @@ class AzkarSearchDelegate extends SearchDelegate<Zikr?> {
       return true;
     }
 
+    // Category match
+    if (categoryLower.contains(queryLower)) {
+      return true;
+    }
+
     // Word boundary matching for better results
     final words = queryLower.split(' ');
-    return words.every((word) => textLower.contains(word));
+    return words.every(
+        (word) => textLower.contains(word) || categoryLower.contains(word));
   }
 }

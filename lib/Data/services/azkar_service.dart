@@ -1,34 +1,45 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import '../models/azkar_model.dart';
+import 'package:serat/features/azkar/domain/azkar_model.dart';
 
 class AzkarService {
-  static Future<List<AzkarModel>> loadAzkar() async {
+  static Future<List<AzkarCategory>> loadAzkar() async {
     try {
+      print('Loading Azkar data...');
       // Load the JSON file from assets
-      final String jsonString = await rootBundle.loadString('assets/data/adhkar.json');
-      
-      // Parse the JSON string into a List of maps
-      final List<dynamic> jsonList = json.decode(jsonString);
-      
-      // Convert each map into an AzkarModel object
-      return jsonList.map((json) => AzkarModel.fromJson(json)).toList();
-    } catch (e) {
+      final String jsonString =
+          await rootBundle.loadString('assets/data/adhkar.json');
+      print('JSON string loaded, length: ${jsonString.length}');
+
+      // Parse the JSON string into a List
+      final List<dynamic> jsonData = json.decode(jsonString);
+      print('JSON parsed, number of categories: ${jsonData.length}');
+
+      // Convert the data into a list of AzkarCategory objects
+      List<AzkarCategory> categories = jsonData.map((category) {
+        print('Processing category: ${category['category']}');
+        return AzkarCategory.fromJson(category);
+      }).toList();
+
+      print('Categories processed: ${categories.length}');
+      return categories;
+    } catch (e, stackTrace) {
       print('Error loading Azkar data: $e');
+      print('Stack trace: $stackTrace');
       return [];
     }
   }
 
-  static Future<AzkarModel?> getAzkarByCategory(String category) async {
-    final azkarList = await loadAzkar();
-    return azkarList.firstWhere(
-      (azkar) => azkar.category == category,
+  static Future<AzkarCategory?> getAzkarByCategory(String categoryName) async {
+    final categories = await loadAzkar();
+    return categories.firstWhere(
+      (category) => category.folderName == categoryName,
       orElse: () => throw Exception('Category not found'),
     );
   }
 
   static Future<List<String>> getAllCategories() async {
-    final azkarList = await loadAzkar();
-    return azkarList.map((azkar) => azkar.category).toList();
+    final categories = await loadAzkar();
+    return categories.map((category) => category.folderName).toList();
   }
-} 
+}
