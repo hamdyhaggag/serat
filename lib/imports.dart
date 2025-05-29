@@ -27,7 +27,6 @@ export 'package:serat/Presentation/screens/SettingsScreen/privacy_policy.dart';
 export 'package:serat/Presentation/screens/azkar_screens/Food_Azkar/food.dart';
 export 'package:serat/Presentation/screens/azkar_screens/Pray_Azkar/pray.dart';
 export 'package:serat/Presentation/screens/azkar_screens/Sleep_Azkar/sleep.dart';
-export 'package:serat/Presentation/screens/azkar_screens/Travel_Azkar/travel.dart';
 export 'package:serat/Presentation/screens/azkar_screens/dead.dart';
 export 'package:serat/Presentation/screens/azkar_screens/mix_Azkar/collection.dart';
 export 'package:serat/Presentation/screens/azkar_screens/quran.dart';
@@ -35,16 +34,6 @@ export 'package:serat/Presentation/screens/azkar_screens/morning.dart';
 export 'package:serat/Presentation/screens/azkar_screens/evening.dart';
 export 'package:serat/Presentation/screens/azkar_screens/wake.dart';
 
-export 'package:serat/Presentation/screens/azkar_screens/Travel_Azkar/travel_1.dart';
-export 'package:serat/Presentation/screens/azkar_screens/Travel_Azkar/travel_10.dart';
-export 'package:serat/Presentation/screens/azkar_screens/Travel_Azkar/travel_2.dart';
-export 'package:serat/Presentation/screens/azkar_screens/Travel_Azkar/travel_3.dart';
-export 'package:serat/Presentation/screens/azkar_screens/Travel_Azkar/travel_4.dart';
-export 'package:serat/Presentation/screens/azkar_screens/Travel_Azkar/travel_5.dart';
-export 'package:serat/Presentation/screens/azkar_screens/Travel_Azkar/travel_6.dart';
-export 'package:serat/Presentation/screens/azkar_screens/Travel_Azkar/travel_7.dart';
-export 'package:serat/Presentation/screens/azkar_screens/Travel_Azkar/travel_8.dart';
-export 'package:serat/Presentation/screens/azkar_screens/Travel_Azkar/travel_9.dart';
 
 export 'package:serat/Presentation/Widgets/Shared/custom_folder_row.dart';
 export 'package:serat/Presentation/screens/azkar_screens/Mix_Azkar/Roqia/roqia_1.dart';

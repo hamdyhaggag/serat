@@ -9,20 +9,28 @@ import 'package:serat/Presentation/screens/azkar_screens/azkar_search_delegate.d
     as search;
 
 class IconConstants {
-  static const IconData morningAzkarIcon = Icons.wb_sunny;
-  static const IconData eveningAzkarIcon = Icons.nights_stay;
-  static const IconData prayAzkarIcon = Icons.access_alarm;
-  static const IconData sleepAzkarIcon = Icons.hotel;
-  static const IconData wakeUpAzkarIcon = Icons.wb_sunny;
-  static const IconData collectionAzkarIcon = Icons.category;
-  static const IconData foodAzkarIcon = Icons.fastfood;
-  static const IconData travelAzkarIcon = Icons.flight;
-  static const IconData quranAzkarIcon = Icons.book;
-  static const IconData nabawiAzkarIcon = Icons.menu_book;
-  static const IconData tasabehIcon = Icons.star;
-  static const IconData plusAzkarIcon = Icons.add;
-  static const IconData deadAzkarIcon = Icons.radio_button_checked;
-  static const IconData roqiaIcon = Icons.healing;
+  static const IconData morningAzkarIcon = Icons.wb_sunny_outlined;
+  static const IconData eveningAzkarIcon = Icons.nightlight_round;
+  static const IconData prayAzkarIcon = Icons.mosque_outlined;
+  static const IconData sleepAzkarIcon = Icons.bedtime_outlined;
+  static const IconData wakeUpAzkarIcon = Icons.wb_twilight_outlined;
+  static const IconData collectionAzkarIcon = Icons.category_outlined;
+  static const IconData foodAzkarIcon = Icons.restaurant_outlined;
+  static const IconData travelAzkarIcon = Icons.flight_takeoff_outlined;
+  static const IconData quranAzkarIcon = Icons.menu_book_outlined;
+  static const IconData nabawiAzkarIcon = Icons.auto_stories_outlined;
+  static const IconData tasabehIcon = Icons.circle_outlined;
+  static const IconData plusAzkarIcon = Icons.add_circle_outline;
+  static const IconData deadAzkarIcon = Icons.celebration_outlined;
+  static const IconData roqiaIcon = Icons.healing_outlined;
+  static const IconData azanIcon = Icons.volume_up_outlined;
+  static const IconData wodooIcon = Icons.water_drop_outlined;
+  static const IconData mosqueIcon = Icons.account_balance_outlined;
+  static const IconData prayerStartIcon = Icons.person_outline;
+  static const IconData rukuIcon = Icons.arrow_downward_outlined;
+  static const IconData sujoodIcon = Icons.arrow_downward_outlined;
+  static const IconData rukuRiseIcon = Icons.arrow_upward_outlined;
+  static const IconData whisperingPrayerIcon = Icons.psychology_outlined;
 }
 
 class AzkarScreen extends StatefulWidget {
@@ -447,7 +455,40 @@ class _AzkarScreenState extends State<AzkarScreen> {
         return IconConstants.morningAzkarIcon;
       case 'أذكار النوم':
         return IconConstants.sleepAzkarIcon;
-      // Add more cases for other categories
+      case 'أذكار الاستيقاظ':
+        return IconConstants.wakeUpAzkarIcon;
+      case 'أذكار الصلاة':
+        return IconConstants.prayAzkarIcon;
+      case 'أذكار الطعام':
+        return IconConstants.foodAzkarIcon;
+      case 'أذكار السفر':
+        return IconConstants.travelAzkarIcon;
+      case 'أذكار القرآن':
+        return IconConstants.quranAzkarIcon;
+      case 'أذكار نبوية':
+        return IconConstants.nabawiAzkarIcon;
+      case 'التسبيح':
+        return IconConstants.tasabehIcon;
+      case 'أذكار الموت':
+        return IconConstants.deadAzkarIcon;
+      case 'الرقية':
+        return IconConstants.roqiaIcon;
+      case 'الأذان':
+        return IconConstants.azanIcon;
+      case 'الوضوء':
+        return IconConstants.wodooIcon;
+      case 'المسجد':
+        return IconConstants.mosqueIcon;
+      case 'دعاء استفتاح الصلاة':
+        return IconConstants.prayerStartIcon;
+      case 'دعاء الركوع':
+        return IconConstants.rukuIcon;
+      case 'دعاء السجود':
+        return IconConstants.sujoodIcon;
+      case 'دعاء الرفع من الركوع':
+        return IconConstants.rukuRiseIcon;
+      case 'دعاء الوسوسة في الصلاة و القراءة':
+        return IconConstants.whisperingPrayerIcon;
       default:
         return IconConstants.collectionAzkarIcon;
     }

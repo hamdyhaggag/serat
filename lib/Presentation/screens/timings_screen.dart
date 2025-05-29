@@ -314,576 +314,529 @@ class _TimingsScreenState extends State<TimingsScreen>
                   onRefresh: () async {
                     await locationCubit.getMyCurrentLocation();
                   },
-                  child: ScrollConfiguration(
-                    behavior: const ScrollBehavior().copyWith(
-                      overscroll: false,
-                    ),
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            height: 220,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: isDarkMode
-                                    ? [
-                                        const Color(0xff1F1F1F),
-                                        const Color(0xff2F2F2F),
-                                      ]
-                                    : [
-                                        AppColors.primaryColor,
-                                        AppColors.primaryColor.withOpacity(
-                                          0.8,
-                                        ),
-                                      ],
-                              ),
-                              borderRadius: const BorderRadius.only(
-                                bottomLeft: Radius.circular(30),
-                                bottomRight: Radius.circular(30),
-                              ),
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          height: 220,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: isDarkMode
+                                  ? [
+                                      const Color(0xff1F1F1F),
+                                      const Color(0xff2F2F2F),
+                                    ]
+                                  : [
+                                      AppColors.primaryColor,
+                                      AppColors.primaryColor.withOpacity(0.8),
+                                    ],
                             ),
-                            child: SafeArea(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 16,
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Row(
-                                            children: [
-                                              IconButton(
-                                                padding: EdgeInsets.zero,
-                                                constraints:
-                                                    const BoxConstraints(),
-                                                icon: Container(
-                                                  padding: const EdgeInsets.all(
-                                                    8,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white
-                                                        .withOpacity(0.1),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                      12,
-                                                    ),
-                                                  ),
-                                                  child: const Icon(
-                                                    Icons.menu,
-                                                    color: Colors.white,
-                                                    size: 24,
-                                                  ),
-                                                ),
-                                                onPressed: () {
-                                                  _scaffoldKey.currentState
-                                                      ?.openDrawer();
-                                                },
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    const AppText(
-                                                      'السلام عليكم',
-                                                      fontSize: 18,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: Colors.white,
-                                                    ),
-                                                    const SizedBox(height: 2),
-                                                    if (_isLoading)
-                                                      Container(
-                                                        width: 200,
-                                                        height: 14,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color: Colors.white
-                                                              .withOpacity(0.2),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                            4,
-                                                          ),
-                                                        ),
-                                                      )
-                                                    else if (locationCubit
-                                                            .timesModel !=
-                                                        null)
-                                                      AppText(
-                                                        '${locationCubit.timesModel!.data.date.hijri.weekday.ar} ${locationCubit.timesModel!.data.date.hijri.day} ${locationCubit.timesModel!.data.date.hijri.month.ar} ${locationCubit.timesModel!.data.date.hijri.year}',
-                                                        fontSize: 14,
-                                                        color: Colors.white
-                                                            .withOpacity(0.8),
-                                                      )
-                                                    else
-                                                      AppText(
-                                                        DateFormat(
-                                                          'EEEE, d MMMM',
-                                                          'ar',
-                                                        ).format(
-                                                          DateTime.now(),
-                                                        ),
-                                                        fontSize: 14,
-                                                        color: Colors.white
-                                                            .withOpacity(0.8),
-                                                      ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        IconButton(
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                          icon: const Icon(
-                                            Icons.notifications_outlined,
-                                            color: Colors.white,
-                                            size: 24,
-                                          ),
-                                          onPressed: () {},
-                                        ),
-                                        const SizedBox(width: 8),
-                                      ],
-                                    ),
-                                    const Spacer(),
-                                    if (_isLoading)
-                                      Container(
-                                        height: 60,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                      )
-                                    else
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 10,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
+                            borderRadius: const BorderRadius.only(
+                              bottomLeft: Radius.circular(30),
+                              bottomRight: Radius.circular(30),
+                            ),
+                          ),
+                          child: SafeArea(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 16,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
                                         child: Row(
                                           children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(8),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white.withOpacity(
-                                                  0.2,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                              ),
-                                              child: const Icon(
-                                                Icons.location_on,
-                                                color: Colors.white,
-                                                size: 20,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  AppText(
-                                                    locationCubit.address
-                                                                ?.locality !=
-                                                            null
-                                                        ? _translateLocationToArabic(
-                                                            locationCubit
-                                                                .address!
-                                                                .locality,
-                                                          )
-                                                        : 'جاري تحديد الموقع...',
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Colors.white,
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                  if (locationCubit.address
-                                                          ?.administrativeArea !=
-                                                      null)
-                                                    AppText(
-                                                      _translateLocationToArabic(
-                                                        locationCubit.address!
-                                                            .administrativeArea,
-                                                      ),
-                                                      fontSize: 12,
-                                                      color: Colors.white
-                                                          .withOpacity(0.7),
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  const SizedBox(height: 16),
-                                                ],
-                                              ),
-                                            ),
                                             IconButton(
                                               padding: EdgeInsets.zero,
                                               constraints:
                                                   const BoxConstraints(),
-                                              icon: const Icon(
-                                                Icons.refresh,
-                                                color: Colors.white,
-                                                size: 20,
+                                              icon: Container(
+                                                padding:
+                                                    const EdgeInsets.all(8),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withOpacity(0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.menu,
+                                                  color: Colors.white,
+                                                  size: 24,
+                                                ),
                                               ),
-                                              onPressed: () async {
-                                                setState(
-                                                  () => _isLoading = true,
-                                                );
-                                                await locationCubit
-                                                    .getMyCurrentLocation();
+                                              onPressed: () {
+                                                _scaffoldKey.currentState
+                                                    ?.openDrawer();
                                               },
                                             ),
-                                          ],
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          if (_isLoading)
-                            Transform.translate(
-                              offset: const Offset(0, -30),
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                ),
-                                child: _buildSkeletonPrayerTimes(),
-                              ),
-                            )
-                          else if (locationCubit.timesModel != null)
-                            Transform.translate(
-                              offset: const Offset(0, -30),
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                ),
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: isDarkMode
-                                      ? const Color(0xff2F2F2F)
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 10),
-                                    ),
-                                  ],
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        AppText(
-                                          'مواقيت الصلاة',
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDarkMode
-                                              ? Colors.white
-                                              : AppColors.primaryColor,
-                                        ),
-                                        Row(
-                                          children: [
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                horizontal: 12,
-                                                vertical: 6,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: isDarkMode
-                                                    ? Colors.grey[800]
-                                                    : AppColors.primaryColor
-                                                        .withOpacity(0.1),
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
                                               child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
                                                 children: [
-                                                  AppText(
-                                                    'متبقي حتى $_nextPrayerName',
-                                                    fontSize: 12,
-                                                    color: isDarkMode
-                                                        ? Colors.white
-                                                        : AppColors
-                                                            .primaryColor,
-                                                  ),
-                                                  AppText(
-                                                    _formatCountdown(
-                                                      _timeUntilNextPrayer,
-                                                    ),
-                                                    fontSize: 14,
+                                                  const AppText(
+                                                    'السلام عليكم',
+                                                    fontSize: 18,
                                                     fontWeight: FontWeight.bold,
-                                                    color: isDarkMode
-                                                        ? Colors.white
-                                                        : AppColors
-                                                            .primaryColor,
+                                                    color: Colors.white,
                                                   ),
+                                                  const SizedBox(height: 2),
+                                                  if (_isLoading)
+                                                    Container(
+                                                      width: 200,
+                                                      height: 14,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white
+                                                            .withOpacity(0.2),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(4),
+                                                      ),
+                                                    )
+                                                  else if (locationCubit
+                                                          .timesModel !=
+                                                      null)
+                                                    AppText(
+                                                      '${locationCubit.timesModel!.data.date.hijri.weekday.ar} ${locationCubit.timesModel!.data.date.hijri.day} ${locationCubit.timesModel!.data.date.hijri.month.ar} ${locationCubit.timesModel!.data.date.hijri.year}',
+                                                      fontSize: 14,
+                                                      color: Colors.white
+                                                          .withOpacity(0.8),
+                                                    )
+                                                  else
+                                                    AppText(
+                                                      DateFormat('EEEE, d MMMM',
+                                                              'ar')
+                                                          .format(
+                                                              DateTime.now()),
+                                                      fontSize: 14,
+                                                      color: Colors.white
+                                                          .withOpacity(0.8),
+                                                    ),
                                                 ],
                                               ),
                                             ),
                                           ],
                                         ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 20),
-                                    SingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
+                                      ),
+                                      IconButton(
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        icon: const Icon(
+                                          Icons.notifications_outlined,
+                                          color: Colors.white,
+                                          size: 24,
+                                        ),
+                                        onPressed: () {},
+                                      ),
+                                      const SizedBox(width: 8),
+                                    ],
+                                  ),
+                                  const Spacer(),
+                                  if (_isLoading)
+                                    Container(
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    )
+                                  else
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
                                       child: Row(
                                         children: [
-                                          _buildPrayerTimeItem(
-                                            'الفجر',
-                                            locationCubit
-                                                .timesModel!.data.timings.fajr,
-                                            isDarkMode,
-                                            isNext: _isNextPrayer(
-                                              'الفجر',
-                                              locationCubit,
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  Colors.white.withOpacity(0.2),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: const Icon(
+                                              Icons.location_on,
+                                              color: Colors.white,
+                                              size: 20,
                                             ),
                                           ),
-                                          _buildPrayerTimeItem(
-                                            'الشروق',
-                                            locationCubit.timesModel!.data
-                                                .timings.sunrise,
-                                            isDarkMode,
-                                            isNext: _isNextPrayer(
-                                              'الشروق',
-                                              locationCubit,
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                AppText(
+                                                  locationCubit.address
+                                                              ?.locality !=
+                                                          null
+                                                      ? _translateLocationToArabic(
+                                                          locationCubit.address!
+                                                              .locality)
+                                                      : 'جاري تحديد الموقع...',
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.white,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                                if (locationCubit.address
+                                                        ?.administrativeArea !=
+                                                    null)
+                                                  AppText(
+                                                    _translateLocationToArabic(
+                                                        locationCubit.address!
+                                                            .administrativeArea),
+                                                    fontSize: 12,
+                                                    color: Colors.white
+                                                        .withOpacity(0.7),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                const SizedBox(height: 16),
+                                              ],
                                             ),
                                           ),
-                                          _buildPrayerTimeItem(
-                                            'الظهر',
-                                            locationCubit
-                                                .timesModel!.data.timings.dhuhr,
-                                            isDarkMode,
-                                            isNext: _isNextPrayer(
-                                              'الظهر',
-                                              locationCubit,
+                                          IconButton(
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                            icon: const Icon(
+                                              Icons.refresh,
+                                              color: Colors.white,
+                                              size: 20,
                                             ),
-                                          ),
-                                          _buildPrayerTimeItem(
-                                            'العصر',
-                                            locationCubit
-                                                .timesModel!.data.timings.asr,
-                                            isDarkMode,
-                                            isNext: _isNextPrayer(
-                                              'العصر',
-                                              locationCubit,
-                                            ),
-                                          ),
-                                          _buildPrayerTimeItem(
-                                            'المغرب',
-                                            locationCubit.timesModel!.data
-                                                .timings.maghrib,
-                                            isDarkMode,
-                                            isNext: _isNextPrayer(
-                                              'المغرب',
-                                              locationCubit,
-                                            ),
-                                          ),
-                                          _buildPrayerTimeItem(
-                                            'العشاء',
-                                            locationCubit
-                                                .timesModel!.data.timings.isha,
-                                            isDarkMode,
-                                            isNext: _isNextPrayer(
-                                              'العشاء',
-                                              locationCubit,
-                                            ),
+                                            onPressed: () async {
+                                              setState(() => _isLoading = true);
+                                              await locationCubit
+                                                  .getMyCurrentLocation();
+                                            },
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ],
-                                ),
+                                ],
                               ),
                             ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (_isLoading)
-                                  GridView.count(
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    crossAxisCount: 2,
-                                    mainAxisSpacing: 15,
-                                    crossAxisSpacing: 15,
-                                    childAspectRatio: 1.2,
-                                    children: List.generate(
-                                      4,
-                                      (index) => _buildSkeletonCard(),
-                                    ),
-                                  )
-                                else
-                                  GridView.count(
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    crossAxisCount: 2,
-                                    mainAxisSpacing: 15,
-                                    crossAxisSpacing: 15,
-                                    childAspectRatio: 1.2,
+                          ),
+                        ),
+                        if (_isLoading)
+                          Transform.translate(
+                            offset: const Offset(0, -30),
+                            child: Container(
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: _buildSkeletonPrayerTimes(),
+                            ),
+                          )
+                        else if (locationCubit.timesModel != null)
+                          Transform.translate(
+                            offset: const Offset(0, -30),
+                            child: Container(
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: isDarkMode
+                                    ? const Color(0xff2F2F2F)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
-                                      _buildFeatureCard(
-                                        'الهدف اليومي',
-                                        Icons.flag,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const DailyGoalNavigationScreen(),
-                                            ),
-                                          );
-                                        },
+                                      AppText(
+                                        'مواقيت الصلاة',
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDarkMode
+                                            ? Colors.white
+                                            : AppColors.primaryColor,
                                       ),
-                                      _buildFeatureCard(
-                                        'القرآن الكريم',
-                                        Icons.menu_book,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const QuranScreen(),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 6,
                                             ),
-                                          );
-                                        },
-                                      ),
-                                      _buildFeatureCard(
-                                        'بطاقات القرآن',
-                                        Icons.book,
-                                        isDarkMode,
-                                        onTap: () => Navigator.pushNamed(
-                                            context, QuranRoutes.surahList),
-                                      ),
-                                      _buildFeatureCard(
-                                        'القراء',
-                                        Icons.record_voice_over,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const RecitersScreen(),
+                                            decoration: BoxDecoration(
+                                              color: isDarkMode
+                                                  ? Colors.grey[800]
+                                                  : AppColors.primaryColor
+                                                      .withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                             ),
-                                          );
-                                        },
-                                      ),
-                                      _buildFeatureCard(
-                                        'الراديو',
-                                        Icons.radio,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const RadioScreen(),
+                                            child: Column(
+                                              children: [
+                                                AppText(
+                                                  'متبقي حتى $_nextPrayerName',
+                                                  fontSize: 12,
+                                                  color: isDarkMode
+                                                      ? Colors.white
+                                                      : AppColors.primaryColor,
+                                                ),
+                                                AppText(
+                                                  _formatCountdown(
+                                                      _timeUntilNextPrayer),
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: isDarkMode
+                                                      ? Colors.white
+                                                      : AppColors.primaryColor,
+                                                ),
+                                              ],
                                             ),
-                                          );
-                                        },
-                                      ),
-                                      _buildFeatureCard(
-                                        'فيديوهات القرآن',
-                                        Icons.video_library,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const QuranVideoScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _buildFeatureCard(
-                                        'التقويم الهجري',
-                                        Icons.calendar_month,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const HijriCalendarScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _buildFeatureCard(
-                                        'حاسبة الزكاة',
-                                        Icons.calculate,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const ZakahCalculatorScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _buildFeatureCard(
-                                        'اختبار إسلامي',
-                                        Icons.quiz,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const IslamicQuizScreen(),
-                                            ),
-                                          );
-                                        },
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                              ],
+                                  const SizedBox(height: 20),
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: [
+                                        _buildPrayerTimeItem(
+                                          'الفجر',
+                                          locationCubit
+                                              .timesModel!.data.timings.fajr,
+                                          isDarkMode,
+                                          isNext: _isNextPrayer(
+                                              'الفجر', locationCubit),
+                                        ),
+                                        _buildPrayerTimeItem(
+                                          'الشروق',
+                                          locationCubit
+                                              .timesModel!.data.timings.sunrise,
+                                          isDarkMode,
+                                          isNext: _isNextPrayer(
+                                              'الشروق', locationCubit),
+                                        ),
+                                        _buildPrayerTimeItem(
+                                          'الظهر',
+                                          locationCubit
+                                              .timesModel!.data.timings.dhuhr,
+                                          isDarkMode,
+                                          isNext: _isNextPrayer(
+                                              'الظهر', locationCubit),
+                                        ),
+                                        _buildPrayerTimeItem(
+                                          'العصر',
+                                          locationCubit
+                                              .timesModel!.data.timings.asr,
+                                          isDarkMode,
+                                          isNext: _isNextPrayer(
+                                              'العصر', locationCubit),
+                                        ),
+                                        _buildPrayerTimeItem(
+                                          'المغرب',
+                                          locationCubit
+                                              .timesModel!.data.timings.maghrib,
+                                          isDarkMode,
+                                          isNext: _isNextPrayer(
+                                              'المغرب', locationCubit),
+                                        ),
+                                        _buildPrayerTimeItem(
+                                          'العشاء',
+                                          locationCubit
+                                              .timesModel!.data.timings.isha,
+                                          isDarkMode,
+                                          isNext: _isNextPrayer(
+                                              'العشاء', locationCubit),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ],
-                      ),
+                        Container(
+                          margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (_isLoading)
+                                GridView.count(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  crossAxisCount: 2,
+                                  mainAxisSpacing: 15,
+                                  crossAxisSpacing: 15,
+                                  childAspectRatio: 1.2,
+                                  children: List.generate(
+                                    4,
+                                    (index) => _buildSkeletonCard(),
+                                  ),
+                                )
+                              else
+                                GridView.count(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  crossAxisCount: 2,
+                                  mainAxisSpacing: 15,
+                                  crossAxisSpacing: 15,
+                                  childAspectRatio: 1.2,
+                                  children: [
+                                    _buildFeatureCard(
+                                      'الهدف اليومي',
+                                      Icons.flag,
+                                      isDarkMode,
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const DailyGoalNavigationScreen(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    _buildFeatureCard(
+                                      'القرآن الكريم',
+                                      Icons.menu_book,
+                                      isDarkMode,
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const QuranScreen(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    _buildFeatureCard(
+                                      'بطاقات القرآن',
+                                      Icons.book,
+                                      isDarkMode,
+                                      onTap: () => Navigator.pushNamed(
+                                          context, QuranRoutes.surahList),
+                                    ),
+                                    _buildFeatureCard(
+                                      'القراء',
+                                      Icons.record_voice_over,
+                                      isDarkMode,
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const RecitersScreen(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    _buildFeatureCard(
+                                      'الراديو',
+                                      Icons.radio,
+                                      isDarkMode,
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const RadioScreen(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    _buildFeatureCard(
+                                      'فيديوهات القرآن',
+                                      Icons.video_library,
+                                      isDarkMode,
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const QuranVideoScreen(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    _buildFeatureCard(
+                                      'التقويم الهجري',
+                                      Icons.calendar_month,
+                                      isDarkMode,
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const HijriCalendarScreen(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    _buildFeatureCard(
+                                      'حاسبة الزكاة',
+                                      Icons.calculate,
+                                      isDarkMode,
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const ZakahCalculatorScreen(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    _buildFeatureCard(
+                                      'اختبار إسلامي',
+                                      Icons.quiz,
+                                      isDarkMode,
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const IslamicQuizScreen(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
