@@ -98,18 +98,8 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
 
     final date = _calendarData!.data[0];
     if (selectedCalendar == 'هجري') {
-      return '${date.hijri.year} ${date.hijri.month.ar ?? date.hijri.month.en} ${date.hijri.day} ${date.hijri.weekday.ar ?? date.hijri.weekday.en}';
+      return '${date.hijri.weekday.ar ?? date.hijri.weekday.en} ، ${date.hijri.day} ${date.hijri.month.ar ?? date.hijri.month.en} ${date.hijri.year} هـ';
     } else {
-      return '${date.gregorian.year} ${date.gregorian.month.en} ${date.gregorian.day} ${date.gregorian.weekday.en}';
-    }
-  }
-
-  String _getAlternateDateString() {
-    if (_calendarData == null || _calendarData!.data.isEmpty) return '';
-
-    final date = _calendarData!.data[0];
-    if (selectedCalendar == 'هجري') {
-      // Convert Gregorian to Arabic
       final gregorianMonths = {
         'January': 'يناير',
         'February': 'فبراير',
@@ -140,9 +130,48 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
       final weekday = gregorianWeekdays[date.gregorian.weekday.en] ??
           date.gregorian.weekday.en;
 
-      return '${date.gregorian.year} $month ${date.gregorian.day} $weekday';
+      return '$weekday ، ${date.gregorian.day} $month ${date.gregorian.year} م';
+    }
+  }
+
+  String _getAlternateDateString() {
+    if (_calendarData == null || _calendarData!.data.isEmpty) return '';
+
+    final date = _calendarData!.data[0];
+    if (selectedCalendar == 'هجري') {
+      final gregorianMonths = {
+        'January': 'يناير',
+        'February': 'فبراير',
+        'March': 'مارس',
+        'April': 'أبريل',
+        'May': 'مايو',
+        'June': 'يونيو',
+        'July': 'يوليو',
+        'August': 'أغسطس',
+        'September': 'سبتمبر',
+        'October': 'أكتوبر',
+        'November': 'نوفمبر',
+        'December': 'ديسمبر',
+      };
+
+      final gregorianWeekdays = {
+        'Monday': 'الاثنين',
+        'Tuesday': 'الثلاثاء',
+        'Wednesday': 'الأربعاء',
+        'Thursday': 'الخميس',
+        'Friday': 'الجمعة',
+        'Saturday': 'السبت',
+        'Sunday': 'الأحد',
+      };
+
+      final month =
+          gregorianMonths[date.gregorian.month.en] ?? date.gregorian.month.en;
+      final weekday = gregorianWeekdays[date.gregorian.weekday.en] ??
+          date.gregorian.weekday.en;
+
+      return '$weekday ، ${date.gregorian.day} $month ${date.gregorian.year} م';
     } else {
-      return '${date.hijri.year} ${date.hijri.month.ar ?? date.hijri.month.en} ${date.hijri.day} ${date.hijri.weekday.ar ?? date.hijri.weekday.en}';
+      return '${date.hijri.weekday.ar ?? date.hijri.weekday.en} ، ${date.hijri.day} ${date.hijri.month.ar ?? date.hijri.month.en} ${date.hijri.year} هـ';
     }
   }
 
@@ -445,7 +474,7 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
     final textColor = isDarkMode ? Colors.white : const Color(0xFF2D3142);
     final secondaryTextColor =
         isDarkMode ? Colors.white70 : const Color(0xFF2D3142).withOpacity(0.7);
-    final accentColor = const Color(0xFF4CB7A5);
+    const accentColor = Color(0xFF4CB7A5);
     final cardColor = isDarkMode ? const Color(0xFF2D2D2D) : Colors.white;
 
     final daysOfWeek = [
