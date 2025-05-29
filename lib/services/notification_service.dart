@@ -87,7 +87,7 @@ class NotificationService {
       importance: Importance.high,
       priority: Priority.high,
       ongoing: true,
-      autoCancel: false,
+      autoCancel: true,
       playSound: false,
       enableVibration: false,
       category: AndroidNotificationCategory.transport,
