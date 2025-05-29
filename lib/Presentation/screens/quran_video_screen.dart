@@ -9,6 +9,8 @@ import 'package:chewie/chewie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'dart:convert';
+import 'dart:developer' as developer;
+import 'package:flutter/rendering.dart';
 
 class QuranVideoScreen extends StatefulWidget {
   const QuranVideoScreen({super.key});
@@ -111,17 +113,16 @@ class _QuranVideoScreenState extends State<QuranVideoScreen> {
               ),
             ),
           ),
-          body:
-              _isLoading || state is QuranVideoLoading
-                  ? _buildSkeletonLoading(isDarkMode)
-                  : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: cubit.videos.length,
-                    itemBuilder: (context, index) {
-                      final reciter = cubit.videos[index];
-                      return _buildReciterCard(reciter, isDarkMode);
-                    },
-                  ),
+          body: _isLoading || state is QuranVideoLoading
+              ? _buildSkeletonLoading(isDarkMode)
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: cubit.videos.length,
+                  itemBuilder: (context, index) {
+                    final reciter = cubit.videos[index];
+                    return _buildReciterCard(reciter, isDarkMode);
+                  },
+                ),
         );
       },
     );
@@ -252,10 +253,9 @@ class _QuranVideoScreenState extends State<QuranVideoScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color:
-                        isDarkMode
-                            ? Colors.grey[800]
-                            : AppColors.primaryColor.withOpacity(0.1),
+                    color: isDarkMode
+                        ? Colors.grey[800]
+                        : AppColors.primaryColor.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -357,24 +357,37 @@ class _QuranVideoScreenState extends State<QuranVideoScreen> {
   }
 
   void _showVideoPlayer(Video video) {
+    developer.log('Showing video player for URL: ${video.videoUrl}',
+        name: 'VideoPlayer');
     showDialog(
       context: context,
-      builder:
-          (context) => Dialog(
-            backgroundColor: Colors.transparent,
-            child: Container(
-              width: double.infinity,
-              height: 300,
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: VideoPlayerWidget(videoUrl: video.videoUrl),
-              ),
+      barrierDismissible: true,
+      builder: (context) => WillPopScope(
+        onWillPop: () async {
+          developer.log('Video player dialog being dismissed',
+              name: 'VideoPlayer');
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
+          return true;
+        },
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.zero,
+          child: Container(
+            width: double.infinity,
+            height: MediaQuery.of(context).size.height * 0.4,
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: VideoPlayerWidget(videoUrl: video.videoUrl),
             ),
           ),
+        ),
+      ),
     );
   }
 }
@@ -388,43 +401,263 @@ class VideoPlayerWidget extends StatefulWidget {
   State<VideoPlayerWidget> createState() => _VideoPlayerWidgetState();
 }
 
-class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
+class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
+    with AutomaticKeepAliveClientMixin {
   late VideoPlayerController _videoPlayerController;
   ChewieController? _chewieController;
+  bool _isInitialized = false;
+  bool _isDisposed = false;
+  bool _isCleaningUp = false;
+  bool _isError = false;
+  String? _errorMessage;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
+    developer.log('VideoPlayerWidget: Initializing player',
+        name: 'VideoPlayer');
     _initializePlayer();
   }
 
   Future<void> _initializePlayer() async {
-    _videoPlayerController = VideoPlayerController.network(widget.videoUrl);
-    await _videoPlayerController.initialize();
-    _chewieController = ChewieController(
-      videoPlayerController: _videoPlayerController,
-      autoPlay: true,
-      looping: false,
-      aspectRatio: _videoPlayerController.value.aspectRatio,
-      placeholder: Container(
-        color: Colors.black,
-        child: const Center(child: CircularProgressIndicator()),
-      ),
-    );
-    setState(() {});
+    if (_isDisposed || _isCleaningUp) {
+      developer.log(
+          'VideoPlayerWidget: Skipping initialization - already disposed or cleaning up',
+          name: 'VideoPlayer');
+      return;
+    }
+
+    try {
+      developer.log(
+          'VideoPlayerWidget: Creating controller for URL: ${widget.videoUrl}',
+          name: 'VideoPlayer');
+      _videoPlayerController = VideoPlayerController.network(
+        widget.videoUrl,
+        videoPlayerOptions: VideoPlayerOptions(
+          mixWithOthers: true,
+          allowBackgroundPlayback: false,
+        ),
+      );
+
+      // Add error listener
+      _videoPlayerController.addListener(() {
+        if (_videoPlayerController.value.hasError) {
+          final error = _videoPlayerController.value.errorDescription;
+          developer.log(
+            'VideoPlayerWidget: Player error - $error',
+            name: 'VideoPlayer',
+            error: error,
+          );
+          if (mounted && !_isDisposed && !_isCleaningUp) {
+            setState(() {
+              _isError = true;
+              _errorMessage = error;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Video error: $error')),
+            );
+          }
+        }
+      });
+
+      developer.log('VideoPlayerWidget: Initializing controller',
+          name: 'VideoPlayer');
+      await _videoPlayerController.initialize();
+
+      if (!mounted || _isDisposed || _isCleaningUp) {
+        developer.log(
+            'VideoPlayerWidget: Widget disposed during initialization',
+            name: 'VideoPlayer');
+        await _cleanup();
+        return;
+      }
+
+      developer.log('VideoPlayerWidget: Creating Chewie controller',
+          name: 'VideoPlayer');
+      _chewieController = ChewieController(
+        videoPlayerController: _videoPlayerController,
+        autoPlay: true,
+        looping: false,
+        aspectRatio: _videoPlayerController.value.aspectRatio,
+        placeholder: Container(
+          color: Colors.black,
+          child: const Center(child: CircularProgressIndicator()),
+        ),
+        errorBuilder: (context, errorMessage) {
+          developer.log(
+            'VideoPlayerWidget: Chewie error - $errorMessage',
+            name: 'VideoPlayer',
+            error: errorMessage,
+          );
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  'Error: $errorMessage',
+                  style: const TextStyle(color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _isError = false;
+                      _errorMessage = null;
+                    });
+                    _initializePlayer();
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
+        },
+        allowFullScreen: true,
+        allowMuting: true,
+        showControls: true,
+        showOptions: true,
+        customControls: const MaterialControls(),
+      );
+
+      if (mounted && !_isDisposed && !_isCleaningUp) {
+        developer.log('VideoPlayerWidget: Setting initialized state',
+            name: 'VideoPlayer');
+        setState(() {
+          _isInitialized = true;
+          _isError = false;
+          _errorMessage = null;
+        });
+      }
+    } catch (e, stackTrace) {
+      developer.log(
+        'VideoPlayerWidget: Error initializing player',
+        name: 'VideoPlayer',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      if (mounted && !_isDisposed && !_isCleaningUp) {
+        setState(() {
+          _isError = true;
+          _errorMessage = e.toString();
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading video: $e')),
+        );
+      }
+      await _cleanup();
+    }
+  }
+
+  Future<void> _cleanup() async {
+    if (_isCleaningUp) {
+      developer.log('VideoPlayerWidget: Cleanup already in progress',
+          name: 'VideoPlayer');
+      return;
+    }
+
+    _isCleaningUp = true;
+    try {
+      developer.log('VideoPlayerWidget: Starting cleanup', name: 'VideoPlayer');
+
+      // First pause the video
+      try {
+        await _videoPlayerController.pause();
+      } catch (e) {
+        developer.log('VideoPlayerWidget: Error pausing video',
+            name: 'VideoPlayer', error: e);
+      }
+
+      // Then dispose the Chewie controller
+      try {
+        _chewieController?.dispose();
+        _chewieController = null;
+      } catch (e) {
+        developer.log('VideoPlayerWidget: Error disposing Chewie controller',
+            name: 'VideoPlayer', error: e);
+      }
+
+      // Finally dispose the video controller
+      try {
+        await _videoPlayerController.dispose();
+      } catch (e) {
+        developer.log('VideoPlayerWidget: Error disposing video controller',
+            name: 'VideoPlayer', error: e);
+      }
+
+      developer.log('VideoPlayerWidget: Cleanup completed',
+          name: 'VideoPlayer');
+    } catch (e, stackTrace) {
+      developer.log(
+        'VideoPlayerWidget: Error during cleanup',
+        name: 'VideoPlayer',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    } finally {
+      _isCleaningUp = false;
+    }
   }
 
   @override
   void dispose() {
-    _videoPlayerController.dispose();
-    _chewieController?.dispose();
+    developer.log('VideoPlayerWidget: Disposing widget', name: 'VideoPlayer');
+    _isDisposed = true;
+    _cleanup();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
+    if (_isError) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              'Error: $_errorMessage',
+              style: const TextStyle(color: Colors.white),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _isError = false;
+                  _errorMessage = null;
+                });
+                _initializePlayer();
+              },
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (!_isInitialized) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        ),
+      );
+    }
+
     return _chewieController != null
         ? Chewie(controller: _chewieController!)
-        : const Center(child: CircularProgressIndicator());
+        : const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          );
   }
 }
