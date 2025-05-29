@@ -4,7 +4,6 @@ import 'package:serat/Business_Logic/Cubit/theme_cubit.dart';
 import 'package:serat/Presentation/screens/qasas_screen.dart';
 import 'package:serat/Presentation/screens/quran_screen.dart';
 import 'package:serat/Presentation/screens/radio_screen.dart';
-import 'package:serat/Presentation/screens/quran_video_screen.dart';
 import 'package:serat/Presentation/screens/reciters_screen.dart';
 import 'package:serat/Presentation/screens/about_screen.dart';
 import 'package:serat/Presentation/screens/islamic_quiz_screen.dart';
@@ -776,22 +775,8 @@ class _TimingsScreenState extends State<TimingsScreen>
                                       },
                                     ),
                                     _buildFeatureCard(
-                                      'فيديوهات القرآن',
-                                      Icons.video_library,
-                                      isDarkMode,
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const QuranVideoScreen(),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    _buildFeatureCard(
                                       'روائع القصص',
-                                      Icons.calendar_month,
+                                      Icons.auto_stories,
                                       isDarkMode,
                                       onTap: () {
                                         Navigator.push(
@@ -1421,7 +1406,6 @@ class _TimingsScreenState extends State<TimingsScreen>
       '• القرآن الكريم مع التفسير\n'
       '• القراء المشهورين\n'
       '• الراديو الإسلامي\n'
-      '• فيديوهات القرآن الكريم\n'
       '• التقويم الهجري\n'
       '• حاسبة الزكاة\n'
       '• الهدف اليومي\n'

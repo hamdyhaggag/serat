@@ -185,7 +185,8 @@ class _QasasScreenState extends State<QasasScreen>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.play_circle_outline, color: Colors.red),
+                      Icon(Icons.play_circle_outline,
+                          color: Theme.of(context).primaryColor),
                       const SizedBox(width: 8),
                       Text(
                         'مشاهدة القائمة',
