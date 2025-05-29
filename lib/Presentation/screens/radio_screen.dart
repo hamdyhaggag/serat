@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/radio/data/radio_service.dart';
 import '../../features/radio/domain/radio_model.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../services/notification_service.dart';
 
 class RadioScreen extends StatefulWidget {
   const RadioScreen({super.key});
@@ -17,6 +18,7 @@ class _RadioScreenState extends State<RadioScreen>
     with SingleTickerProviderStateMixin {
   late final AudioPlayer _audioPlayer;
   final RadioService _radioService = RadioService();
+  final NotificationService _notificationService = NotificationService();
   bool _isPlaying = false;
   String _currentStation = '';
   String _currentStationName = '';
@@ -36,6 +38,7 @@ class _RadioScreenState extends State<RadioScreen>
     _initAudioPlayer();
     _loadRadioStations();
     _initPrefs();
+    _initNotificationService();
     _tabController = TabController(length: 2, vsync: this);
   }
 
@@ -104,11 +107,22 @@ class _RadioScreenState extends State<RadioScreen>
     }
   }
 
+  Future<void> _initNotificationService() async {
+    await _notificationService.initialize();
+    _notificationService.onPlayPause = () {
+      if (_currentStation.isNotEmpty) {
+        _playStation(_currentStation, _currentStationName);
+      }
+    };
+    _notificationService.onStop = _stopPlayback;
+  }
+
   @override
   void dispose() {
     _audioPlayer.dispose();
     _tabController.dispose();
     _searchController.dispose();
+    _notificationService.removeNotification();
     super.dispose();
   }
 
@@ -117,13 +131,25 @@ class _RadioScreenState extends State<RadioScreen>
       if (_currentStation == url) {
         if (_isPlaying) {
           await _audioPlayer.pause();
+          await _notificationService.showRadioNotification(
+            stationName: name,
+            isPlaying: false,
+          );
         } else {
           await _audioPlayer.resume();
+          await _notificationService.showRadioNotification(
+            stationName: name,
+            isPlaying: true,
+          );
         }
       } else {
         await _audioPlayer.stop();
         await _audioPlayer.setSourceUrl(url);
         await _audioPlayer.resume();
+        await _notificationService.showRadioNotification(
+          stationName: name,
+          isPlaying: true,
+        );
         setState(() {
           _currentStation = url;
           _currentStationName = name;
@@ -137,6 +163,15 @@ class _RadioScreenState extends State<RadioScreen>
         ),
       );
     }
+  }
+
+  Future<void> _stopPlayback() async {
+    await _audioPlayer.stop();
+    await _notificationService.removeNotification();
+    setState(() {
+      _currentStation = '';
+      _currentStationName = '';
+    });
   }
 
   @override
@@ -294,11 +329,7 @@ class _RadioScreenState extends State<RadioScreen>
                             _buildControlButton(
                               icon: Icons.stop,
                               onPressed: () async {
-                                await _audioPlayer.stop();
-                                setState(() {
-                                  _currentStation = '';
-                                  _currentStationName = '';
-                                });
+                                await _stopPlayback();
                               },
                             ),
                           ],
