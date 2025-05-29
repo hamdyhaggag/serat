@@ -48,6 +48,16 @@ class VideoModel {
     }
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'thumbnailUrl': thumbnailUrl,
+      'channelTitle': channelTitle,
+      'publishedAt': publishedAt,
+    };
+  }
+
   @override
   String toString() {
     return 'VideoModel(id: $id, title: $title, channelTitle: $channelTitle)';

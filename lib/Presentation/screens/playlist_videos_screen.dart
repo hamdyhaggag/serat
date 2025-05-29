@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:serat/core/utils/app_colors.dart' show AppColors;
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../../domain/models/playlist_model.dart';
 import '../../domain/models/video_model.dart';
 import '../../domain/services/youtube_service.dart';
@@ -42,12 +45,40 @@ class _PlaylistVideosScreenState extends State<PlaylistVideosScreen> {
   Future<void> _loadPlaylistVideos() async {
     try {
       LoggingService.info('Loading playlist videos', tag: _tag);
-      final videos =
-          await _youtubeService.getPlaylistVideos(widget.playlist.playlistId);
-      setState(() {
-        _videos = videos;
-        _isLoading = false;
-      });
+
+      // Try to load cached videos first
+      final cachedVideos = await _loadCachedVideos();
+      if (cachedVideos.isNotEmpty) {
+        setState(() {
+          _videos = cachedVideos;
+          _isLoading = false;
+        });
+      }
+
+      // Then try to fetch fresh data
+      try {
+        final videos =
+            await _youtubeService.getPlaylistVideos(widget.playlist.playlistId);
+        // Cache the new videos
+        await _cacheVideos(videos);
+        setState(() {
+          _videos = videos;
+          _isLoading = false;
+        });
+      } catch (e) {
+        LoggingService.error(
+          'Error fetching fresh videos, using cached data',
+          tag: _tag,
+          error: e,
+        );
+        // If we have cached data, we'll keep showing it
+        if (cachedVideos.isEmpty) {
+          setState(() {
+            _error = 'No internet connection and no cached data available';
+            _isLoading = false;
+          });
+        }
+      }
     } catch (e, stackTrace) {
       LoggingService.error(
         'Error loading playlist videos',
@@ -59,6 +90,41 @@ class _PlaylistVideosScreenState extends State<PlaylistVideosScreen> {
         _error = e.toString();
         _isLoading = false;
       });
+    }
+  }
+
+  Future<List<VideoModel>> _loadCachedVideos() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedData =
+          prefs.getString('cached_videos_${widget.playlist.playlistId}');
+
+      if (cachedData != null) {
+        final List<dynamic> decodedData = json.decode(cachedData);
+        return decodedData.map((item) => VideoModel.fromJson(item)).toList();
+      }
+    } catch (e) {
+      LoggingService.error(
+        'Error loading cached videos',
+        tag: _tag,
+        error: e,
+      );
+    }
+    return [];
+  }
+
+  Future<void> _cacheVideos(List<VideoModel> videos) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final encodedData = json.encode(videos.map((v) => v.toJson()).toList());
+      await prefs.setString(
+          'cached_videos_${widget.playlist.playlistId}', encodedData);
+    } catch (e) {
+      LoggingService.error(
+        'Error caching videos',
+        tag: _tag,
+        error: e,
+      );
     }
   }
 
@@ -237,9 +303,9 @@ class _PlaylistVideosScreenState extends State<PlaylistVideosScreen> {
                       highlightColor: Colors.grey[100]!,
                       child: Container(
                         height: 200,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: Colors.white,
-                          borderRadius: const BorderRadius.vertical(
+                          borderRadius: BorderRadius.vertical(
                             top: Radius.circular(12),
                           ),
                         ),
@@ -288,9 +354,9 @@ class _PlaylistVideosScreenState extends State<PlaylistVideosScreen> {
                         color: Colors.black.withOpacity(0.8),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: const [
+                        children: [
                           Icon(
                             Icons.play_arrow,
                             color: Colors.white,
