@@ -6,6 +6,7 @@ import '../../features/radio/data/radio_service.dart';
 import '../../features/radio/domain/radio_model.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../services/notification_service.dart';
+import 'package:audio_session/audio_session.dart' as audio_session;
 
 class RadioScreen extends StatefulWidget {
   const RadioScreen({super.key});
@@ -78,11 +79,35 @@ class _RadioScreenState extends State<RadioScreen>
   Future<void> _initAudioPlayer() async {
     _audioPlayer = AudioPlayer();
     await _audioPlayer.setReleaseMode(ReleaseMode.stop);
+
+    // Configure for background playback
+    final session = await audio_session.AudioSession.instance;
+    await session.configure(const audio_session.AudioSessionConfiguration(
+      avAudioSessionCategory: audio_session.AVAudioSessionCategory.playback,
+      avAudioSessionCategoryOptions:
+          audio_session.AVAudioSessionCategoryOptions.mixWithOthers,
+      avAudioSessionMode: audio_session.AVAudioSessionMode.defaultMode,
+      androidAudioAttributes: audio_session.AndroidAudioAttributes(
+        contentType: audio_session.AndroidAudioContentType.music,
+        flags: audio_session.AndroidAudioFlags.none,
+        usage: audio_session.AndroidAudioUsage.media,
+      ),
+      androidAudioFocusGainType: audio_session.AndroidAudioFocusGainType.gain,
+      androidWillPauseWhenDucked: true,
+    ));
+
     _audioPlayer.onPlayerStateChanged.listen((state) {
       if (mounted) {
         setState(() {
           _isPlaying = state == PlayerState.playing;
         });
+      }
+    });
+
+    // Listen for audio session interruptions
+    session.becomingNoisyEventStream.listen((_) {
+      if (_isPlaying) {
+        _playStation(_currentStation, _currentStationName);
       }
     });
   }
@@ -119,10 +144,12 @@ class _RadioScreenState extends State<RadioScreen>
 
   @override
   void dispose() {
-    _audioPlayer.dispose();
+    // Only dispose if we're not playing
+    if (!_isPlaying) {
+      _audioPlayer.dispose();
+    }
     _tabController.dispose();
     _searchController.dispose();
-    _notificationService.removeNotification();
     super.dispose();
   }
 
@@ -143,7 +170,12 @@ class _RadioScreenState extends State<RadioScreen>
           );
         }
       } else {
-        await _audioPlayer.stop();
+        // Stop current playback if any
+        if (_currentStation.isNotEmpty) {
+          await _audioPlayer.stop();
+        }
+
+        // Set new source and start playback
         await _audioPlayer.setSourceUrl(url);
         await _audioPlayer.resume();
         await _notificationService.showRadioNotification(
@@ -166,12 +198,15 @@ class _RadioScreenState extends State<RadioScreen>
   }
 
   Future<void> _stopPlayback() async {
-    await _audioPlayer.stop();
-    await _notificationService.removeNotification();
-    setState(() {
-      _currentStation = '';
-      _currentStationName = '';
-    });
+    if (_isPlaying) {
+      await _audioPlayer.stop();
+      await _notificationService.removeNotification();
+      setState(() {
+        _isPlaying = false;
+        _currentStation = '';
+        _currentStationName = '';
+      });
+    }
   }
 
   @override
