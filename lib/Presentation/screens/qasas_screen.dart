@@ -24,27 +24,27 @@ class _QasasScreenState extends State<QasasScreen>
 
   final List<PlaylistModel> _defaultPlaylists = [
     PlaylistModel(
-      title: 'قصص الأنبياء',
+      title: 'قصص النساء في القرآن',
       playlistId: 'PLv7XuvsLjBzYcEE0xuprcF6GwzY1JFXOV',
       thumbnailUrl: 'https://img.youtube.com/vi/hV42DbzZzx4/maxresdefault.jpg',
     ),
     PlaylistModel(
-      title: 'قصص القرآن',
+      title: 'قصص الايات في القرآن',
       playlistId: 'PLJ0WU3XQoz4-x5FPOHh3s8nRkeal-4ED7',
       thumbnailUrl: 'https://img.youtube.com/vi/rfbd68nNSI4/maxresdefault.jpg',
     ),
     PlaylistModel(
-      title: 'قصص الصحابة',
+      title: 'قصص العجائب في القرآن',
       playlistId: 'PLJ0WU3XQoz4_vDPS0Xlaf3E2LgUz7pJsp',
       thumbnailUrl: 'https://img.youtube.com/vi/8aO-jm-3Oc0/maxresdefault.jpg',
     ),
     PlaylistModel(
-      title: 'قصص التابعين',
+      title: 'قصص الإنسان في القرآن',
       playlistId: 'PLJ0WU3XQoz49XWayvM7-m1N5ZgNNHL7fK',
       thumbnailUrl: 'https://img.youtube.com/vi/SMdRK8KVCT8/maxresdefault.jpg',
     ),
     PlaylistModel(
-      title: 'قصص إسلامية',
+      title: 'قصص الحيوان في القرآن',
       playlistId: 'PLJ0WU3XQoz4-4AjkrKBJTClcJxJsVF7RU',
       thumbnailUrl: 'https://img.youtube.com/vi/wHrxioBnB9o/maxresdefault.jpg',
     ),
