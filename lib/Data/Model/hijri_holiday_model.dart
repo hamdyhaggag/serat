@@ -11,11 +11,13 @@ class HijriHolidayModel {
 
   factory HijriHolidayModel.fromJson(Map<String, dynamic> json) {
     return HijriHolidayModel(
-      code: json['code'],
-      status: json['status'],
-      data: (json['data'] as List)
-          .map((item) => HolidayData.fromJson(item))
-          .toList(),
+      code: json['code'] as int? ?? 0,
+      status: json['status'] as String? ?? '',
+      data: (json['data'] as List<dynamic>?)
+              ?.map(
+                  (item) => HolidayData.fromJson(item as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 }
@@ -31,8 +33,8 @@ class HolidayData {
 
   factory HolidayData.fromJson(Map<String, dynamic> json) {
     return HolidayData(
-      name: json['name'],
-      description: json['description'],
+      name: json['name'] as String? ?? '',
+      description: json['description'] as String? ?? '',
     );
   }
 }
