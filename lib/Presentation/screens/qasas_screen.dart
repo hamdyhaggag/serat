@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../domain/models/playlist_model.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/services/playlist_cache_service.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'playlist_videos_screen.dart';
 
 class QasasScreen extends StatefulWidget {
   const QasasScreen({super.key});
@@ -24,27 +24,27 @@ class _QasasScreenState extends State<QasasScreen>
 
   final List<PlaylistModel> _defaultPlaylists = [
     PlaylistModel(
-      title: 'قصص النساء في القرآن',
+      title: 'قصص الأنبياء',
       playlistId: 'PLv7XuvsLjBzYcEE0xuprcF6GwzY1JFXOV',
       thumbnailUrl: 'https://img.youtube.com/vi/hV42DbzZzx4/maxresdefault.jpg',
     ),
     PlaylistModel(
-      title: 'قصص الايات في القرآن',
+      title: 'قصص القرآن',
       playlistId: 'PLJ0WU3XQoz4-x5FPOHh3s8nRkeal-4ED7',
       thumbnailUrl: 'https://img.youtube.com/vi/rfbd68nNSI4/maxresdefault.jpg',
     ),
     PlaylistModel(
-      title: 'قصص العجائب في القرآن',
+      title: 'قصص الصحابة',
       playlistId: 'PLJ0WU3XQoz4_vDPS0Xlaf3E2LgUz7pJsp',
       thumbnailUrl: 'https://img.youtube.com/vi/8aO-jm-3Oc0/maxresdefault.jpg',
     ),
     PlaylistModel(
-      title: 'قصص الإنسان في القرآن',
+      title: 'قصص التابعين',
       playlistId: 'PLJ0WU3XQoz49XWayvM7-m1N5ZgNNHL7fK',
       thumbnailUrl: 'https://img.youtube.com/vi/SMdRK8KVCT8/maxresdefault.jpg',
     ),
     PlaylistModel(
-      title: 'قصص الحيوان في القرآن',
+      title: 'قصص إسلامية',
       playlistId: 'PLJ0WU3XQoz4-4AjkrKBJTClcJxJsVF7RU',
       thumbnailUrl: 'https://img.youtube.com/vi/wHrxioBnB9o/maxresdefault.jpg',
     ),
@@ -100,19 +100,13 @@ class _QasasScreenState extends State<QasasScreen>
     super.dispose();
   }
 
-  Future<void> _launchPlaylist(String playlistId) async {
-    final Uri url =
-        Uri.parse('https://www.youtube.com/playlist?list=$playlistId');
-    if (!await launchUrl(url)) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not launch playlist'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
+  void _navigateToPlaylist(PlaylistModel playlist) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PlaylistVideosScreen(playlist: playlist),
+      ),
+    );
   }
 
   Widget _buildPlaylistCard(PlaylistModel playlist, int index) {
@@ -126,7 +120,7 @@ class _QasasScreenState extends State<QasasScreen>
             borderRadius: BorderRadius.circular(16),
           ),
           child: InkWell(
-            onTap: () => _launchPlaylist(playlist.playlistId),
+            onTap: () => _navigateToPlaylist(playlist),
             borderRadius: BorderRadius.circular(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -88,6 +88,7 @@ dependencies:
   cached_network_image: ^3.3.1
   path_provider: ^2.1.2
   crypto: ^3.0.3
+  youtube_player_iframe: ^4.0.4
 
 
   # The following adds the Cupertino Icons font to your application.
