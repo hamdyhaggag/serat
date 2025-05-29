@@ -4,7 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serat/Business_Logic/Cubit/location_cubit.dart';
 import 'package:serat/Data/Model/times_model.dart';
 import 'package:serat/Data/Model/hijri_calendar_model.dart';
+import 'package:serat/Data/Model/hijri_holiday_model.dart';
 import 'package:serat/Data/Services/hijri_calendar_service.dart';
+import 'package:serat/Data/Services/hijri_holiday_service.dart';
 import 'package:serat/Presentation/Widgets/Shared/custom_app_bar.dart';
 
 class HijriCalendarScreen extends StatefulWidget {
@@ -21,8 +23,11 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
   late List<String> months;
   final List<String> calendarTypes = ['هجري', 'ميلادي'];
   final HijriCalendarService _calendarService = HijriCalendarService();
+  final HijriHolidayService _holidayService = HijriHolidayService();
   HijriCalendarResponse? _calendarData;
+  HijriHolidayModel? _holidayData;
   bool _isLoading = true;
+  bool _isLoadingHoliday = false;
   String? _error;
 
   @override
@@ -54,6 +59,26 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
       setState(() {
         _error = e.toString();
         _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchHolidays(int day, int month) async {
+    try {
+      setState(() {
+        _isLoadingHoliday = true;
+      });
+
+      final response = await _holidayService.getHijriHolidays(day, month);
+
+      setState(() {
+        _holidayData = response;
+        _isLoadingHoliday = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoadingHoliday = false;
       });
     }
   }
@@ -220,349 +245,351 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Scaffold(
-      body: SafeArea(
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Theme.of(context).primaryColor.withOpacity(0.6),
-                Theme.of(context).primaryColor.withOpacity(0.4),
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
+        body: SafeArea(
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).primaryColor.withOpacity(0.6),
+              Theme.of(context).primaryColor.withOpacity(0.4),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _error != null
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            _error!,
-                            style: const TextStyle(
-                              fontFamily: 'DIN',
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: _fetchCalendarData,
-                            child: const Text(
-                              'إعادة المحاولة',
-                              style: TextStyle(
-                                fontFamily: 'DIN',
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : Column(
+        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          margin: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Theme.of(context).primaryColor.withOpacity(0.3),
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).primaryColor,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Icon(
-                                      Icons.calendar_today,
-                                      size: 18,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      _getTodayHijriDateString(),
-                                      style: textTheme.titleLarge?.copyWith(
-                                        fontFamily: 'DIN',
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                      softWrap: false,
-                                      textAlign: TextAlign.start,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).primaryColor,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Icon(
-                                      Icons.calendar_month,
-                                      size: 18,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      _getTodayDateString(),
-                                      style: textTheme.titleLarge?.copyWith(
-                                        fontFamily: 'DIN',
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                      softWrap: false,
-                                      textAlign: TextAlign.start,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                        Text(
+                          _error!,
+                          style: const TextStyle(
+                            fontFamily: 'DIN',
+                            fontSize: 16,
                           ),
                         ),
-                        Card(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          elevation: 4,
-                          shadowColor:
-                              Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.black
-                                  : Colors.black12,
-                          color: Colors.white.withOpacity(0.1),
-                          child: Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: Column(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context)
-                                        .primaryColor
-                                        .withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  Theme.of(context).primaryColor,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            child: const Icon(
-                                              Icons.calendar_today,
-                                              size: 18,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Text(
-                                              _getCurrentDateString(),
-                                              style:
-                                                  textTheme.titleLarge?.copyWith(
-                                                fontFamily: 'DIN',
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                              softWrap: false,
-                                              textAlign: TextAlign.start,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.end,
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  Theme.of(context).primaryColor,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            child: const Icon(
-                                              Icons.calendar_today,
-                                              size: 18,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Text(
-                                              _getAlternateDateString(),
-                                              style:
-                                                  textTheme.titleLarge?.copyWith(
-                                                fontFamily: 'DIN',
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                              softWrap: false,
-                                              textAlign: TextAlign.end,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(16),
-                                          border: Border.all(
-                                            color: Theme.of(context)
-                                                .primaryColor
-                                                .withOpacity(0.3),
-                                          ),
-                                        ),
-                                        child: DropdownButtonFormField<String>(
-                                          value: selectedMonth,
-                                          isExpanded: true,
-                                          dropdownColor:
-                                              Colors.white.withOpacity(0.1),
-                                          style: textTheme.bodyLarge?.copyWith(
-                                            fontFamily: 'DIN',
-                                          ),
-                                          decoration: InputDecoration(
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 8,
-                                            ),
-                                            border: InputBorder.none,
-                                            prefixIcon: Icon(
-                                              Icons.calendar_month,
-                                              color:
-                                                  Theme.of(context).primaryColor,
-                                            ),
-                                          ),
-                                          items: months
-                                              .map(
-                                                (month) => DropdownMenuItem(
-                                                  value: month,
-                                                  child: Text(
-                                                    month,
-                                                    style: textTheme.bodyLarge
-                                                        ?.copyWith(
-                                                      fontFamily: 'DIN',
-                                                    ),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                              )
-                                              .toList(),
-                                          onChanged: (val) {
-                                            setState(() {
-                                              selectedMonth = val!;
-                                              final monthIndex =
-                                                  months.indexOf(val);
-                                              selectedDate = DateTime(
-                                                selectedDate.year,
-                                                monthIndex + 1,
-                                                selectedDate.day,
-                                              );
-                                              _fetchCalendarData();
-                                            });
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(16),
-                                          border: Border.all(
-                                            color: Theme.of(context)
-                                                .primaryColor
-                                                .withOpacity(0.3),
-                                          ),
-                                        ),
-                                        child: DropdownButtonFormField<String>(
-                                          value: selectedCalendar,
-                                          isExpanded: true,
-                                          dropdownColor:
-                                              Colors.white.withOpacity(0.1),
-                                          style: textTheme.bodyLarge?.copyWith(
-                                            fontFamily: 'DIN',
-                                          ),
-                                          decoration: InputDecoration(
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 8,
-                                            ),
-                                            border: InputBorder.none,
-                                            prefixIcon: Icon(
-                                              Icons.swap_horiz,
-                                              color:
-                                                  Theme.of(context).primaryColor,
-                                            ),
-                                          ),
-                                          items: calendarTypes
-                                              .map(
-                                                (type) => DropdownMenuItem(
-                                                  value: type,
-                                                  child: Text(
-                                                    type,
-                                                    style: textTheme.bodyLarge
-                                                        ?.copyWith(
-                                                      fontFamily: 'DIN',
-                                                    ),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                              )
-                                              .toList(),
-                                          onChanged: (val) {
-                                            setState(() {
-                                              selectedCalendar = val!;
-                                              _initializeMonths();
-                                              _fetchCalendarData();
-                                            });
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 24),
-                                _buildCalendarGrid(),
-                              ],
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _fetchCalendarData,
+                          child: const Text(
+                            'إعادة المحاولة',
+                            style: TextStyle(
+                              fontFamily: 'DIN',
+                              fontSize: 16,
                             ),
                           ),
                         ),
                       ],
                     ),
-      ),)
-    );
+                  )
+                : Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        margin: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color:
+                                Theme.of(context).primaryColor.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).primaryColor,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.calendar_today,
+                                    size: 18,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _getTodayHijriDateString(),
+                                    style: textTheme.titleLarge?.copyWith(
+                                      fontFamily: 'DIN',
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: false,
+                                    textAlign: TextAlign.start,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).primaryColor,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.calendar_month,
+                                    size: 18,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _getTodayDateString(),
+                                    style: textTheme.titleLarge?.copyWith(
+                                      fontFamily: 'DIN',
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: false,
+                                    textAlign: TextAlign.start,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      _buildHolidayContainer(),
+                      Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        elevation: 4,
+                        shadowColor:
+                            Theme.of(context).brightness == Brightness.dark
+                                ? Colors.black
+                                : Colors.black12,
+                        color: Colors.white.withOpacity(0.1),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .primaryColor
+                                      .withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Theme.of(context).primaryColor,
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: const Icon(
+                                            Icons.calendar_today,
+                                            size: 18,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            _getCurrentDateString(),
+                                            style:
+                                                textTheme.titleLarge?.copyWith(
+                                              fontFamily: 'DIN',
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            softWrap: false,
+                                            textAlign: TextAlign.start,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Theme.of(context).primaryColor,
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: const Icon(
+                                            Icons.calendar_today,
+                                            size: 18,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            _getAlternateDateString(),
+                                            style:
+                                                textTheme.titleLarge?.copyWith(
+                                              fontFamily: 'DIN',
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            softWrap: false,
+                                            textAlign: TextAlign.end,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: Theme.of(context)
+                                              .primaryColor
+                                              .withOpacity(0.3),
+                                        ),
+                                      ),
+                                      child: DropdownButtonFormField<String>(
+                                        value: selectedMonth,
+                                        isExpanded: true,
+                                        dropdownColor:
+                                            Colors.white.withOpacity(0.1),
+                                        style: textTheme.bodyLarge?.copyWith(
+                                          fontFamily: 'DIN',
+                                        ),
+                                        decoration: InputDecoration(
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 8,
+                                          ),
+                                          border: InputBorder.none,
+                                          prefixIcon: Icon(
+                                            Icons.calendar_month,
+                                            color:
+                                                Theme.of(context).primaryColor,
+                                          ),
+                                        ),
+                                        items: months
+                                            .map(
+                                              (month) => DropdownMenuItem(
+                                                value: month,
+                                                child: Text(
+                                                  month,
+                                                  style: textTheme.bodyLarge
+                                                      ?.copyWith(
+                                                    fontFamily: 'DIN',
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            )
+                                            .toList(),
+                                        onChanged: (val) {
+                                          setState(() {
+                                            selectedMonth = val!;
+                                            final monthIndex =
+                                                months.indexOf(val);
+                                            selectedDate = DateTime(
+                                              selectedDate.year,
+                                              monthIndex + 1,
+                                              selectedDate.day,
+                                            );
+                                            _fetchCalendarData();
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: Theme.of(context)
+                                              .primaryColor
+                                              .withOpacity(0.3),
+                                        ),
+                                      ),
+                                      child: DropdownButtonFormField<String>(
+                                        value: selectedCalendar,
+                                        isExpanded: true,
+                                        dropdownColor:
+                                            Colors.white.withOpacity(0.1),
+                                        style: textTheme.bodyLarge?.copyWith(
+                                          fontFamily: 'DIN',
+                                        ),
+                                        decoration: InputDecoration(
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 8,
+                                          ),
+                                          border: InputBorder.none,
+                                          prefixIcon: Icon(
+                                            Icons.swap_horiz,
+                                            color:
+                                                Theme.of(context).primaryColor,
+                                          ),
+                                        ),
+                                        items: calendarTypes
+                                            .map(
+                                              (type) => DropdownMenuItem(
+                                                value: type,
+                                                child: Text(
+                                                  type,
+                                                  style: textTheme.bodyLarge
+                                                      ?.copyWith(
+                                                    fontFamily: 'DIN',
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            )
+                                            .toList(),
+                                        onChanged: (val) {
+                                          setState(() {
+                                            selectedCalendar = val!;
+                                            _initializeMonths();
+                                            _fetchCalendarData();
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 24),
+                              _buildCalendarGrid(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+      ),
+    ));
   }
 
   Widget _buildCalendarGrid() {
@@ -582,7 +609,7 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
     final textColor = isDarkMode ? Colors.white : const Color(0xFF2D3142);
     final secondaryTextColor =
         isDarkMode ? Colors.white70 : const Color(0xFF2D3142).withOpacity(0.7);
-    const accentColor = Color(0xFF4CB7A5);
+    final accentColor = const Color(0xFF4CB7A5);
     final cardColor = isDarkMode ? const Color(0xFF2D2D2D) : Colors.white;
 
     final daysOfWeek = [
@@ -663,6 +690,12 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                           selectedDate.month,
                           dayNumber,
                         );
+                        if (selectedCalendar == 'هجري') {
+                          _fetchHolidays(
+                            int.parse(currentDayData.hijri.day),
+                            currentDayData.hijri.month.number,
+                          );
+                        }
                       });
                     },
                     child: Container(
@@ -733,5 +766,108 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
   int _getHijriFirstDayOfMonth(int year, int month) {
     final now = DateTime.now();
     return now.weekday % 7;
+  }
+
+  Widget _buildHolidayContainer() {
+    if (_isLoadingHoliday) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_holidayData == null || _holidayData!.data.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).primaryColor.withOpacity(0.3),
+          ),
+        ),
+        child: const Center(
+          child: Text(
+            'لا توجد مناسبات في هذا اليوم',
+            style: TextStyle(
+              fontFamily: 'DIN',
+              fontSize: 16,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).primaryColor.withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.celebration,
+                  size: 18,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'المناسبات',
+                style: TextStyle(
+                  fontFamily: 'DIN',
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ..._holidayData!.data.map((holiday) => Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      holiday.name,
+                      style: const TextStyle(
+                        fontFamily: 'DIN',
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (holiday.description.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        holiday.description,
+                        style: const TextStyle(
+                          fontFamily: 'DIN',
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              )),
+        ],
+      ),
+    );
   }
 }
