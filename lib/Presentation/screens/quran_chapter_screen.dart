@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serat/Business_Logic/Cubit/quran_cubit.dart';
 import 'package:serat/Core/models/quran_chapter.dart';
-import 'package:serat/Core/models/quran_verse.dart'; // Ensure this path is correct
+import 'package:serat/Core/models/quran_verse.dart';
+import 'package:serat/Core/services/quran_service.dart';
+import 'package:serat/Core/services/cache_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class QuranChapterScreen extends StatefulWidget {
   final QuranChapter chapter;
@@ -16,111 +19,429 @@ class QuranChapterScreen extends StatefulWidget {
 class _QuranChapterScreenState extends State<QuranChapterScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  final int _versesPerPage = 10; // Consider making this configurable or dynamic
+  int _totalPages = 604;
+  QuranService? _quranService;
+  late final SharedPreferences _prefs;
+  static const String _lastReadPagePrefix = 'last_read_page_';
+  bool _isLoading = true;
 
-  List<List<QuranVerse>> _pagedVerses = [];
-  int _totalPages = 0;
+  // Map of chapter numbers to their page ranges
+  final Map<int, List<int>> _chapterPageRanges = {
+    1: [1, 1],
+    2: [2, 49],
+    3: [50, 76],
+    4: [77, 105],
+    5: [106, 127],
+    6: [128, 150],
+    7: [151, 176],
+    8: [177, 186],
+    9: [187, 207],
+    10: [208, 220],
+    11: [221, 234],
+    12: [235, 248],
+    13: [249, 254],
+    14: [255, 261],
+    15: [262, 266],
+    16: [267, 281],
+    17: [282, 292],
+    18: [293, 304],
+    19: [305, 311],
+    20: [312, 321],
+    21: [322, 331],
+    22: [332, 341],
+    23: [342, 349],
+    24: [350, 358],
+    25: [359, 365],
+    26: [366, 376],
+    27: [377, 384],
+    28: [385, 395],
+    29: [396, 403],
+    30: [404, 410],
+    31: [411, 414],
+    32: [415, 417],
+    33: [418, 427],
+    34: [428, 433],
+    35: [434, 440],
+    36: [440, 445],
+    37: [446, 452],
+    38: [453, 457],
+    39: [458, 466],
+    40: [467, 476],
+    41: [477, 482],
+    42: [483, 488],
+    43: [489, 495],
+    44: [496, 498],
+    45: [499, 501],
+    46: [502, 506],
+    47: [507, 510],
+    48: [511, 514],
+    49: [515, 517],
+    50: [518, 520],
+    51: [520, 522],
+    52: [523, 525],
+    53: [526, 528],
+    54: [528, 530],
+    55: [531, 533],
+    56: [534, 536],
+    57: [537, 541],
+    58: [542, 544],
+    59: [545, 548],
+    60: [549, 550],
+    61: [551, 552],
+    62: [553, 554],
+    63: [554, 555],
+    64: [556, 557],
+    65: [558, 559],
+    66: [560, 561],
+    67: [562, 563],
+    68: [564, 565],
+    69: [566, 567],
+    70: [568, 569],
+    71: [570, 571],
+    72: [572, 573],
+    73: [574, 575],
+    74: [575, 577],
+    75: [577, 578],
+    76: [578, 580],
+    77: [580, 581],
+    78: [582, 582],
+    79: [583, 584],
+    80: [585, 585],
+    81: [586, 586],
+    82: [587, 587],
+    83: [587, 589],
+    84: [589, 589],
+    85: [590, 590],
+    86: [591, 591],
+    87: [591, 591],
+    88: [592, 592],
+    89: [593, 593],
+    90: [594, 594],
+    91: [595, 595],
+    92: [595, 595],
+    93: [596, 596],
+    94: [596, 596],
+    95: [597, 597],
+    96: [597, 597],
+    97: [598, 598],
+    98: [598, 599],
+    99: [599, 599],
+    100: [599, 600],
+    101: [600, 600],
+    102: [601, 601],
+    103: [601, 601],
+    104: [601, 601],
+    105: [602, 602],
+    106: [602, 602],
+    107: [602, 602],
+    108: [603, 603],
+    109: [603, 603],
+    110: [603, 603],
+    111: [604, 604],
+    112: [604, 604],
+    113: [604, 604],
+    114: [604, 604],
+  };
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      if (mounted) {
-        context.read<QuranCubit>().getChapterVerses(widget.chapter.number);
-      }
-    });
+    _initializeServices();
   }
 
-  void _paginateVerses(List<QuranVerse> allVerses) {
-    _pagedVerses = [];
-    if (allVerses.isEmpty) {
-      _totalPages = 0;
-      if (mounted) setState(() {});
-      return;
+  Future<void> _initializeServices() async {
+    try {
+      _prefs = await SharedPreferences.getInstance();
+      _quranService = QuranService(CacheService(_prefs));
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        _showPageSelectionDialog();
+      }
+    } catch (e) {
+      debugPrint('Error initializing services: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        _showErrorDialog();
+      }
     }
+  }
 
-    List<QuranVerse> versesToPaginate = List.from(allVerses);
+  void _showErrorDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('خطأ'),
+          content: const Text(
+              'حدث خطأ أثناء تحميل الصفحات. يرجى المحاولة مرة أخرى.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.read<QuranCubit>().returnToChapters();
+              },
+              child: const Text('العودة'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-    if (widget.chapter.number != 9 && widget.chapter.number != 1) {
-      final bismillahVerse = QuranVerse(
-          text: {
-            'ar': 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'
-          },
-          number: 0, // Special identifier for Bismillah
-          // Ensure these match your QuranVerse model's requirements for non-nullable fields
-          // If your model has an 'id', ensure it's provided or nullable.
-          juz: widget.chapter.verses.isNotEmpty
-              ? widget.chapter.verses.first.juz
-              : 0,
-          page: widget.chapter.verses.isNotEmpty
-              ? widget.chapter.verses.first.page
-              : 0,
-          sajda: null);
-      versesToPaginate.insert(0, bismillahVerse);
-    }
+  Future<void> _showPageSelectionDialog() async {
+    final chapterNumber = widget.chapter.number;
+    final pageRange = _chapterPageRanges[chapterNumber] ?? [1, 1];
+    final lastReadPage = _prefs.getInt('$_lastReadPagePrefix$chapterNumber');
 
-    for (int i = 0; i < versesToPaginate.length; i += _versesPerPage) {
-      _pagedVerses.add(
-        versesToPaginate.sublist(
-            i,
-            i + _versesPerPage > versesToPaginate.length
-                ? versesToPaginate.length
-                : i + _versesPerPage),
+    if (lastReadPage != null &&
+        lastReadPage >= pageRange[0] &&
+        lastReadPage <= pageRange[1]) {
+      if (!mounted) return;
+
+      final result = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+          final primaryColor = Theme.of(context).primaryColor;
+
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.grey[900] : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.menu_book_rounded,
+                      size: 40,
+                      color: primaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'سورة ${widget.chapter.name['ar'] ?? ''}',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Amiri',
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: isDarkMode ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'آخر صفحة تمت قراءتها: ${_toArabicNumbers(lastReadPage.toString())}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 16,
+                        color: isDarkMode ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text(
+                            'بداية السورة',
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 16,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isDarkMode
+                                ? Colors.grey[800]
+                                : Colors.grey[200],
+                            foregroundColor:
+                                isDarkMode ? Colors.white : Colors.black87,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          icon: const Icon(Icons.play_arrow_rounded),
+                          label: const Text(
+                            'الاستمرار',
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 16,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       );
-    }
 
-    if (_pagedVerses.isEmpty && versesToPaginate.isNotEmpty) {
-      _pagedVerses.add(versesToPaginate);
-      _totalPages = 1;
-    } else if (_pagedVerses.isEmpty) {
-      _totalPages = 0;
+      if (result != null) {
+        _initializePage(continueFromLast: result);
+      }
     } else {
-      _totalPages = _pagedVerses.length;
+      _initializePage(continueFromLast: false);
     }
-    if (mounted) setState(() {});
+  }
+
+  Future<void> _initializePage({required bool continueFromLast}) async {
+    try {
+      final chapterNumber = widget.chapter.number;
+      final pageRange = _chapterPageRanges[chapterNumber];
+      if (pageRange != null && mounted) {
+        int startPage;
+        if (continueFromLast) {
+          final lastReadPage =
+              _prefs.getInt('$_lastReadPagePrefix$chapterNumber') ??
+                  pageRange[0];
+          startPage = lastReadPage;
+        } else {
+          startPage = pageRange[0];
+        }
+
+        setState(() {
+          _currentPage = startPage -
+              pageRange[
+                  0]; // Convert to 0-based index relative to chapter start
+        });
+        _pageController.jumpToPage(_currentPage);
+      }
+    } catch (e) {
+      debugPrint('Error initializing page: $e');
+    }
+  }
+
+  void _saveCurrentPage() {
+    final chapterNumber = widget.chapter.number;
+    final pageRange = _chapterPageRanges[chapterNumber];
+    if (pageRange != null) {
+      final actualPageNumber = pageRange[0] + _currentPage;
+      _prefs.setInt('$_lastReadPagePrefix$chapterNumber', actualPageNumber);
+    }
   }
 
   @override
   void dispose() {
+    _saveCurrentPage();
     _pageController.dispose();
     super.dispose();
   }
 
-  String _toArabicNumbers(String number) {
+  String _toArabicNumbers(String input) {
     const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
     const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
     for (int i = 0; i < english.length; i++) {
-      number = number.replaceAll(english[i], arabic[i]);
+      input = input.replaceAll(english[i], arabic[i]);
     }
-    return number;
+    return input;
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final scaffoldBgColor = isDarkMode ? Colors.black : Colors.grey[50];
+    final appBarColor = Theme.of(context).primaryColor;
 
-    // Professional Color Palette
-    final primaryColor = theme.primaryColor; // Keep primary color from theme
-    final scaffoldBgColor = isDarkMode
-        ? const Color(0xFF121212)
-        : const Color(0xFFF0F2F5); // Slightly off-white/grey
-    final appBarColor = isDarkMode ? const Color(0xFF1E1E1E) : primaryColor;
-    final pageColor = isDarkMode
-        ? const Color(0xFF1E1E1E)
-        : const Color(0xFFFFFFFF); // White page for light, dark grey for dark
-    final mainTextColor =
-        isDarkMode ? const Color(0xFFE0E0E0) : const Color(0xFF1B2028);
-    final subtleTextColor = isDarkMode ? Colors.grey[400]! : Colors.grey[600]!;
-    final pageBorderColor =
-        isDarkMode ? Colors.grey[700]!.withAlpha(100) : Colors.grey[300]!;
-    final shadowColor =
-        isDarkMode ? Colors.black.withAlpha(100) : Colors.grey.withAlpha(70);
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: scaffoldBgColor,
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_quranService == null) {
+      return Scaffold(
+        backgroundColor: scaffoldBgColor,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'حدث خطأ في تحميل الصفحات',
+                style: TextStyle(fontSize: 18),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  context.read<QuranCubit>().returnToChapters();
+                },
+                child: const Text('العودة إلى السور'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Get the page range for current chapter
+    final pageRange = _chapterPageRanges[widget.chapter.number] ?? [1, 1];
+    final chapterStartPage = pageRange[0];
+    final chapterEndPage = pageRange[1];
+    final chapterPageCount = chapterEndPage - chapterStartPage + 1;
 
     return PopScope(
       canPop: true,
       onPopInvoked: (didPop) {
         if (didPop) {
+          _saveCurrentPage();
           context.read<QuranCubit>().returnToChapters();
         }
       },
@@ -137,391 +458,63 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
               Text(
                 "سورة ${widget.chapter.name['ar'] ?? ''}",
                 style: TextStyle(
-                  fontSize: 22, // Adjusted for better balance
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: isDarkMode ? Colors.white : Colors.white,
                   fontFamily: 'Amiri',
                 ),
               ),
-              if (_totalPages > 0)
-                AnimatedOpacity(
-                  opacity: _totalPages > 0 ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: Text(
-                    '${_toArabicNumbers((_currentPage + 1).toString())} / ${_toArabicNumbers(_totalPages.toString())}',
-                    style: TextStyle(
-                      color: (isDarkMode ? Colors.white : Colors.white)
-                          .withAlpha(200),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'Cairo', // Consistent font
-                    ),
+              AnimatedOpacity(
+                opacity: chapterPageCount > 0 ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 300),
+                child: Text(
+                  '${_toArabicNumbers((_currentPage + 1).toString())} / ${_toArabicNumbers(chapterPageCount.toString())}',
+                  style: TextStyle(
+                    color: (isDarkMode ? Colors.white : Colors.white)
+                        .withAlpha(200),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Cairo',
                   ),
                 ),
+              ),
             ],
           ),
-          leading: Center(
-            // Ensures button is centered in its space
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 22),
-              color: isDarkMode ? Colors.white : Colors.white,
-              tooltip: 'Back to Chapters',
-              onPressed: () {
-                context.read<QuranCubit>().returnToChapters();
-                Navigator.of(context).pop();
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 22),
+            color: isDarkMode ? Colors.white : Colors.white,
+            tooltip: 'Back to Chapters',
+            onPressed: () {
+              _saveCurrentPage();
+              context.read<QuranCubit>().returnToChapters();
+              Navigator.of(context).pop();
+            },
+          ),
+        ),
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            return PageView.builder(
+              controller: _pageController,
+              itemCount: chapterPageCount,
+              onPageChanged: (page) {
+                if (mounted) {
+                  setState(() => _currentPage = page);
+                  _saveCurrentPage();
+                }
               },
-            ),
-          ),
-          // Consider adding actions like settings or bookmarks later
-        ),
-        body: BlocConsumer<QuranCubit, QuranState>(
-          listener: (context, state) {
-            if (state is QuranVersesLoaded) {
-              _paginateVerses(state.verses);
-              if (_pageController.hasClients && _pageController.page != 0.0) {
-                _pageController.jumpToPage(0);
-              }
-              _currentPage = 0;
-            } else if (state is QuranInitial) {
-              if (mounted && widget.chapter.number > 0) {
-                context
-                    .read<QuranCubit>()
-                    .getChapterVerses(widget.chapter.number);
-              }
-            }
-          },
-          builder: (context, state) {
-            if (state is QuranVersesLoading ||
-                (state is QuranInitial && widget.chapter.number > 0)) {
-              return Center(
-                  child: CircularProgressIndicator(color: primaryColor));
-            } else if (state is QuranVersesError) {
-              return _buildErrorState(context, state.message, primaryColor);
-            } else if (state is QuranVersesLoaded) {
-              if (_pagedVerses.isEmpty) {
-                return _buildEmptyState(mainTextColor);
-              }
-              return Column(
-                children: [
-                  if (_currentPage == 0) // Show header only on the first page
-                    _buildSurahPageHeader(context, isDarkMode, primaryColor,
-                        mainTextColor, subtleTextColor, pageColor, shadowColor),
-                  Expanded(
-                    child: PageView.builder(
-                      controller: _pageController,
-                      itemCount: _totalPages,
-                      // reverse: true, // RTL page turning if desired
-                      onPageChanged: (page) {
-                        if (mounted) setState(() => _currentPage = page);
-                      },
-                      itemBuilder: (context, pageIndex) {
-                        final pageVerses = _pagedVerses[pageIndex];
-                        return _buildMushafPage(
-                          context,
-                          pageVerses,
-                          pageIndex,
-                          _totalPages,
-                          widget.chapter,
-                          mainTextColor,
-                          pageColor,
-                          pageBorderColor,
-                          primaryColor,
-                          shadowColor,
-                          subtleTextColor,
-                        );
-                      },
-                    ),
+              itemBuilder: (context, pageIndex) {
+                final actualPageNumber = chapterStartPage + pageIndex;
+                return Center(
+                  child: Image.asset(
+                    _quranService!.getPageImagePath(actualPageNumber),
+                    fit: BoxFit.contain,
+                    width: constraints.maxWidth,
+                    height: constraints.maxHeight,
                   ),
-                ],
-              );
-            }
-            return _buildEmptyState(mainTextColor, message: "يرجى تحديد سورة");
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildErrorState(
-      BuildContext context, String message, Color primaryColor) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline_rounded, color: Colors.red[400], size: 60),
-            const SizedBox(height: 20),
-            Text(
-              'حدث خطأ',
-              style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).textTheme.bodyLarge?.color),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: TextStyle(
-                  fontSize: 16,
-                  color: Theme.of(context).textTheme.bodyMedium?.color),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('إعادة المحاولة',
-                  style: TextStyle(
-                      fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
-              onPressed: () {
-                context
-                    .read<QuranCubit>()
-                    .getChapterVerses(widget.chapter.number);
+                );
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                textStyle: const TextStyle(fontSize: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(Color textColor,
-      {String message = 'لا توجد آيات لعرضها'}) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.menu_book_rounded,
-              size: 80, color: textColor.withAlpha(100)),
-          const SizedBox(height: 20),
-          Text(
-            message,
-            style: TextStyle(
-                fontSize: 18,
-                fontFamily: 'Amiri',
-                color: textColor.withAlpha(150)),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSurahPageHeader(
-      BuildContext context,
-      bool isDarkMode,
-      Color primaryColor,
-      Color mainTextColor,
-      Color subtleTextColor,
-      Color headerBgColor,
-      Color shadowColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 24.0),
-      margin: const EdgeInsets.only(top: 12.0, left: 12, right: 12, bottom: 0),
-      decoration: BoxDecoration(
-          color:
-              headerBgColor, // Use the general page color or a slightly different tint
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-          ),
-          boxShadow: [
-            BoxShadow(
-                color: shadowColor, blurRadius: 10, offset: const Offset(0, 2)),
-          ],
-          border: Border.all(
-              color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-              width: 0.5)),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            "سورة ${widget.chapter.name['ar'] ?? ''}",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Amiri',
-              fontSize: 30, // Prominent Surah name
-              fontWeight: FontWeight.bold,
-              color: primaryColor, // Use primary color for Surah name
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: primaryColor.withAlpha(
-                  isDarkMode ? 40 : 25), // Subtle background for info
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              // Ensure revelationPlace and versesCount exist and are valid on QuranChapter model
-              "${widget.chapter.revelationPlace == 'Meccan' ? 'مكية' : 'مدنية'} • ${_toArabicNumbers(widget.chapter.versesCount.toString())} آيات",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'Cairo',
-                fontSize: 14,
-                color: primaryColor.withAlpha(200),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMushafPage(
-    BuildContext context,
-    List<QuranVerse> verses,
-    int pageIndex,
-    int totalPages,
-    QuranChapter chapter,
-    Color mainTextColor,
-    Color pageBackgroundColor,
-    Color pageBorderColor,
-    Color primaryColor,
-    Color shadowColor,
-    Color subtleTextColor,
-  ) {
-    final bool isFirstPageWithHeader = pageIndex == 0;
-
-    return Container(
-      margin: EdgeInsets.only(
-          left: 12.0,
-          right: 12.0,
-          bottom: 16.0,
-          top: (isFirstPageWithHeader
-              ? 0
-              : 12.0) // No top margin if header is shown directly above
-          ),
-      padding: const EdgeInsets.symmetric(
-          horizontal: 16.0, vertical: 20.0), // Increased padding
-      decoration: BoxDecoration(
-        color: pageBackgroundColor,
-        border:
-            Border.all(color: pageBorderColor, width: 1.0), // Thinner border
-        borderRadius: isFirstPageWithHeader
-            ? const BorderRadius.only(
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16))
-            : BorderRadius.circular(16.0),
-        boxShadow: [
-          BoxShadow(
-              color: shadowColor, blurRadius: 12, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Bismillah display
-            if (pageIndex == 0 &&
-                verses.isNotEmpty &&
-                verses.first.number == 0 && // Is Bismillah pseudo-verse
-                chapter.number != 1 && // Not Fatiha (Bismillah is part of it)
-                chapter.number != 9) // Not Tawbah (No Bismillah)
-              Container(
-                margin: const EdgeInsets.only(bottom: 20.0, top: 4.0),
-                padding: const EdgeInsets.symmetric(vertical: 12.0),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                    border: Border(
-                        bottom: BorderSide(
-                            color: primaryColor.withAlpha(70), width: 1.0))),
-                child: Text(
-                  verses.first.text['ar']!,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily:
-                        'Amiri', // Consider a specific Bismillah font if available
-                    fontSize: 22, // Prominent Bismillah
-                    fontWeight: FontWeight.w500,
-                    color: mainTextColor,
-                    height: 1.8,
-                  ),
-                ),
-              ),
-            // Verses display
-            RichText(
-              textAlign: TextAlign.justify, // Justified text for Mushaf feel
-              textDirection: TextDirection.rtl,
-              text: TextSpan(
-                style: TextStyle(
-                  fontSize: 23, // Slightly adjusted font size for body
-                  color: mainTextColor,
-                  fontFamily: 'Amiri',
-                  height: 2.5, // Generous line height for readability
-                  letterSpacing: 0.3,
-                  fontWeight: FontWeight.normal, // Standard weight for reading
-                ),
-                children: verses.expand((verse) {
-                  // Skip Bismillah if it was the pseudo-verse and handled above
-                  if (pageIndex == 0 &&
-                      verse.number == 0 &&
-                      chapter.number != 1 &&
-                      chapter.number != 9) {
-                    return <InlineSpan>[];
-                  }
-
-                  return <InlineSpan>[
-                    TextSpan(
-                        text:
-                            "${verse.text['ar']?.toString() ?? ''} "), // Add space after verse
-                    WidgetSpan(
-                      alignment: PlaceholderAlignment.middle,
-                      baseline: TextBaseline.alphabetic,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 3),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                              color: primaryColor.withAlpha(100), width: 1.0),
-                          shape: BoxShape.circle,
-                          // color: primaryColor.withAlpha(30), // Optional: very subtle background
-                        ),
-                        child: Text(
-                          _toArabicNumbers(verse.number.toString()),
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600, // Bolder for number
-                            color:
-                                primaryColor, // Use primary color for verse numbers
-                            fontFamily: 'Cairo', // Numeric font
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (verse.sajda?.obligatory == true)
-                      WidgetSpan(
-                        alignment: PlaceholderAlignment.middle,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                          child: Icon(
-                            Icons
-                                .star_border_purple500_outlined, // More distinct Sajda icon
-                            color: Colors.green.shade600,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                  ];
-                }).toList(),
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
