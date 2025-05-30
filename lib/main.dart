@@ -20,6 +20,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:io' show Platform;
 import 'package:serat/features/quran/routes/quran_routes.dart';
 import 'package:serat/Business_Logic/Cubit/theme_cubit.dart';
+import 'package:serat/shared/services/notification_service.dart';
 
 TimeOfDay? stringToTimeOfDay(String timeString) {
   if (timeString.isNotEmpty) {
@@ -60,18 +61,28 @@ void main() async {
   try {
     final notificationStatus = await Permission.notification.status;
     if (notificationStatus.isDenied) {
-      await Permission.notification.request();
+      final result = await Permission.notification.request();
+      if (result.isDenied) {
+        debugPrint('Notification permission denied');
+      }
     }
 
     if (Platform.isAndroid) {
       final exactAlarmStatus = await Permission.scheduleExactAlarm.status;
       if (exactAlarmStatus.isDenied) {
-        await Permission.scheduleExactAlarm.request();
+        final result = await Permission.scheduleExactAlarm.request();
+        if (result.isDenied) {
+          debugPrint('Exact alarm permission denied');
+        }
       }
     }
   } catch (e) {
     debugPrint('Error requesting permissions: $e');
   }
+
+  // Initialize notification service
+  final notificationService = NotificationService();
+  await notificationService.initialize();
 
   Bloc.observer = MyGlobalObserver();
 

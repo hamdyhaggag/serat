@@ -7,6 +7,7 @@ import 'package:serat/Presentation/screens/radio_screen.dart';
 import 'package:serat/Presentation/screens/reciters_screen.dart';
 import 'package:serat/Presentation/screens/about_screen.dart';
 import 'package:serat/Presentation/screens/islamic_quiz_screen.dart';
+import 'package:serat/Presentation/screens/notifications_screen.dart';
 import 'package:serat/imports.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -19,6 +20,9 @@ import 'package:serat/Presentation/screens/zakah_calculator_screen.dart';
 import 'package:serat/features/quran/routes/quran_routes.dart';
 import 'dart:math';
 import 'dart:async';
+import 'package:serat/Data/Model/times_model.dart';
+import 'package:serat/shared/services/notification_service.dart';
+import 'dart:developer' as developer;
 
 class TimingsScreen extends StatefulWidget {
   const TimingsScreen({super.key});
@@ -73,6 +77,12 @@ class _TimingsScreenState extends State<TimingsScreen>
         }
       }
     });
+
+    // Listen for prayer times updates
+    final locationCubit = location.LocationCubit.get(context);
+    if (locationCubit.timesModel != null) {
+      _schedulePrayerNotifications(locationCubit.timesModel!.data.timings);
+    }
   }
 
   void _initializeParticles() {
@@ -438,9 +448,16 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           color: Colors.white,
                                           size: 24,
                                         ),
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const NotificationsScreen(),
+                                            ),
+                                          );
+                                        },
                                       ),
-                                      const SizedBox(width: 8),
                                     ],
                                   ),
                                   const Spacer(),
@@ -1115,17 +1132,17 @@ class _TimingsScreenState extends State<TimingsScreen>
                         tag: 'app_logo',
                         child: Image.asset(
                           'assets/logo.png',
-                          width: 90,
-                          height: 90,
+                          width: 80,
+                          height: 80,
                           fit: BoxFit.contain,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
+                        horizontal: 16,
+                        vertical: 6,
                       ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.1),
@@ -1140,7 +1157,7 @@ class _TimingsScreenState extends State<TimingsScreen>
                       ),
                       child: AppText(
                         'تطبيق صراط',
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color:
                             isDarkMode ? Colors.white : AppColors.primaryColor,
@@ -1204,6 +1221,27 @@ class _TimingsScreenState extends State<TimingsScreen>
                             value:
                                 "${selectedTimeMorning!.hour}:${selectedTimeMorning!.minute}",
                           );
+
+                          // Schedule a test notification
+                          try {
+                            final notificationService = NotificationService();
+                            await notificationService.initialize();
+                            await notificationService
+                                .scheduleTestNotification();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('تم جدولة إشعار تجريبي'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('حدث خطأ: $e'),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          }
                         }
                       },
                       isDarkMode: isDarkMode,
@@ -1238,6 +1276,27 @@ class _TimingsScreenState extends State<TimingsScreen>
                             value:
                                 "${selectedTimeEvening!.hour}:${selectedTimeEvening!.minute}",
                           );
+
+                          // Schedule a test notification
+                          try {
+                            final notificationService = NotificationService();
+                            await notificationService.initialize();
+                            await notificationService
+                                .scheduleTestNotification();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('تم جدولة إشعار تجريبي'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('حدث خطأ: $e'),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          }
                         }
                       },
                       isDarkMode: isDarkMode,
@@ -1660,6 +1719,22 @@ class _TimingsScreenState extends State<TimingsScreen>
 
     // If no match found, return the original location
     return location;
+  }
+
+  Future<void> _schedulePrayerNotifications(Timings timings) async {
+    final notificationService = NotificationService();
+    await notificationService.initialize();
+
+    final prayerTimes = {
+      'الفجر': timings.fajr,
+      'الشروق': timings.sunrise,
+      'الظهر': timings.dhuhr,
+      'العصر': timings.asr,
+      'المغرب': timings.maghrib,
+      'العشاء': timings.isha,
+    };
+
+    await notificationService.scheduleAllPrayerTimes(prayerTimes);
   }
 }
 
