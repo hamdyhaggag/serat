@@ -5,6 +5,7 @@ import 'package:serat/Business_Logic/Cubit/reciters_cubit.dart';
 import 'package:serat/Business_Logic/Models/reciter_model.dart';
 import 'package:serat/imports.dart';
 import 'package:flutter/foundation.dart';
+import '../../services/reciter_notification_service.dart';
 
 class RecitersScreen extends StatefulWidget {
   const RecitersScreen({super.key});
@@ -20,14 +21,19 @@ class _RecitersScreenState extends State<RecitersScreen>
   late Animation<double> _fadeAnimation;
   List<Reciter> _filteredReciters = [];
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final ReciterNotificationService _notificationService =
+      ReciterNotificationService();
   bool _isPlaying = false;
   bool _isInitialized = false;
   bool _isOfflineMode = false;
+  String _currentReciterName = '';
+  String _currentSurahName = '';
 
   @override
   void initState() {
     super.initState();
     _initializeAudio();
+    _initializeNotificationService();
     _loadReciters();
     _setupAnimation();
     _setupSearchListener();
@@ -78,18 +84,95 @@ class _RecitersScreenState extends State<RecitersScreen>
     });
   }
 
+  Future<void> _initializeNotificationService() async {
+    await _notificationService.initialize();
+    _notificationService.onStop = _stopAudio;
+  }
+
+  Future<void> _playAudio(
+      String url, String reciterName, String surahName) async {
+    try {
+      if (_isPlaying) {
+        await _stopAudio();
+      }
+
+      await _audioPlayer.setSourceUrl(url);
+      await _audioPlayer.resume();
+
+      setState(() {
+        _isPlaying = true;
+        _currentReciterName = reciterName;
+        _currentSurahName = surahName;
+      });
+
+      await _notificationService.showReciterNotification(
+        reciterName: reciterName,
+        surahName: surahName,
+        isPlaying: true,
+      );
+    } catch (e) {
+      debugPrint('Error playing audio: $e');
+      _showErrorSnackBar('حدث خطأ أثناء تشغيل التلاوة');
+    }
+  }
+
+  Future<void> _pauseAudio() async {
+    try {
+      await _audioPlayer.pause();
+      setState(() => _isPlaying = false);
+
+      await _notificationService.showReciterNotification(
+        reciterName: _currentReciterName,
+        surahName: _currentSurahName,
+        isPlaying: false,
+      );
+    } catch (e) {
+      _showErrorSnackBar('حدث خطأ أثناء إيقاف التلاوة مؤقتاً');
+    }
+  }
+
+  Future<void> _resumeAudio() async {
+    try {
+      await _audioPlayer.resume();
+      setState(() => _isPlaying = true);
+
+      await _notificationService.showReciterNotification(
+        reciterName: _currentReciterName,
+        surahName: _currentSurahName,
+        isPlaying: true,
+      );
+    } catch (e) {
+      _showErrorSnackBar('حدث خطأ أثناء استئناف التلاوة');
+    }
+  }
+
+  Future<void> _stopAudio() async {
+    try {
+      if (!_isPlaying) return;
+
+      await _audioPlayer.stop();
+      setState(() {
+        _isPlaying = false;
+        _currentReciterName = '';
+        _currentSurahName = '';
+      });
+
+      await _notificationService.removeNotification();
+    } catch (e) {
+      debugPrint('Error stopping audio: $e');
+      _showErrorSnackBar('حدث خطأ أثناء إيقاف التلاوة');
+    }
+  }
+
   void _loadReciters() {
     try {
-      RecitersCubit.get(context)
-          .getReciters()
-          .then((_) {
-            setState(() => _isOfflineMode = false);
-            _filterReciters(_searchController.text);
-          })
-          .catchError((_) {
-            setState(() => _isOfflineMode = true);
-            _showErrorSnackBar('حدث خطأ أثناء تحميل بيانات القراء');
-          });
+      RecitersCubit.get(context).getReciters().then((_) {
+        setState(() => _isOfflineMode = false);
+        _filterReciters(_searchController.text);
+      }).catchError((_) {
+        setState(() => _isOfflineMode = true);
+        _showErrorSnackBar('حدث خطأ أثناء تحميل بيانات القراء');
+      });
     } catch (e) {
       setState(() => _isOfflineMode = true);
       _showErrorSnackBar('حدث خطأ أثناء تحميل بيانات القراء');
@@ -101,20 +184,19 @@ class _RecitersScreenState extends State<RecitersScreen>
     if (cubit.recitersModel == null) return;
 
     setState(() {
-      _filteredReciters =
-          query.isEmpty
-              ? cubit.recitersModel!.reciters
-              : cubit.recitersModel!.reciters
-                  .where(
-                    (reciter) =>
-                        reciter.name.toLowerCase().contains(
+      _filteredReciters = query.isEmpty
+          ? cubit.recitersModel!.reciters
+          : cubit.recitersModel!.reciters
+              .where(
+                (reciter) =>
+                    reciter.name.toLowerCase().contains(
                           query.toLowerCase(),
                         ) ||
-                        reciter.letter.toLowerCase().contains(
+                    reciter.letter.toLowerCase().contains(
                           query.toLowerCase(),
                         ),
-                  )
-                  .toList();
+              )
+              .toList();
     });
   }
 
@@ -193,23 +275,21 @@ class _RecitersScreenState extends State<RecitersScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors:
-                isDarkMode
-                    ? [const Color(0xff2F2F2F), const Color(0xff1F1F1F)]
-                    : [
-                      AppColors.primaryColor,
-                      const Color.fromRGBO(0, 150, 136, 0.8),
-                    ],
+            colors: isDarkMode
+                ? [const Color(0xff2F2F2F), const Color(0xff1F1F1F)]
+                : [
+                    AppColors.primaryColor,
+                    const Color.fromRGBO(0, 150, 136, 0.8),
+                  ],
           ),
         ),
       ),
       leading: IconButton(
         icon: Icon(
           Icons.arrow_back_ios_new_rounded,
-          color:
-              isDarkMode
-                  ? const Color.fromRGBO(255, 255, 255, 0.7)
-                  : Colors.white,
+          color: isDarkMode
+              ? const Color.fromRGBO(255, 255, 255, 0.7)
+              : Colors.white,
         ),
         onPressed: () => Navigator.pop(context),
       ),
@@ -316,14 +396,13 @@ class _RecitersScreenState extends State<RecitersScreen>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder:
-          (context) => _ReciterDetailsSheet(
-            reciter: reciter,
-            onPlay: (moshaf) {
-              Navigator.pop(context);
-              _playRecitation(reciter, moshaf);
-            },
-          ),
+      builder: (context) => _ReciterDetailsSheet(
+        reciter: reciter,
+        onPlay: (moshaf) {
+          Navigator.pop(context);
+          _playRecitation(reciter, moshaf);
+        },
+      ),
     );
   }
 
@@ -340,12 +419,12 @@ class _RecitersScreenState extends State<RecitersScreen>
 
     try {
       final audioUrl = _buildAudioUrl(moshaf.server, selectedSurah);
-      await _audioPlayer.stop();
-      await _audioPlayer.setSourceUrl(audioUrl);
+      final surahName = _getSurahName(selectedSurah);
+
+      await _playAudio(audioUrl, reciter.name, surahName);
+
       Navigator.pop(context); // Remove loading dialog
       _showAudioPlayer(reciter, moshaf, selectedSurah);
-      await _audioPlayer.resume();
-      setState(() => _isPlaying = true);
     } catch (e) {
       Navigator.pop(context); // Remove loading dialog
       _showErrorSnackBar(_getErrorMessage(e));
@@ -369,25 +448,25 @@ class _RecitersScreenState extends State<RecitersScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder:
-          (context) => const AlertDialog(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                AppText('جاري تحميل التلاوة...', fontSize: 16),
-              ],
-            ),
-          ),
+      builder: (context) => const AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            AppText('جاري تحميل التلاوة...', fontSize: 16),
+          ],
+        ),
+      ),
     );
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
-    _animationController.dispose();
+    // Don't stop audio when navigating away
     _audioPlayer.dispose();
+    _animationController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -511,67 +590,66 @@ class _RecitersScreenState extends State<RecitersScreen>
 
     return showDialog<int>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: const AppText(
+          'اختر السورة',
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 1.8,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
             ),
-            title: const AppText(
-              'اختر السورة',
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-            content: SizedBox(
-              width: double.maxFinite,
-              height: MediaQuery.of(context).size.height * 0.6,
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  childAspectRatio: 1.8,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                ),
-                itemCount: surahs.length,
-                itemBuilder: (context, index) {
-                  final surahNumber = index + 1;
-                  final surahName = surahs[surahNumber]!;
-                  return InkWell(
-                    onTap: () => Navigator.pop(context, surahNumber),
+            itemCount: surahs.length,
+            itemBuilder: (context, index) {
+              final surahNumber = index + 1;
+              final surahName = surahs[surahNumber]!;
+              return InkWell(
+                onTap: () => Navigator.pop(context, surahNumber),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 4,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AppText(
+                        surahNumber.toString(),
+                        fontSize: 12,
+                        color: AppColors.primaryColor,
                       ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
+                      const SizedBox(height: 1),
+                      AppText(
+                        surahName,
+                        fontSize: 10,
+                        color: AppColors.primaryColor,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AppText(
-                            surahNumber.toString(),
-                            fontSize: 12,
-                            color: AppColors.primaryColor,
-                          ),
-                          const SizedBox(height: 1),
-                          AppText(
-                            surahName,
-                            fontSize: 10,
-                            color: AppColors.primaryColor,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
+        ),
+      ),
     );
   }
 
@@ -581,52 +659,46 @@ class _RecitersScreenState extends State<RecitersScreen>
       backgroundColor: Colors.transparent,
       enableDrag: true,
       isDismissible: true,
-      builder:
-          (context) => WillPopScope(
-            onWillPop: () async {
-              await _audioPlayer.stop();
-              setState(() => _isPlaying = false);
-              return true;
-            },
-            child: NotificationListener<DraggableScrollableNotification>(
-              onNotification: (notification) {
-                if (notification.extent <= 0.0) {
-                  _audioPlayer.stop();
-                  setState(() => _isPlaying = false);
-                }
-                return true;
-              },
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color:
-                      Theme.of(context).brightness == Brightness.dark
-                          ? const Color(0xff2F2F2F)
-                          : Colors.white,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(20),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, -5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildPlayerHeader(reciter, moshaf, selectedSurah),
-                    const SizedBox(height: 24),
-                    _buildPlayerControls(),
-                    const SizedBox(height: 24),
-                    _buildProgressBar(),
-                  ],
-                ),
+      builder: (context) => WillPopScope(
+        onWillPop: () async {
+          // Don't stop audio when closing the player UI
+          return true;
+        },
+        child: NotificationListener<DraggableScrollableNotification>(
+          onNotification: (notification) {
+            // Don't stop audio when dragging down
+            return true;
+          },
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xff2F2F2F)
+                  : Colors.white,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildPlayerHeader(reciter, moshaf, selectedSurah),
+                const SizedBox(height: 24),
+                _buildPlayerControls(),
+                const SizedBox(height: 24),
+                _buildProgressBar(),
+              ],
             ),
           ),
+        ),
+      ),
     );
   }
 
@@ -675,8 +747,7 @@ class _RecitersScreenState extends State<RecitersScreen>
           icon: const Icon(Icons.close),
           onPressed: () {
             Navigator.pop(context);
-            _audioPlayer.stop();
-            setState(() => _isPlaying = false);
+            // Don't stop audio when closing the player UI
           },
         ),
       ],
@@ -729,7 +800,13 @@ class _RecitersScreenState extends State<RecitersScreen>
               color: Colors.white,
               size: 32,
             ),
-            onPressed: () => _togglePlayPause(isPlaying),
+            onPressed: () {
+              if (isPlaying) {
+                _pauseAudio();
+              } else {
+                _resumeAudio();
+              }
+            },
           ),
         );
       },
@@ -765,9 +842,9 @@ class _RecitersScreenState extends State<RecitersScreen>
                     ),
                     child: Slider(
                       value: position.inSeconds.toDouble().clamp(
-                        0.0,
-                        duration.inSeconds.toDouble(),
-                      ),
+                            0.0,
+                            duration.inSeconds.toDouble(),
+                          ),
                       max: duration.inSeconds.toDouble(),
                       onChanged: (value) => _seekTo(value.toInt()),
                     ),
@@ -944,7 +1021,7 @@ class _RecitersScreenState extends State<RecitersScreen>
       113: 'الفلق',
       114: 'الناس',
     };
-    return surahs[surahNumber] ?? '';
+    return surahs[surahNumber] ?? 'سورة $surahNumber';
   }
 
   Future<void> _seekBackward() async {
@@ -981,20 +1058,6 @@ class _RecitersScreenState extends State<RecitersScreen>
       await _audioPlayer.seek(Duration(seconds: seconds));
     } catch (e) {
       debugPrint('Error seeking: $e');
-    }
-  }
-
-  Future<void> _togglePlayPause(bool isPlaying) async {
-    try {
-      if (isPlaying) {
-        await _audioPlayer.pause();
-      } else {
-        await _audioPlayer.resume();
-      }
-      setState(() => _isPlaying = !isPlaying);
-    } catch (e) {
-      debugPrint('Error toggling play state: $e');
-      _showErrorSnackBar('حدث خطأ أثناء التحكم في التشغيل');
     }
   }
 
@@ -1183,10 +1246,9 @@ class _ReciterCard extends StatelessWidget {
       width: 50,
       height: 50,
       decoration: BoxDecoration(
-        color:
-            isDarkMode
-                ? Colors.grey[800]
-                : AppColors.primaryColor.withValues(alpha: 0.1),
+        color: isDarkMode
+            ? Colors.grey[800]
+            : AppColors.primaryColor.withValues(alpha: 0.1),
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
@@ -1215,10 +1277,9 @@ class _ReciterCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color:
-                  isDarkMode
-                      ? Colors.grey[800]
-                      : AppColors.primaryColor.withValues(alpha: 0.1),
+              color: isDarkMode
+                  ? Colors.grey[800]
+                  : AppColors.primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
