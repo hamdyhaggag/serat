@@ -262,202 +262,14 @@ class _RadioScreenState extends State<RadioScreen>
       body: SafeArea(
         child: Column(
           children: [
-            SingleChildScrollView(
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: isDarkMode
-                          ? const Color(0xff2F2F2F)
-                          : AppColors.primaryColor,
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(30),
-                        bottomRight: Radius.circular(30),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          width: 200,
-                          height: 200,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              if (_isPlaying)
-                                TweenAnimationBuilder<double>(
-                                  tween: Tween(begin: 0.8, end: 1.2),
-                                  duration: const Duration(seconds: 1),
-                                  curve: Curves.easeInOut,
-                                  builder: (context, value, child) {
-                                    return Transform.scale(
-                                      scale: value,
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color:
-                                                Colors.white.withOpacity(0.3),
-                                            width: 2,
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              Icon(
-                                _isPlaying
-                                    ? Icons.radio
-                                    : Icons.radio_button_unchecked,
-                                size: 80,
-                                color: Colors.white,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        AppText(
-                          _currentStation.isEmpty
-                              ? 'اختر محطة'
-                              : _currentStationName,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontFamily: 'Cairo',
-                        ),
-                        const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _buildControlButton(
-                              icon: _isPlaying ? Icons.pause : Icons.play_arrow,
-                              onPressed: () {
-                                if (_currentStation.isNotEmpty) {
-                                  _playStation(
-                                    _currentStation,
-                                    _currentStationName,
-                                  );
-                                }
-                              },
-                            ),
-                            const SizedBox(width: 20),
-                            _buildControlButton(
-                              icon: Icons.stop,
-                              onPressed: () async {
-                                await _stopPlayback();
-                              },
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.volume_down,
-                                  color: Colors.white),
-                              Expanded(
-                                child: Slider(
-                                  value: _volume,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _volume = value;
-                                    });
-                                    _audioPlayer.setVolume(value);
-                                  },
-                                  activeColor: Colors.white,
-                                  inactiveColor: Colors.white.withOpacity(0.3),
-                                ),
-                              ),
-                              const Icon(Icons.volume_up, color: Colors.white),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: isDarkMode
-                            ? const Color(0xff2F2F2F)
-                            : Colors.grey[100],
-                        borderRadius: BorderRadius.circular(30),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: _filterStations,
-                        decoration: InputDecoration(
-                          hintText: 'ابحث عن محطة...',
-                          hintStyle: TextStyle(
-                            color:
-                                isDarkMode ? Colors.white70 : Colors.grey[600],
-                            fontFamily: 'Cairo',
-                          ),
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color:
-                                isDarkMode ? Colors.white70 : Colors.grey[600],
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                          fillColor: isDarkMode
-                              ? const Color(0xff2F2F2F)
-                              : Colors.grey[100],
-                        ),
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.white : Colors.black,
-                          fontFamily: 'Cairo',
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
             Expanded(
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildStationList(
-                    _filteredStations.isEmpty ? _stations : _filteredStations,
-                  ),
-                  _buildStationList(_bookmarkedStations),
+                  _buildUnifiedLayout(_filteredStations.isEmpty
+                      ? _stations
+                      : _filteredStations),
+                  _buildUnifiedLayout(_bookmarkedStations),
                 ],
               ),
             ),
@@ -548,7 +360,7 @@ class _RadioScreenState extends State<RadioScreen>
     );
   }
 
-  Widget _buildStationList(List<RadioStation> stations) {
+  Widget _buildUnifiedLayout(List<RadioStation> stations) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     if (_isLoading) {
@@ -601,83 +413,265 @@ class _RadioScreenState extends State<RadioScreen>
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      itemCount: stations.length,
-      itemBuilder: (context, index) {
-        final station = stations[index];
-        final isSelected = station.url == _currentStation;
-        final isBookmarked = _bookmarkedStations.any(
-          (s) => s.url == station.url,
-        );
-
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          margin: const EdgeInsets.only(bottom: 15),
-          decoration: BoxDecoration(
-            color: isDarkMode ? const Color(0xff2F2F2F) : Colors.white,
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color:
+                  isDarkMode ? const Color(0xff2F2F2F) : AppColors.primaryColor,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(30),
+                bottomRight: Radius.circular(30),
               ),
-            ],
-            border: isSelected
-                ? Border.all(color: AppColors.primaryColor, width: 2)
-                : null,
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 10,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
             ),
-            leading: Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: isDarkMode
-                    ? Colors.grey[800]
-                    : AppColors.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                Icons.radio,
-                color: isDarkMode ? Colors.white : AppColors.primaryColor,
-              ),
-            ),
-            title: Text(
-              station.name,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: isDarkMode ? Colors.white : AppColors.primaryColor,
-                fontFamily: 'Cairo',
-              ),
-            ),
-            trailing: Row(
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                IconButton(
-                  icon: Icon(
-                    isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                    color: isDarkMode ? Colors.white : AppColors.primaryColor,
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
-                  onPressed: () => _toggleBookmark(station),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      if (_isPlaying)
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0.8, end: 1.2),
+                          duration: const Duration(seconds: 1),
+                          curve: Curves.easeInOut,
+                          builder: (context, value, child) {
+                            return Transform.scale(
+                              scale: value,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.3),
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      Icon(
+                        _isPlaying ? Icons.radio : Icons.radio_button_unchecked,
+                        size: 80,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
                 ),
-                IconButton(
-                  icon: Icon(
-                    isSelected && _isPlaying ? Icons.pause : Icons.play_arrow,
-                    color: isDarkMode ? Colors.white : AppColors.primaryColor,
+                const SizedBox(height: 20),
+                AppText(
+                  _currentStation.isEmpty ? 'اختر محطة' : _currentStationName,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontFamily: 'Cairo',
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildControlButton(
+                      icon: _isPlaying ? Icons.pause : Icons.play_arrow,
+                      onPressed: () {
+                        if (_currentStation.isNotEmpty) {
+                          _playStation(_currentStation, _currentStationName);
+                        }
+                      },
+                    ),
+                    const SizedBox(width: 20),
+                    _buildControlButton(
+                      icon: Icons.stop,
+                      onPressed: () async {
+                        await _stopPlayback();
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                  onPressed: () => _playStation(station.url, station.name),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.volume_down, color: Colors.white),
+                      Expanded(
+                        child: Slider(
+                          value: _volume,
+                          onChanged: (value) {
+                            setState(() {
+                              _volume = value;
+                            });
+                            _audioPlayer.setVolume(value);
+                          },
+                          activeColor: Colors.white,
+                          inactiveColor: Colors.white.withOpacity(0.3),
+                        ),
+                      ),
+                      const Icon(Icons.volume_up, color: Colors.white),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-        );
-      },
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDarkMode ? const Color(0xff2F2F2F) : Colors.grey[100],
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: _filterStations,
+                decoration: InputDecoration(
+                  hintText: 'ابحث عن محطة...',
+                  hintStyle: TextStyle(
+                    color: isDarkMode ? Colors.white70 : Colors.grey[600],
+                    fontFamily: 'Cairo',
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: isDarkMode ? Colors.white70 : Colors.grey[600],
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor:
+                      isDarkMode ? const Color(0xff2F2F2F) : Colors.grey[100],
+                ),
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  fontFamily: 'Cairo',
+                ),
+              ),
+            ),
+          ),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(20),
+            itemCount: stations.length,
+            itemBuilder: (context, index) {
+              final station = stations[index];
+              final isSelected = station.url == _currentStation;
+              final isBookmarked = _bookmarkedStations.any(
+                (s) => s.url == station.url,
+              );
+
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.only(bottom: 15),
+                decoration: BoxDecoration(
+                  color: isDarkMode ? const Color(0xff2F2F2F) : Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                  border: isSelected
+                      ? Border.all(color: AppColors.primaryColor, width: 2)
+                      : null,
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
+                  leading: Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: isDarkMode
+                          ? Colors.grey[800]
+                          : AppColors.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.radio,
+                      color: isDarkMode ? Colors.white : AppColors.primaryColor,
+                    ),
+                  ),
+                  title: Text(
+                    station.name,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDarkMode ? Colors.white : AppColors.primaryColor,
+                      fontFamily: 'Cairo',
+                    ),
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                          color: isDarkMode
+                              ? Colors.white
+                              : AppColors.primaryColor,
+                        ),
+                        onPressed: () => _toggleBookmark(station),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          isSelected && _isPlaying
+                              ? Icons.pause
+                              : Icons.play_arrow,
+                          color: isDarkMode
+                              ? Colors.white
+                              : AppColors.primaryColor,
+                        ),
+                        onPressed: () =>
+                            _playStation(station.url, station.name),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }
