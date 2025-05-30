@@ -267,24 +267,7 @@ class QiblaScreenState extends State<QiblaScreen>
                               angle: (qibla * (math.pi / 180)) -
                                   (rotatedAngle ?? 0),
                               child: Column(
-                                children: [
-                                  Container(
-                                    width: 4,
-                                    height: width * 0.35,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primaryColor,
-                                      borderRadius: BorderRadius.circular(2),
-                                    ),
-                                  ),
-                                  Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primaryColor,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                ],
+                                children: [],
                               ),
                             ),
                           ),
