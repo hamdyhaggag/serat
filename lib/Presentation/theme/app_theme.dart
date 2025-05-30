@@ -42,7 +42,7 @@ class AppTheme {
     brightness: Brightness.light,
     primaryColor: primaryLight,
     scaffoldBackgroundColor: backgroundLight,
-    colorScheme: ColorScheme.light(
+    colorScheme: const ColorScheme.light(
       primary: primaryLight,
       secondary: secondaryLight,
       error: errorLight,
@@ -53,6 +53,37 @@ class AppTheme {
       onError: Colors.white,
       onBackground: textPrimaryLight,
       onSurface: textPrimaryLight,
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: primaryLight,
+      circularTrackColor: Color(0xFFE0E0E0),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      focusedBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: primaryLight, width: 2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: primaryLight.withOpacity(0.5), width: 1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: errorLight, width: 2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: errorLight, width: 2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      labelStyle: const TextStyle(color: primaryLight),
+      hintStyle: TextStyle(color: primaryLight.withOpacity(0.7)),
+      prefixIconColor: primaryLight,
+      suffixIconColor: primaryLight,
+    ),
+    textSelectionTheme: const TextSelectionThemeData(
+      cursorColor: primaryLight,
+      selectionColor: primaryLight,
+      selectionHandleColor: primaryLight,
     ),
     cardTheme: CardTheme(
       color: surfaceLight,
@@ -66,13 +97,13 @@ class AppTheme {
         backgroundColor: primaryLight,
         foregroundColor: Colors.white,
         elevation: 2,
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
       ),
     ),
-    textTheme: TextTheme(
+    textTheme: const TextTheme(
       titleLarge: TextStyle(
         color: textPrimaryLight,
         fontSize: 20,
@@ -99,7 +130,7 @@ class AppTheme {
     brightness: Brightness.dark,
     primaryColor: primaryDark,
     scaffoldBackgroundColor: backgroundDark,
-    colorScheme: ColorScheme.dark(
+    colorScheme: const ColorScheme.dark(
       primary: primaryDark,
       secondary: secondaryDark,
       error: errorDark,
@@ -110,6 +141,37 @@ class AppTheme {
       onError: Colors.white,
       onBackground: textPrimaryDark,
       onSurface: textPrimaryDark,
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: primaryDark,
+      circularTrackColor: Color(0xFF424242),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      focusedBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: primaryDark, width: 2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: primaryDark.withOpacity(0.5), width: 1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: errorDark, width: 2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: errorDark, width: 2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      labelStyle: const TextStyle(color: primaryDark),
+      hintStyle: TextStyle(color: primaryDark.withOpacity(0.7)),
+      prefixIconColor: primaryDark,
+      suffixIconColor: primaryDark,
+    ),
+    textSelectionTheme: const TextSelectionThemeData(
+      cursorColor: primaryDark,
+      selectionColor: primaryDark,
+      selectionHandleColor: primaryDark,
     ),
     cardTheme: CardTheme(
       color: surfaceDark,
@@ -123,13 +185,13 @@ class AppTheme {
         backgroundColor: primaryDark,
         foregroundColor: Colors.white,
         elevation: 2,
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
       ),
     ),
-    textTheme: TextTheme(
+    textTheme: const TextTheme(
       titleLarge: TextStyle(
         color: textPrimaryDark,
         fontSize: 20,
