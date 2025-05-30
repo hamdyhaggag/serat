@@ -396,12 +396,26 @@ class _TimingsScreenState extends State<TimingsScreen>
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  const AppText(
-                                                    'السلام عليكم',
-                                                    fontSize: 18,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.white,
-                                                  ),
+                                                  if (_isLoading)
+                                                    Container(
+                                                      width: 120,
+                                                      height: 18,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white
+                                                            .withOpacity(0.2),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(4),
+                                                      ),
+                                                    )
+                                                  else
+                                                    const AppText(
+                                                      'السلام عليكم',
+                                                      fontSize: 18,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.white,
+                                                    ),
                                                   const SizedBox(height: 2),
                                                   if (_isLoading)
                                                     Container(
@@ -440,24 +454,36 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           ],
                                         ),
                                       ),
-                                      IconButton(
-                                        padding: EdgeInsets.zero,
-                                        constraints: const BoxConstraints(),
-                                        icon: const Icon(
-                                          Icons.notifications_outlined,
-                                          color: Colors.white,
-                                          size: 24,
+                                      if (_isLoading)
+                                        Container(
+                                          width: 24,
+                                          height: 24,
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Colors.white.withOpacity(0.2),
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                          ),
+                                        )
+                                      else
+                                        IconButton(
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(),
+                                          icon: const Icon(
+                                            Icons.notifications_outlined,
+                                            color: Colors.white,
+                                            size: 24,
+                                          ),
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const NotificationsScreen(),
+                                              ),
+                                            );
+                                          },
                                         ),
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const NotificationsScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
                                     ],
                                   ),
                                   const Spacer(),
