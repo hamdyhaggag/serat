@@ -701,141 +701,147 @@ class _TimingsScreenState extends State<TimingsScreen>
                               ),
                             ),
                           ),
-                        Container(
-                          margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (_isLoading)
-                                GridView.count(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  crossAxisCount: 2,
-                                  mainAxisSpacing: 15,
-                                  crossAxisSpacing: 15,
-                                  childAspectRatio: 1.2,
-                                  children: List.generate(
-                                    4,
-                                    (index) => _buildSkeletonCard(),
+                        Transform.translate(
+                          offset: const Offset(0, -60),
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (_isLoading)
+                                  GridView.count(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    crossAxisCount: 2,
+                                    mainAxisSpacing: 15,
+                                    crossAxisSpacing: 15,
+                                    childAspectRatio: 1.2,
+                                    children: List.generate(
+                                      4,
+                                      (index) => _buildSkeletonCard(),
+                                    ),
+                                  )
+                                else
+                                  GridView.count(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    crossAxisCount: 2,
+                                    mainAxisSpacing: 15,
+                                    crossAxisSpacing: 15,
+                                    childAspectRatio: 1.2,
+                                    children: [
+                                      _buildFeatureCard(
+                                        'الهدف اليومي',
+                                        Icons.flag,
+                                        isDarkMode,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const DailyGoalNavigationScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _buildFeatureCard(
+                                        'القرآن الكريم',
+                                        Icons.menu_book,
+                                        isDarkMode,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const QuranScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _buildFeatureCard(
+                                        'بطاقات القرآن',
+                                        Icons.book,
+                                        isDarkMode,
+                                        onTap: () => Navigator.pushNamed(
+                                            context, QuranRoutes.surahList),
+                                      ),
+                                      _buildFeatureCard(
+                                        'القراء',
+                                        Icons.record_voice_over,
+                                        isDarkMode,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const RecitersScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _buildFeatureCard(
+                                        'الراديو',
+                                        Icons.radio,
+                                        isDarkMode,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const RadioScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _buildFeatureCard(
+                                        'روائع القصص',
+                                        Icons.auto_stories,
+                                        isDarkMode,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const QasasScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _buildFeatureCard(
+                                        'حاسبة الزكاة',
+                                        Icons.calculate,
+                                        isDarkMode,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const ZakahCalculatorScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _buildFeatureCard(
+                                        'اختبار إسلامي',
+                                        Icons.quiz,
+                                        isDarkMode,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const IslamicQuizScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
                                   ),
-                                )
-                              else
-                                GridView.count(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  crossAxisCount: 2,
-                                  mainAxisSpacing: 15,
-                                  crossAxisSpacing: 15,
-                                  childAspectRatio: 1.2,
-                                  children: [
-                                    _buildFeatureCard(
-                                      'الهدف اليومي',
-                                      Icons.flag,
-                                      isDarkMode,
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const DailyGoalNavigationScreen(),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    _buildFeatureCard(
-                                      'القرآن الكريم',
-                                      Icons.menu_book,
-                                      isDarkMode,
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const QuranScreen(),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    _buildFeatureCard(
-                                      'بطاقات القرآن',
-                                      Icons.book,
-                                      isDarkMode,
-                                      onTap: () => Navigator.pushNamed(
-                                          context, QuranRoutes.surahList),
-                                    ),
-                                    _buildFeatureCard(
-                                      'القراء',
-                                      Icons.record_voice_over,
-                                      isDarkMode,
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const RecitersScreen(),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    _buildFeatureCard(
-                                      'الراديو',
-                                      Icons.radio,
-                                      isDarkMode,
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const RadioScreen(),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    _buildFeatureCard(
-                                      'روائع القصص',
-                                      Icons.auto_stories,
-                                      isDarkMode,
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const QasasScreen(),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    _buildFeatureCard(
-                                      'حاسبة الزكاة',
-                                      Icons.calculate,
-                                      isDarkMode,
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const ZakahCalculatorScreen(),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    _buildFeatureCard(
-                                      'اختبار إسلامي',
-                                      Icons.quiz,
-                                      isDarkMode,
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const IslamicQuizScreen(),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ],
