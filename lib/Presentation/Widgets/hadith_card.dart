@@ -8,6 +8,7 @@ class HadithCard extends StatelessWidget {
   final bool isBookmarked;
   final Function(HadithModel) onBookmarkToggle;
   final bool isDarkMode;
+  final String searchQuery;
 
   const HadithCard({
     super.key,
@@ -15,7 +16,78 @@ class HadithCard extends StatelessWidget {
     required this.isBookmarked,
     required this.onBookmarkToggle,
     required this.isDarkMode,
+    this.searchQuery = '',
   });
+
+  String _highlightText(String text) {
+    if (searchQuery.isEmpty) return text;
+
+    final words = searchQuery.split(' ').where((word) => word.isNotEmpty);
+    String highlightedText = text;
+
+    for (final word in words) {
+      final regex = RegExp(word, caseSensitive: false);
+      highlightedText = highlightedText.replaceAllMapped(
+        regex,
+        (match) => '<highlight>${match.group(0)}</highlight>',
+      );
+    }
+
+    return highlightedText;
+  }
+
+  Widget _buildHighlightedText(String text) {
+    if (searchQuery.isEmpty) {
+      return Text(
+        text,
+        style: TextStyle(
+          fontFamily: 'DIN',
+          fontSize: 16,
+          height: 1.5,
+          color: isDarkMode ? Colors.white70 : Colors.black87,
+        ),
+        maxLines: 3,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+
+    final parts = text.split(RegExp(r'<highlight>(.*?)</highlight>'));
+    return RichText(
+      maxLines: 3,
+      overflow: TextOverflow.ellipsis,
+      text: TextSpan(
+        children: parts.map((part) {
+          if (part.startsWith('<highlight>') && part.endsWith('</highlight>')) {
+            final highlightedText = part
+                .replaceAll('<highlight>', '')
+                .replaceAll('</highlight>', '');
+            return TextSpan(
+              text: highlightedText,
+              style: TextStyle(
+                fontFamily: 'DIN',
+                fontSize: 16,
+                height: 1.5,
+                color: isDarkMode ? Colors.white70 : Colors.black87,
+                backgroundColor: isDarkMode
+                    ? Colors.yellow.withOpacity(0.3)
+                    : Colors.yellow.withOpacity(0.2),
+                fontWeight: FontWeight.bold,
+              ),
+            );
+          }
+          return TextSpan(
+            text: part,
+            style: TextStyle(
+              fontFamily: 'DIN',
+              fontSize: 16,
+              height: 1.5,
+              color: isDarkMode ? Colors.white70 : Colors.black87,
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,17 +139,8 @@ class HadithCard extends StatelessWidget {
                                 : AppColors.primaryColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text(
-                            hadith.hadithNumber,
-                            style: TextStyle(
-                              fontFamily: 'DIN',
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: isDarkMode
-                                  ? Colors.white
-                                  : AppColors.primaryColor,
-                            ),
-                          ),
+                          child: _buildHighlightedText(
+                              _highlightText(hadith.hadithNumber)),
                         ),
                       ],
                     ),
@@ -96,17 +159,7 @@ class HadithCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              Text(
-                hadith.hadithText,
-                style: TextStyle(
-                  fontFamily: 'DIN',
-                  fontSize: 16,
-                  height: 1.5,
-                  color: isDarkMode ? Colors.white70 : Colors.black87,
-                ),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
+              _buildHighlightedText(_highlightText(hadith.hadithText)),
             ],
           ),
         ),

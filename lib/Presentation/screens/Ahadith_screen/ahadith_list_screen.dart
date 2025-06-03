@@ -72,17 +72,14 @@ class _AhadithListScreenState extends State<AhadithListScreen>
   }
 
   Future<void> _loadData() async {
-    await Future.wait([
-      _loadHadiths(),
-      _loadAllBookmarks(),
-      _loadBookNames(),
-    ]);
+    await Future.wait([_loadHadiths(), _loadAllBookmarks(), _loadBookNames()]);
   }
 
   Future<void> _loadHadiths() async {
     try {
-      final hadiths =
-          await _hadithDatabaseService.getHadiths(_filterState.selectedBook);
+      final hadiths = await _hadithDatabaseService.getHadiths(
+        _filterState.selectedBook,
+      );
       if (!mounted) return;
 
       setState(() {
@@ -106,7 +103,8 @@ class _AhadithListScreenState extends State<AhadithListScreen>
   }
 
   Map<String, List<HadithModel>> _groupHadithsByChapter(
-      List<HadithModel> hadiths) {
+    List<HadithModel> hadiths,
+  ) {
     final grouped = <String, List<HadithModel>>{};
     for (var hadith in hadiths) {
       if (hadith.chapterName.isEmpty) continue;
@@ -194,65 +192,89 @@ class _AhadithListScreenState extends State<AhadithListScreen>
             groupedHadiths: _groupHadithsByChapter(_hadiths),
           );
         } else {
-          // Normalize the search query
-          final queryLower = query.trim();
-          final queryWords = queryLower
-              .split(RegExp(r'\s+'))
-              .where((word) => word.isNotEmpty)
-              .toList();
-
-          final filtered = _hadiths.where((hadith) {
-            // Get text fields
-            final text = hadith.hadithText;
-            final number = hadith.hadithNumber;
-            final explanation = hadith.explanation;
-            final narrator = hadith.narrator;
-            final chapterName = hadith.chapterName;
-
-            // First try exact phrase match
-            if (text.contains(queryLower) ||
-                number.contains(queryLower) ||
-                explanation.contains(queryLower) ||
-                narrator.contains(queryLower) ||
-                chapterName.contains(queryLower)) {
-              return true;
-            }
-
-            // If no exact match, try word-based search
-            if (queryWords.isNotEmpty) {
-              // Check if all words are present in any of the fields
-              return queryWords.every((word) {
-                // For Arabic text, we'll use a simpler contains check
-                return text.contains(word) ||
-                    number.contains(word) ||
-                    explanation.contains(word) ||
-                    narrator.contains(word) ||
-                    chapterName.contains(word);
-              });
-            }
-
-            return false;
-          }).toList();
-
-          // Only cache if we found results
-          if (filtered.isNotEmpty) {
-            if (!_searchCache.containsKey(_filterState.selectedBook)) {
-              _searchCache[_filterState.selectedBook] = {};
-            }
-            _searchCache[_filterState.selectedBook]![query] = filtered;
-
-            // Limit cache size to prevent memory issues
-            if (_searchCache[_filterState.selectedBook]!.length > 100) {
-              _searchCache[_filterState.selectedBook]!
-                  .remove(_searchCache[_filterState.selectedBook]!.keys.first);
-            }
-          }
+          // Split query into words for better matching
+          final words = query.split(' ').where((word) => word.isNotEmpty);
 
           _searchState = _searchState.copyWith(
             query: query,
-            filteredHadiths: filtered,
-            groupedHadiths: _groupHadithsByChapter(filtered),
+            filteredHadiths: _hadiths.where((hadith) {
+              // Normalize text by removing diacritics
+              String normalizeText(String text) {
+                return text
+                    .replaceAll(RegExp(r'[\u064B-\u065F\u0670]'),
+                        '') // Remove diacritics
+                    .replaceAll('أ', 'ا')
+                    .replaceAll('إ', 'ا')
+                    .replaceAll('آ', 'ا')
+                    .replaceAll('ى', 'ي')
+                    .toLowerCase();
+              }
+
+              // Search in hadith text (including chain of narrators)
+              final textLower = normalizeText(hadith.hadithText);
+              final numberLower = normalizeText(hadith.hadithNumber);
+              final explanationLower = normalizeText(hadith.explanation);
+              final narratorLower = normalizeText(hadith.narrator);
+              final normalizedQuery = words.map(normalizeText).toList();
+
+              // Check if all words in the query are found in any of the fields
+              return normalizedQuery.every(
+                (word) =>
+                    textLower.contains(word) ||
+                    numberLower.contains(word) ||
+                    explanationLower.contains(word) ||
+                    narratorLower.contains(word),
+              );
+            }).toList(),
+            groupedHadiths: _groupHadithsByChapter(
+              _hadiths.where((hadith) {
+                // Normalize text by removing diacritics
+                String normalizeText(String text) {
+                  return text
+                      .replaceAll(RegExp(r'[\u064B-\u065F\u0670]'),
+                          '') // Remove diacritics
+                      .replaceAll('أ', 'ا')
+                      .replaceAll('إ', 'ا')
+                      .replaceAll('آ', 'ا')
+                      .replaceAll('ى', 'ي')
+                      .toLowerCase();
+                }
+
+                // Search in hadith text (including chain of narrators)
+                final textLower = normalizeText(hadith.hadithText);
+                final numberLower = normalizeText(hadith.hadithNumber);
+                final explanationLower = normalizeText(hadith.explanation);
+                final narratorLower = normalizeText(hadith.narrator);
+                final normalizedQuery = words.map(normalizeText).toList();
+
+                // Check if all words in the query are found in any of the fields
+                return normalizedQuery.every(
+                  (word) =>
+                      textLower.contains(word) ||
+                      numberLower.contains(word) ||
+                      explanationLower.contains(word) ||
+                      narratorLower.contains(word),
+                );
+              }).toList(),
+            ),
           );
+
+          // Cache the results
+          if (_searchCache.containsKey(_filterState.selectedBook)) {
+            _searchCache[_filterState.selectedBook]![query] =
+                _searchState.filteredHadiths;
+          } else {
+            _searchCache[_filterState.selectedBook] = {
+              query: _searchState.filteredHadiths,
+            };
+          }
+
+          // Limit cache size to prevent memory issues
+          if (_searchCache[_filterState.selectedBook]!.length > 100) {
+            _searchCache[_filterState.selectedBook]!.remove(
+              _searchCache[_filterState.selectedBook]!.keys.first,
+            );
+          }
         }
       });
     });
@@ -295,7 +317,8 @@ class _AhadithListScreenState extends State<AhadithListScreen>
           _searchState = _searchState.copyWith(
             filteredHadiths: _hadiths.where((h) => _isBookmarked(h)).toList(),
             groupedHadiths: _groupHadithsByChapter(
-                _hadiths.where((h) => _isBookmarked(h)).toList()),
+              _hadiths.where((h) => _isBookmarked(h)).toList(),
+            ),
           );
         });
       }
@@ -319,10 +342,7 @@ class _AhadithListScreenState extends State<AhadithListScreen>
           SnackBar(
             content: Text(
               'حدث خطأ أثناء حفظ الإشارة المرجعية',
-              style: TextStyle(
-                fontFamily: 'DIN',
-                color: Colors.white,
-              ),
+              style: TextStyle(fontFamily: 'DIN', color: Colors.white),
             ),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 2),
@@ -336,10 +356,7 @@ class _AhadithListScreenState extends State<AhadithListScreen>
         SnackBar(
           content: Text(
             'حدث خطأ غير متوقع',
-            style: TextStyle(
-              fontFamily: 'DIN',
-              color: Colors.white,
-            ),
+            style: TextStyle(fontFamily: 'DIN', color: Colors.white),
           ),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 2),
@@ -443,6 +460,8 @@ class _AhadithListScreenState extends State<AhadithListScreen>
               controller: _searchController,
               onChanged: _filterHadiths,
               isDarkMode: isDarkMode,
+              resultCount: _searchState.filteredHadiths.length,
+              isSearching: _isLoading,
             ),
             HadithFilterChips(
               books: _hadithBooks,
@@ -500,6 +519,7 @@ class _AhadithListScreenState extends State<AhadithListScreen>
                                       isDarkMode: isDarkMode,
                                       onBookmarkToggle: _toggleBookmark,
                                       isBookmarked: _isBookmarked,
+                                      searchQuery: _searchState.query,
                                     );
                                   } catch (e) {
                                     print('Error building chapter: $e');
