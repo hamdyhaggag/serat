@@ -44,7 +44,7 @@ class _QasasScreenState extends State<QasasScreen>
       thumbnailUrl: 'https://img.youtube.com/vi/SMdRK8KVCT8/maxresdefault.jpg',
     ),
     PlaylistModel(
-      title: 'قصص إسلامية',
+      title: 'قصص الحيوان',
       playlistId: 'PLJ0WU3XQoz4-4AjkrKBJTClcJxJsVF7RU',
       thumbnailUrl: 'https://img.youtube.com/vi/wHrxioBnB9o/maxresdefault.jpg',
     ),
