@@ -88,10 +88,11 @@ class _BaseAhadithScreenState extends State<BaseAhadithScreen>
   }
 
   Widget _buildSkeleton() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDarkMode ? Colors.grey[850] : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -108,7 +109,7 @@ class _BaseAhadithScreenState extends State<BaseAhadithScreen>
             width: 120,
             height: 28,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
               borderRadius: BorderRadius.circular(10),
             ),
           ),
@@ -120,7 +121,7 @@ class _BaseAhadithScreenState extends State<BaseAhadithScreen>
               child: Container(
                 height: 18,
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -131,7 +132,7 @@ class _BaseAhadithScreenState extends State<BaseAhadithScreen>
             width: 160,
             height: 28,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
               borderRadius: BorderRadius.circular(10),
             ),
           ),
@@ -143,7 +144,7 @@ class _BaseAhadithScreenState extends State<BaseAhadithScreen>
               child: Container(
                 height: 18,
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),

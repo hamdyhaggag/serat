@@ -6,16 +6,19 @@ class HadithLoadingShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: 5,
       itemBuilder: (context, index) {
         return Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
-          highlightColor: Colors.grey[100]!,
+          baseColor: isDarkMode ? Colors.grey[900]! : Colors.grey[300]!,
+          highlightColor: isDarkMode ? Colors.grey[800]! : Colors.grey[100]!,
           child: Card(
             margin: const EdgeInsets.only(bottom: 16),
             elevation: 0,
+            color: isDarkMode ? Colors.grey[850] : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -29,7 +32,7 @@ class HadithLoadingShimmer extends StatelessWidget {
                     width: 100,
                     height: 24,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: isDarkMode ? Colors.grey[850] : Colors.white,
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
@@ -38,7 +41,7 @@ class HadithLoadingShimmer extends StatelessWidget {
                     width: double.infinity,
                     height: 16,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: isDarkMode ? Colors.grey[850] : Colors.white,
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
@@ -47,7 +50,7 @@ class HadithLoadingShimmer extends StatelessWidget {
                     width: double.infinity,
                     height: 16,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: isDarkMode ? Colors.grey[850] : Colors.white,
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
