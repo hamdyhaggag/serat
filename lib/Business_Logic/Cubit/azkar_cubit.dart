@@ -18,7 +18,7 @@ class AzkarCubit extends Cubit<AzkarState> {
       currentCounters[cardIndex] = currentCount + 1;
 
       // If we've reached the max value, mark as completed
-      if (currentCount + 1 == maxValue) {
+      if (currentCount + 1 >= maxValue) {
         final currentCompleted = List<int>.from(state.completedCards);
         if (!currentCompleted.contains(cardIndex)) {
           currentCompleted.add(cardIndex);

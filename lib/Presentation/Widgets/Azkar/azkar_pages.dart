@@ -46,6 +46,11 @@ class AzkarPages extends StatelessWidget {
           return BlocBuilder<AzkarCubit, AzkarState>(
             builder: (context, state) {
               final completedCards = state.completedCards;
+              final currentCount = state.counters[index] ?? 0;
+              final maxValue = state.maxValues[index] ?? 0;
+              final isCompleted =
+                  completedCards.contains(index) || currentCount >= maxValue;
+
               return Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: screenWidth * 0.05,
@@ -53,7 +58,7 @@ class AzkarPages extends StatelessWidget {
                 ),
                 child: GestureDetector(
                   onTap: () {
-                    if (!completedCards.contains(index)) {
+                    if (!isCompleted) {
                       context.read<AzkarCubit>().incrementCounter(index);
                     }
                   },
@@ -105,9 +110,8 @@ class AzkarPages extends StatelessWidget {
                                         Clipboard.setData(
                                           ClipboardData(text: azkar[index]),
                                         );
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
                                           SnackBar(
                                             content: Text(
                                               'تم نسخ الذكر',
@@ -140,23 +144,27 @@ class AzkarPages extends StatelessWidget {
                             ),
                           ),
                           AzkarCounter(
-                            maxValue: maxValues[index],
+                            maxValue: maxValue,
                             onComplete: () {
-                              context.read<AzkarCubit>().updateCompletedCards(
-                                    index,
-                                  );
+                              if (!isCompleted) {
+                                context
+                                    .read<AzkarCubit>()
+                                    .updateCompletedCards(index);
+                              }
                             },
-                            isCompleted: completedCards.contains(index),
+                            isCompleted: isCompleted,
                             pageController: pageController,
                             currentIndex: index,
                             totalPages: azkar.length,
                             onIncrement: () {
-                              context
-                                  .read<AzkarCubit>()
-                                  .incrementCounter(index);
+                              if (!isCompleted) {
+                                context
+                                    .read<AzkarCubit>()
+                                    .incrementCounter(index);
+                              }
                             },
                           ),
-                          if (completedCards.contains(index))
+                          if (isCompleted)
                             Padding(
                               padding:
                                   EdgeInsets.only(top: screenHeight * 0.02),
@@ -238,7 +246,8 @@ class _AzkarCounterState extends State<AzkarCounter>
         (AzkarCubit cubit) => cubit.state.counters[widget.currentIndex] ?? 0,
       );
 
-      if (currentValue + 1 == widget.maxValue) {
+      if (currentValue + 1 >= widget.maxValue) {
+        widget.onComplete();
         // Add a small delay before auto-scrolling
         Future.delayed(const Duration(milliseconds: 500), () {
           if (widget.currentIndex < widget.totalPages - 1) {
