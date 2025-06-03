@@ -192,33 +192,44 @@ class _AhadithListScreenState extends State<AhadithListScreen>
             groupedHadiths: _groupHadithsByChapter(_hadiths),
           );
         } else {
-          // Split query into words for better matching
-          final words = query.split(' ').where((word) => word.isNotEmpty);
+          // Normalize text by removing diacritics
+          String normalizeText(String text) {
+            final normalized = text
+                .replaceAll(
+                    RegExp(r'[\u064B-\u065F\u0670]'), '') // Remove diacritics
+                .replaceAll('أ', 'ا')
+                .replaceAll('إ', 'ا')
+                .replaceAll('آ', 'ا')
+                .replaceAll('ى', 'ي')
+                .toLowerCase();
+            return normalized;
+          }
+
+          // Normalize the search query
+          final normalizedQuery = normalizeText(query);
 
           _searchState = _searchState.copyWith(
             query: query,
             filteredHadiths: _hadiths.where((hadith) {
-              // Normalize text by removing diacritics
-              String normalizeText(String text) {
-                return text
-                    .replaceAll(RegExp(r'[\u064B-\u065F\u0670]'),
-                        '') // Remove diacritics
-                    .replaceAll('أ', 'ا')
-                    .replaceAll('إ', 'ا')
-                    .replaceAll('آ', 'ا')
-                    .replaceAll('ى', 'ي')
-                    .toLowerCase();
-              }
-
               // Search in hadith text (including chain of narrators)
               final textLower = normalizeText(hadith.hadithText);
               final numberLower = normalizeText(hadith.hadithNumber);
               final explanationLower = normalizeText(hadith.explanation);
               final narratorLower = normalizeText(hadith.narrator);
-              final normalizedQuery = words.map(normalizeText).toList();
 
-              // Check if all words in the query are found in any of the fields
-              return normalizedQuery.every(
+              // First try exact phrase match
+              if (textLower.contains(normalizedQuery) ||
+                  numberLower.contains(normalizedQuery) ||
+                  explanationLower.contains(normalizedQuery) ||
+                  narratorLower.contains(normalizedQuery)) {
+                return true;
+              }
+
+              // If no exact match, try word by word
+              final queryWords =
+                  normalizedQuery.split(' ').where((word) => word.isNotEmpty);
+
+              return queryWords.every(
                 (word) =>
                     textLower.contains(word) ||
                     numberLower.contains(word) ||
@@ -228,27 +239,24 @@ class _AhadithListScreenState extends State<AhadithListScreen>
             }).toList(),
             groupedHadiths: _groupHadithsByChapter(
               _hadiths.where((hadith) {
-                // Normalize text by removing diacritics
-                String normalizeText(String text) {
-                  return text
-                      .replaceAll(RegExp(r'[\u064B-\u065F\u0670]'),
-                          '') // Remove diacritics
-                      .replaceAll('أ', 'ا')
-                      .replaceAll('إ', 'ا')
-                      .replaceAll('آ', 'ا')
-                      .replaceAll('ى', 'ي')
-                      .toLowerCase();
-                }
-
                 // Search in hadith text (including chain of narrators)
                 final textLower = normalizeText(hadith.hadithText);
                 final numberLower = normalizeText(hadith.hadithNumber);
                 final explanationLower = normalizeText(hadith.explanation);
                 final narratorLower = normalizeText(hadith.narrator);
-                final normalizedQuery = words.map(normalizeText).toList();
 
-                // Check if all words in the query are found in any of the fields
-                return normalizedQuery.every(
+                // First try exact phrase match
+                if (textLower.contains(normalizedQuery) ||
+                    numberLower.contains(normalizedQuery) ||
+                    explanationLower.contains(normalizedQuery) ||
+                    narratorLower.contains(normalizedQuery)) {
+                  return true;
+                }
+
+                // If no exact match, try word by word
+                final queryWords =
+                    normalizedQuery.split(' ').where((word) => word.isNotEmpty);
+                return queryWords.every(
                   (word) =>
                       textLower.contains(word) ||
                       numberLower.contains(word) ||
