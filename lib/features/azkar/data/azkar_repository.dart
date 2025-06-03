@@ -3,32 +3,19 @@ import 'package:flutter/services.dart';
 import '../domain/azkar_model.dart';
 
 class AzkarRepository {
-  Future<List<Azkar>> getMorningAzkar() async {
+  Future<List<AzkarCategory>> getAllCategories() async {
     final String response =
-        await rootBundle.loadString('assets/azkar/morning.json');
+        await rootBundle.loadString('assets/data/adhkar.json');
     final List<dynamic> data = json.decode(response);
-    return data.map((json) => Azkar.fromJson(json)).toList();
+    return data.map((json) => AzkarCategory.fromJson(json)).toList();
   }
 
-  Future<List<Azkar>> getEveningAzkar() async {
-    final String response =
-        await rootBundle.loadString('assets/azkar/evening.json');
-    final List<dynamic> data = json.decode(response);
-    return data.map((json) => Azkar.fromJson(json)).toList();
-  }
-
-  Future<List<Azkar>> getSleepAzkar() async {
-    final String response =
-        await rootBundle.loadString('assets/azkar/sleep.json');
-    final List<dynamic> data = json.decode(response);
-    return data.map((json) => Azkar.fromJson(json)).toList();
-  }
-
-  Future<List<Azkar>> getAllAzkar() async {
-    final morningAzkar = await getMorningAzkar();
-    final eveningAzkar = await getEveningAzkar();
-    final sleepAzkar = await getSleepAzkar();
-
-    return [...morningAzkar, ...eveningAzkar, ...sleepAzkar];
+  Future<AzkarCategory?> getAzkarByCategory(String categoryName) async {
+    final categories = await getAllCategories();
+    try {
+      return categories.firstWhere((cat) => cat.folderName == categoryName);
+    } catch (e) {
+      return null;
+    }
   }
 }

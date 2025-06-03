@@ -128,7 +128,6 @@ flutter:
       - assets/nawawi_hadiths.json
       - assets/logo.png
       - assets/azkar/
-      - lib/Data/azkar/morning_azkar.json
       - assets/hadiths/
       - assets/data/islamic_questions.json
       - assets/data/quran.json

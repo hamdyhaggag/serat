@@ -29,16 +29,17 @@ class AzkarService {
     throw Exception('Failed to fetch data after $_maxRetries attempts');
   }
 
-  Future<List<Azkar>> _loadLocalData(String assetPath) async {
+  Future<List<Azkar>> _loadLocalData() async {
     try {
-      final String response = await rootBundle.loadString(assetPath);
-      final List<dynamic> data = json.decode(response) as List<dynamic>;
+      final String response =
+          await rootBundle.loadString('assets/data/adhkar.json');
+      final List<dynamic> data = json.decode(response);
       return data
           .map((json) => Azkar.fromJson(json as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      print('Error loading local data: $e');
-      rethrow;
+      print('Error loading local data from adhkar.json: $e');
+      return []; // Return empty list instead of rethrowing
     }
   }
 
@@ -51,7 +52,7 @@ class AzkarService {
           .toList();
     } catch (e) {
       print('Error fetching all azkar: $e');
-      return _loadLocalData('assets/azkar/all.json');
+      return _loadLocalData();
     }
   }
 
@@ -65,7 +66,7 @@ class AzkarService {
           .toList();
     } catch (e) {
       print('Error fetching morning azkar: $e');
-      return _loadLocalData('assets/azkar/morning.json');
+      return _loadLocalData();
     }
   }
 
@@ -79,7 +80,7 @@ class AzkarService {
           .toList();
     } catch (e) {
       print('Error fetching evening azkar: $e');
-      return _loadLocalData('assets/azkar/evening.json');
+      return _loadLocalData();
     }
   }
 
@@ -92,7 +93,21 @@ class AzkarService {
           .toList();
     } catch (e) {
       print('Error fetching sleep azkar: $e');
-      return _loadLocalData('assets/azkar/sleep.json');
+      return _loadLocalData();
+    }
+  }
+
+  static Future<List<AzkarCategory>> loadAzkar() async {
+    try {
+      final String jsonString =
+          await rootBundle.loadString('assets/data/adhkar.json');
+      final List<dynamic> jsonData = json.decode(jsonString);
+      return jsonData
+          .map((category) => AzkarCategory.fromJson(category))
+          .toList();
+    } catch (e) {
+      print('Error loading Azkar data: $e');
+      return [];
     }
   }
 }

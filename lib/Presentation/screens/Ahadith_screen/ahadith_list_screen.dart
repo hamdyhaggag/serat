@@ -205,36 +205,45 @@ class _AhadithListScreenState extends State<AhadithListScreen>
               groupedHadiths: _groupHadithsByChapter(cachedResults),
             );
           } else {
-            // Optimize string matching by converting to lowercase once
-            final queryLower = query.toLowerCase();
+            // Normalize the search query
+            final queryLower = query.toLowerCase().trim();
+            final queryWords = queryLower
+                .split(RegExp(r'\s+'))
+                .where((word) => word.isNotEmpty)
+                .toList();
+
             final filtered = _hadiths.where((hadith) {
+              // Normalize the text fields
               final textLower = hadith.hadithText.toLowerCase();
               final numberLower = hadith.hadithNumber.toLowerCase();
               final explanationLower = hadith.explanation.toLowerCase();
+              final narratorLower = hadith.narrator.toLowerCase();
+              final chapterNameLower = hadith.chapterName.toLowerCase();
 
-              // Search in hadith text, number, and explanation
+              // First try exact phrase match
               if (textLower.contains(queryLower) ||
                   numberLower.contains(queryLower) ||
-                  explanationLower.contains(queryLower)) {
+                  explanationLower.contains(queryLower) ||
+                  narratorLower.contains(queryLower) ||
+                  chapterNameLower.contains(queryLower)) {
                 return true;
               }
 
-              // Extract chapter name from explanation if it exists
-              final chapterMatch = RegExp(r'هذا الحديث يبين أن (.*?)،')
-                  .firstMatch(explanationLower);
-              if (chapterMatch != null) {
-                final chapterName = chapterMatch.group(1)?.toLowerCase() ?? '';
-                if (chapterName.contains(queryLower)) {
-                  return true;
-                }
+              // If no exact match, try word-based search
+              if (queryWords.isNotEmpty) {
+                // Check if all words are present in any of the fields
+                return queryWords.every((word) {
+                  // Use word boundary regex for more accurate matching
+                  final wordRegex = RegExp(r'\b' + RegExp.escape(word) + r'\b');
+                  return wordRegex.hasMatch(textLower) ||
+                      wordRegex.hasMatch(numberLower) ||
+                      wordRegex.hasMatch(explanationLower) ||
+                      wordRegex.hasMatch(narratorLower) ||
+                      wordRegex.hasMatch(chapterNameLower);
+                });
               }
 
-              // Fallback to word boundary matching for better results
-              final words = queryLower.split(' ');
-              return words.every((word) =>
-                  textLower.contains(word) ||
-                  numberLower.contains(word) ||
-                  explanationLower.contains(word));
+              return false;
             }).toList();
 
             // Cache the results

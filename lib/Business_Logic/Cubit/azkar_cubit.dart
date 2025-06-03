@@ -3,7 +3,7 @@ import 'azkar_state.dart';
 
 class AzkarCubit extends Cubit<AzkarState> {
   AzkarCubit({AzkarState? initialState})
-    : super(initialState ?? AzkarState(currentIndex: 0));
+      : super(initialState ?? AzkarState(currentIndex: 0));
 
   void updateIndex(int newIndex) {
     emit(state.copyWith(currentIndex: newIndex));
