@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import 'dart:math';
 import 'package:serat/imports.dart' hide AppColors;
 import 'package:serat/data/services/hadith_service.dart';
 import 'package:serat/data/services/bookmark_service.dart';
@@ -193,60 +194,48 @@ class _AhadithListScreenState extends State<AhadithListScreen>
             groupedHadiths: _groupHadithsByChapter(_hadiths),
           );
         } else {
-          // Check cache first
-          final cacheKey = '${_filterState.selectedBook}_$query';
-          if (_searchCache.containsKey(_filterState.selectedBook) &&
-              _searchCache[_filterState.selectedBook]!.containsKey(query)) {
-            final cachedResults =
-                _searchCache[_filterState.selectedBook]![query]!;
-            _searchState = _searchState.copyWith(
-              query: query,
-              filteredHadiths: cachedResults,
-              groupedHadiths: _groupHadithsByChapter(cachedResults),
-            );
-          } else {
-            // Normalize the search query
-            final queryLower = query.toLowerCase().trim();
-            final queryWords = queryLower
-                .split(RegExp(r'\s+'))
-                .where((word) => word.isNotEmpty)
-                .toList();
+          // Normalize the search query
+          final queryLower = query.trim();
+          final queryWords = queryLower
+              .split(RegExp(r'\s+'))
+              .where((word) => word.isNotEmpty)
+              .toList();
 
-            final filtered = _hadiths.where((hadith) {
-              // Normalize the text fields
-              final textLower = hadith.hadithText.toLowerCase();
-              final numberLower = hadith.hadithNumber.toLowerCase();
-              final explanationLower = hadith.explanation.toLowerCase();
-              final narratorLower = hadith.narrator.toLowerCase();
-              final chapterNameLower = hadith.chapterName.toLowerCase();
+          final filtered = _hadiths.where((hadith) {
+            // Get text fields
+            final text = hadith.hadithText;
+            final number = hadith.hadithNumber;
+            final explanation = hadith.explanation;
+            final narrator = hadith.narrator;
+            final chapterName = hadith.chapterName;
 
-              // First try exact phrase match
-              if (textLower.contains(queryLower) ||
-                  numberLower.contains(queryLower) ||
-                  explanationLower.contains(queryLower) ||
-                  narratorLower.contains(queryLower) ||
-                  chapterNameLower.contains(queryLower)) {
-                return true;
-              }
+            // First try exact phrase match
+            if (text.contains(queryLower) ||
+                number.contains(queryLower) ||
+                explanation.contains(queryLower) ||
+                narrator.contains(queryLower) ||
+                chapterName.contains(queryLower)) {
+              return true;
+            }
 
-              // If no exact match, try word-based search
-              if (queryWords.isNotEmpty) {
-                // Check if all words are present in any of the fields
-                return queryWords.every((word) {
-                  // Use word boundary regex for more accurate matching
-                  final wordRegex = RegExp(r'\b' + RegExp.escape(word) + r'\b');
-                  return wordRegex.hasMatch(textLower) ||
-                      wordRegex.hasMatch(numberLower) ||
-                      wordRegex.hasMatch(explanationLower) ||
-                      wordRegex.hasMatch(narratorLower) ||
-                      wordRegex.hasMatch(chapterNameLower);
-                });
-              }
+            // If no exact match, try word-based search
+            if (queryWords.isNotEmpty) {
+              // Check if all words are present in any of the fields
+              return queryWords.every((word) {
+                // For Arabic text, we'll use a simpler contains check
+                return text.contains(word) ||
+                    number.contains(word) ||
+                    explanation.contains(word) ||
+                    narrator.contains(word) ||
+                    chapterName.contains(word);
+              });
+            }
 
-              return false;
-            }).toList();
+            return false;
+          }).toList();
 
-            // Cache the results
+          // Only cache if we found results
+          if (filtered.isNotEmpty) {
             if (!_searchCache.containsKey(_filterState.selectedBook)) {
               _searchCache[_filterState.selectedBook] = {};
             }
@@ -257,13 +246,13 @@ class _AhadithListScreenState extends State<AhadithListScreen>
               _searchCache[_filterState.selectedBook]!
                   .remove(_searchCache[_filterState.selectedBook]!.keys.first);
             }
-
-            _searchState = _searchState.copyWith(
-              query: query,
-              filteredHadiths: filtered,
-              groupedHadiths: _groupHadithsByChapter(filtered),
-            );
           }
+
+          _searchState = _searchState.copyWith(
+            query: query,
+            filteredHadiths: filtered,
+            groupedHadiths: _groupHadithsByChapter(filtered),
+          );
         }
       });
     });
