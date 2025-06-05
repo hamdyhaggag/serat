@@ -47,6 +47,16 @@ class AboutScreenConstants {
       description: 'تحديد اتجاه القبلة بدقة',
       icon: Icons.explore,
     ),
+    FeatureItem(
+      title: 'أسماء الله الحسنى',
+      description: 'معرفة أسماء الله الحسنى وشرحها وفضلها',
+      icon: Icons.auto_awesome,
+    ),
+    FeatureItem(
+      title: 'التاريخ الإسلامي',
+      description: 'أحداث ومواقف مهمة من التاريخ الإسلامي',
+      icon: Icons.history,
+    ),
   ];
 
   static const List<DeveloperInfo> developers = [
@@ -85,4 +95,4 @@ class AboutScreenConstants {
       type: ActionButtonType.feedback,
     ),
   ];
-} 
+}
