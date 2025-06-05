@@ -71,12 +71,12 @@ class _AboutScreenState extends State<AboutScreen>
                       borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primaryColor.withOpacity(0.1),
+                          color: const Color.fromRGBO(0, 0, 0, 0.1),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: const Color.fromRGBO(0, 0, 0, 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
@@ -89,8 +89,8 @@ class _AboutScreenState extends State<AboutScreen>
                           child: CustomPaint(
                             painter: ModernPatternPainter(
                               color: isDarkMode
-                                  ? Colors.white.withOpacity(0.03)
-                                  : AppColors.primaryColor.withOpacity(0.02),
+                                  ? const Color.fromRGBO(255, 255, 255, 0.03)
+                                  : const Color.fromRGBO(0, 0, 0, 0.02),
                             ),
                           ),
                         ),
@@ -112,18 +112,20 @@ class _AboutScreenState extends State<AboutScreen>
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
                                     color: isDarkMode
-                                        ? Colors.white.withOpacity(0.1)
+                                        ? const Color.fromRGBO(
+                                            255, 255, 255, 0.1)
                                         : Colors.white,
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: AppColors.primaryColor
-                                            .withOpacity(0.2),
+                                        color:
+                                            const Color.fromRGBO(0, 0, 0, 0.2),
                                         blurRadius: 20,
                                         offset: const Offset(0, 10),
                                       ),
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
+                                        color:
+                                            const Color.fromRGBO(0, 0, 0, 0.1),
                                         blurRadius: 10,
                                         offset: const Offset(0, 5),
                                       ),
@@ -149,12 +151,13 @@ class _AboutScreenState extends State<AboutScreen>
                                         colors: isDarkMode
                                             ? [
                                                 Colors.white,
-                                                Colors.white.withOpacity(0.9),
+                                                const Color.fromRGBO(
+                                                    255, 255, 255, 0.9),
                                               ]
                                             : [
                                                 AppColors.primaryColor,
-                                                AppColors.primaryColor
-                                                    .withOpacity(0.8),
+                                                const Color.fromRGBO(
+                                                    0, 0, 0, 0.8),
                                               ],
                                       ).createShader(bounds),
                                       child: const AppText(
@@ -172,15 +175,17 @@ class _AboutScreenState extends State<AboutScreen>
                                       ),
                                       decoration: BoxDecoration(
                                         color: isDarkMode
-                                            ? Colors.white.withOpacity(0.1)
-                                            : AppColors.primaryColor
-                                                .withOpacity(0.05),
+                                            ? const Color.fromRGBO(
+                                                255, 255, 255, 0.1)
+                                            : const Color.fromRGBO(
+                                                0, 0, 0, 0.05),
                                         borderRadius: BorderRadius.circular(20),
                                         border: Border.all(
                                           color: isDarkMode
-                                              ? Colors.white.withOpacity(0.1)
-                                              : AppColors.primaryColor
-                                                  .withOpacity(0.1),
+                                              ? const Color.fromRGBO(
+                                                  255, 255, 255, 0.1)
+                                              : const Color.fromRGBO(
+                                                  0, 0, 0, 0.1),
                                           width: 1,
                                         ),
                                       ),
@@ -191,18 +196,20 @@ class _AboutScreenState extends State<AboutScreen>
                                             Icons.verified,
                                             size: 14,
                                             color: isDarkMode
-                                                ? Colors.white.withOpacity(0.7)
-                                                : AppColors.primaryColor
-                                                    .withOpacity(0.7),
+                                                ? const Color.fromRGBO(
+                                                    255, 255, 255, 0.7)
+                                                : const Color.fromRGBO(
+                                                    0, 0, 0, 0.7),
                                           ),
                                           const SizedBox(width: 6),
                                           AppText(
                                             'الإصدار 1.0.0',
                                             fontSize: 14,
                                             color: isDarkMode
-                                                ? Colors.white.withOpacity(0.7)
-                                                : AppColors.primaryColor
-                                                    .withOpacity(0.7),
+                                                ? const Color.fromRGBO(
+                                                    255, 255, 255, 0.7)
+                                                : const Color.fromRGBO(
+                                                    0, 0, 0, 0.7),
                                           ),
                                         ],
                                       ),
@@ -287,11 +294,141 @@ class _AboutScreenState extends State<AboutScreen>
               const SizedBox(height: 30),
               _buildActionButtons(isDarkMode),
               const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDeveloperDialog(BuildContext context, bool isDarkMode) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color:
+                isDarkMode ? const Color.fromRGBO(40, 40, 40, 1) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: isDarkMode
+                      ? const Color.fromRGBO(255, 255, 255, 0.05)
+                      : const Color.fromRGBO(0, 0, 0, 0.02),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.person,
+                  size: 40,
+                  color: isDarkMode
+                      ? const Color.fromRGBO(255, 255, 255, 0.9)
+                      : const Color.fromRGBO(0, 0, 0, 0.9),
+                ),
+              ),
+              const SizedBox(height: 20),
               AppText(
-                'تم تطوير التطبيق بواسطة حمدي حجاج',
-                fontSize: 14,
-                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                align: TextAlign.center,
+                'حمدي حجاج',
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: isDarkMode
+                    ? const Color.fromRGBO(255, 255, 255, 0.9)
+                    : const Color.fromRGBO(0, 0, 0, 0.9),
+              ),
+              const SizedBox(height: 8),
+              AppText(
+                'مطور تطبيقات Flutter',
+                fontSize: 16,
+                color: isDarkMode
+                    ? const Color.fromRGBO(255, 255, 255, 0.7)
+                    : const Color.fromRGBO(0, 0, 0, 0.7),
+              ),
+              const SizedBox(height: 20),
+              _buildContactButton(
+                'GitHub',
+                Icons.code,
+                'https://github.com/serat',
+                isDarkMode,
+              ),
+              const SizedBox(height: 12),
+              _buildContactButton(
+                'LinkedIn',
+                Icons.work,
+                'https://linkedin.com/in/serat',
+                isDarkMode,
+              ),
+              const SizedBox(height: 12),
+              _buildContactButton(
+                'Facebook',
+                Icons.facebook,
+                'https://facebook.com/serat',
+                isDarkMode,
+              ),
+              const SizedBox(height: 20),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: AppText(
+                  'إغلاق',
+                  fontSize: 16,
+                  color: isDarkMode
+                      ? const Color.fromRGBO(255, 255, 255, 0.7)
+                      : const Color.fromRGBO(0, 0, 0, 0.7),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContactButton(
+    String title,
+    IconData icon,
+    String url,
+    bool isDarkMode,
+  ) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => launchUrl(Uri.parse(url)),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            color: isDarkMode
+                ? const Color.fromRGBO(255, 255, 255, 0.05)
+                : const Color.fromRGBO(0, 0, 0, 0.02),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDarkMode
+                  ? const Color.fromRGBO(255, 255, 255, 0.1)
+                  : const Color.fromRGBO(0, 0, 0, 0.05),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: isDarkMode
+                    ? const Color.fromRGBO(255, 255, 255, 0.7)
+                    : const Color.fromRGBO(0, 0, 0, 0.7),
+              ),
+              const SizedBox(width: 12),
+              AppText(
+                title,
+                fontSize: 16,
+                color: isDarkMode
+                    ? const Color.fromRGBO(255, 255, 255, 0.7)
+                    : const Color.fromRGBO(0, 0, 0, 0.7),
               ),
             ],
           ),
@@ -334,7 +471,7 @@ class _AboutScreenState extends State<AboutScreen>
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
@@ -345,7 +482,7 @@ class _AboutScreenState extends State<AboutScreen>
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.primaryColor.withOpacity(0.1),
+              color: AppColors.primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: AppColors.primaryColor, size: 24),
@@ -427,7 +564,7 @@ class _AboutScreenState extends State<AboutScreen>
             child: _buildActionButton(
               'تطوير التطبيق',
               Icons.code,
-              () => launchUrl(Uri.parse('https://github.com/serat')),
+              () => _showDeveloperDialog(context, isDarkMode),
               isDarkMode,
             ),
           ),
@@ -579,14 +716,14 @@ class _ShimmerEffectState extends State<ShimmerEffect>
               end: Alignment.bottomRight,
               colors: [
                 widget.isDarkMode
-                    ? Colors.white.withOpacity(0.0)
-                    : AppColors.primaryColor.withOpacity(0.0),
+                    ? const Color.fromRGBO(255, 255, 255, 0.0)
+                    : const Color.fromRGBO(0, 0, 0, 0.0),
                 widget.isDarkMode
-                    ? Colors.white.withOpacity(0.05)
-                    : AppColors.primaryColor.withOpacity(0.05),
+                    ? const Color.fromRGBO(255, 255, 255, 0.05)
+                    : const Color.fromRGBO(0, 0, 0, 0.05),
                 widget.isDarkMode
-                    ? Colors.white.withOpacity(0.0)
-                    : AppColors.primaryColor.withOpacity(0.0),
+                    ? const Color.fromRGBO(255, 255, 255, 0.0)
+                    : const Color.fromRGBO(0, 0, 0, 0.0),
               ],
               stops: [
                 0.0,
