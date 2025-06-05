@@ -3,9 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:serat/imports.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const CustomAppBar({super.key, required this.title, this.isHome = false});
+  const CustomAppBar({
+    super.key,
+    required this.title,
+    this.isHome = false,
+    this.actions,
+  });
   final String title;
   final bool isHome;
+  final List<Widget>? actions;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -51,7 +57,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       leadingWidth: 0.0,
       leading: const SizedBox(),
-      actions: const [],
+      actions: actions,
     );
   }
 }

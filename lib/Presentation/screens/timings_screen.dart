@@ -22,6 +22,7 @@ import 'dart:math';
 import 'dart:async';
 import 'package:serat/Data/Model/times_model.dart';
 import 'dart:developer' as developer;
+import 'package:serat/Features/NamesOfAllah/Presentation/Screens/names_of_allah_screen.dart';
 
 class TimingsScreen extends StatefulWidget {
   const TimingsScreen({super.key});
@@ -813,6 +814,20 @@ class _TimingsScreenState extends State<TimingsScreen>
                                             MaterialPageRoute(
                                               builder: (context) =>
                                                   const HistoryScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _buildFeatureCard(
+                                        'أسماء الله الحسنى',
+                                        Icons.mosque,
+                                        isDarkMode,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const NamesOfAllahScreen(),
                                             ),
                                           );
                                         },

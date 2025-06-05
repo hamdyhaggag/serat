@@ -123,6 +123,7 @@ flutter:
   assets:
     - assets/logo.png
     - assets/data/history.json
+    - assets/data/Names_Of_Allah.json
 
   fonts:
     - family: Cairo
