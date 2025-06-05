@@ -5,6 +5,9 @@ import 'package:serat/imports.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:serat/Presentation/Widgets/Shared/custom_app_bar.dart';
+import 'package:serat/Presentation/Widgets/text_size_slider.dart';
+import 'package:serat/Features/NamesOfAllah/Data/Model/text_scale_model.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -19,6 +22,8 @@ class _HistoryScreenState extends State<HistoryScreen>
   List<HistoryModel> _filteredItems = [];
   bool _isLoading = true;
   bool _isSearching = false;
+  bool _showTextSizeSlider = false;
+  double _textScale = 1.0;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   final ScrollController _scrollController = ScrollController();
@@ -90,6 +95,7 @@ class _HistoryScreenState extends State<HistoryScreen>
         builder: (context, scrollController) => HistoryDetailsSheet(
           item: item,
           scrollController: scrollController,
+          textScale: _textScale,
         ),
       ),
     );
@@ -196,37 +202,20 @@ class _HistoryScreenState extends State<HistoryScreen>
 
     return Scaffold(
       backgroundColor: isDarkMode ? const Color(0xff1F1F1F) : Colors.white,
-      appBar: AppBar(
-        title: _isSearching
-            ? TextField(
-                controller: _searchController,
-                focusNode: _searchFocusNode,
-                style: TextStyle(
-                  color: isDarkMode ? Colors.white : Colors.black,
-                  fontSize: 16,
-                  fontFamily: 'DIN',
-                ),
-                decoration: InputDecoration(
-                  hintText: 'ابحث في التاريخ الإسلامي...',
-                  hintStyle: TextStyle(
-                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                    fontFamily: 'DIN',
-                    fontSize: 16,
-                  ),
-                  border: InputBorder.none,
-                ),
-                onChanged: _filterHistory,
-                autofocus: true,
-              )
-            : const AppText(
-                'التاريخ الإسلامي',
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.transparent,
+      appBar: CustomAppBar(
+        title: _isSearching ? '' : 'التاريخ الإسلامي',
         actions: [
+          IconButton(
+            icon: Icon(
+              Icons.text_fields,
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
+            onPressed: () {
+              setState(() {
+                _showTextSizeSlider = !_showTextSizeSlider;
+              });
+            },
+          ),
           IconButton(
             icon: Icon(
               _isSearching ? Icons.close : Icons.search,
@@ -244,143 +233,245 @@ class _HistoryScreenState extends State<HistoryScreen>
           ),
         ],
       ),
-      body: _isLoading
-          ? _buildShimmerLoading()
-          : _filteredItems.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        _isSearching ? Icons.search_off : Icons.history,
-                        size: 64,
-                        color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      AppText(
-                        _isSearching
-                            ? 'لا توجد نتائج للبحث'
-                            : 'لا توجد أحداث تاريخية',
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              if (_isSearching)
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.white : Colors.black,
+                      fontSize: 16,
+                      fontFamily: 'DIN',
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'ابحث في التاريخ الإسلامي...',
+                      hintStyle: TextStyle(
+                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                        fontFamily: 'DIN',
                         fontSize: 16,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: isDarkMode
+                              ? Colors.grey[700]!
+                              : Colors.grey[300]!,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: isDarkMode
+                              ? Colors.grey[700]!
+                              : Colors.grey[300]!,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: AppColors.primaryColor,
+                        ),
+                      ),
+                      filled: true,
+                      fillColor:
+                          isDarkMode ? const Color(0xff2F2F2F) : Colors.white,
+                      prefixIcon: Icon(
+                        Icons.search,
                         color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                       ),
-                    ],
+                    ),
+                    onChanged: _filterHistory,
+                    autofocus: true,
                   ),
-                )
-              : FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    itemCount: _filteredItems.length,
-                    itemBuilder: (context, index) {
-                      final item = _filteredItems[index];
-                      return Hero(
-                        tag: 'history_${item.id}',
-                        child: GestureDetector(
-                          onTap: () => _showHistoryDetails(context, item),
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              color: isDarkMode
-                                  ? const Color(0xff2F2F2F)
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 5),
+                ),
+              Expanded(
+                child: _isLoading
+                    ? _buildShimmerLoading()
+                    : _filteredItems.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  _isSearching
+                                      ? Icons.search_off
+                                      : Icons.history,
+                                  size: 64,
+                                  color: isDarkMode
+                                      ? Colors.grey[600]
+                                      : Colors.grey[400],
+                                ),
+                                const SizedBox(height: 16),
+                                AppText(
+                                  _isSearching
+                                      ? 'لا توجد نتائج للبحث'
+                                      : 'لا توجد أحداث تاريخية',
+                                  fontSize: 16,
+                                  color: isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
                                 ),
                               ],
                             ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(16),
-                                onTap: () => _showHistoryDetails(context, item),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.primaryColor
-                                                  .withOpacity(0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                            child: AppText(
-                                              '${item.id}',
-                                              fontSize: 12,
-                                              color: AppColors.primaryColor,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Wrap(
-                                              spacing: 8,
-                                              children: item.date
-                                                  .map((date) => AppText(
-                                                        date,
-                                                        fontSize: 12,
-                                                        color: isDarkMode
-                                                            ? Colors.grey[400]
-                                                            : Colors.grey[600],
-                                                      ))
-                                                  .toList(),
-                                            ),
+                          )
+                        : FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: ListView.builder(
+                              controller: _scrollController,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              itemCount: _filteredItems.length,
+                              itemBuilder: (context, index) {
+                                final item = _filteredItems[index];
+                                return Hero(
+                                  tag: 'history_${item.id}',
+                                  child: GestureDetector(
+                                    onTap: () =>
+                                        _showHistoryDetails(context, item),
+                                    child: Container(
+                                      margin: const EdgeInsets.only(bottom: 16),
+                                      decoration: BoxDecoration(
+                                        color: isDarkMode
+                                            ? const Color(0xff2F2F2F)
+                                            : Colors.white,
+                                        borderRadius: BorderRadius.circular(16),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color:
+                                                Colors.black.withOpacity(0.1),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 5),
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        item.title,
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDarkMode
-                                              ? Colors.white
-                                              : AppColors.primaryColor,
-                                          fontFamily: 'Cairo',
-                                          height: 1.4,
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                          onTap: () => _showHistoryDetails(
+                                              context, item),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(16),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Container(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4,
+                                                      ),
+                                                      decoration: BoxDecoration(
+                                                        color: AppColors
+                                                            .primaryColor
+                                                            .withOpacity(0.1),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(8),
+                                                      ),
+                                                      child: AppText(
+                                                        '${item.id}',
+                                                        fontSize: 12,
+                                                        color: AppColors
+                                                            .primaryColor,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Expanded(
+                                                      child: Wrap(
+                                                        spacing: 8,
+                                                        children: item.date
+                                                            .map((date) =>
+                                                                AppText(
+                                                                  date,
+                                                                  fontSize: 12,
+                                                                  color: isDarkMode
+                                                                      ? Colors.grey[
+                                                                          400]
+                                                                      : Colors.grey[
+                                                                          600],
+                                                                ))
+                                                            .toList(),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  item.title,
+                                                  style: TextStyle(
+                                                    fontSize: 18 * _textScale,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: isDarkMode
+                                                        ? Colors.white
+                                                        : AppColors
+                                                            .primaryColor,
+                                                    fontFamily: 'Cairo',
+                                                    height: 1.4,
+                                                  ),
+                                                  maxLines: 2,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  item.text,
+                                                  style: TextStyle(
+                                                    fontSize: 14 * _textScale,
+                                                    color: isDarkMode
+                                                        ? Colors.grey[300]
+                                                        : Colors.grey[700],
+                                                    fontFamily: 'Cairo',
+                                                    height: 1.4,
+                                                  ),
+                                                  maxLines: 2,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        item.text,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: isDarkMode
-                                              ? Colors.grey[300]
-                                              : Colors.grey[700],
-                                          fontFamily: 'Cairo',
-                                          height: 1.4,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
+                                    ),
                                   ),
-                                ),
-                              ),
+                                );
+                              },
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+              ),
+            ],
+          ),
+          if (_showTextSizeSlider)
+            Positioned(
+              top: 16,
+              right: 16,
+              child: TextSizeSlider(
+                value: _textScale,
+                onChanged: (value) {
+                  setState(() {
+                    _textScale = value;
+                  });
+                },
+                onClose: () {
+                  setState(() {
+                    _showTextSizeSlider = false;
+                  });
+                },
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -388,11 +479,13 @@ class _HistoryScreenState extends State<HistoryScreen>
 class HistoryDetailsSheet extends StatelessWidget {
   final HistoryModel item;
   final ScrollController scrollController;
+  final double textScale;
 
   const HistoryDetailsSheet({
     super.key,
     required this.item,
     required this.scrollController,
+    required this.textScale,
   });
 
   void _copyText(BuildContext context) {
@@ -574,7 +667,7 @@ class HistoryDetailsSheet extends StatelessWidget {
                     child: Text(
                       item.title,
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 20 * textScale,
                         fontWeight: FontWeight.bold,
                         color:
                             isDarkMode ? Colors.white : AppColors.primaryColor,
@@ -605,7 +698,7 @@ class HistoryDetailsSheet extends StatelessWidget {
                             Text(
                               'النص',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 16 * textScale,
                                 fontWeight: FontWeight.bold,
                                 color: isDarkMode
                                     ? Colors.grey[300]
@@ -640,7 +733,7 @@ class HistoryDetailsSheet extends StatelessWidget {
                                       Text(
                                         'نسخ النص',
                                         style: TextStyle(
-                                          fontSize: 14,
+                                          fontSize: 14 * textScale,
                                           color: AppColors.primaryColor,
                                           fontFamily: 'Cairo',
                                         ),
@@ -656,7 +749,7 @@ class HistoryDetailsSheet extends StatelessWidget {
                         Text(
                           item.text,
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 16 * textScale,
                             height: 1.6,
                             color: isDarkMode
                                 ? Colors.grey[300]
