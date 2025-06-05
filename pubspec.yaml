@@ -121,9 +121,16 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - assets/
+    - assets/icon/
+    - assets/onboarding/
+    - assets/quran_pages/
+    - assets/nawawi_hadiths.json
     - assets/logo.png
-    - assets/data/history.json
-    - assets/data/Names_Of_Allah.json
+    - assets/azkar/
+    - assets/hadiths/
+    - assets/data/
+
 
   fonts:
     - family: Cairo
