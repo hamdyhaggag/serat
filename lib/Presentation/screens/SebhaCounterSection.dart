@@ -43,8 +43,9 @@ class SebhaCounterSection extends StatelessWidget {
                   ),
                   textAlign: TextAlign.center,
                 ),
+                SizedBox(height: 10.h),
                 SizedBox(
-                  height: 30.h,
+                  height: 40.h,
                   child: RichText(
                     textAlign: TextAlign.center,
                     text: TextSpan(
@@ -62,13 +63,16 @@ class SebhaCounterSection extends StatelessWidget {
             ),
           ),
           SizedBox(height: 25.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildCounterBox('عدد الدورات', cycleCount, textColor),
-              _buildCounterBox('الإجمالي', total, textColor),
-              _buildCounterBox('عدد التكرارات', beadCount, textColor),
-            ],
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 20.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildCounterBox('عدد الدورات', cycleCount, textColor),
+                _buildCounterBox('الإجمالي', total, textColor),
+                _buildCounterBox('عدد التكرارات', beadCount, textColor),
+              ],
+            ),
           ),
         ],
       ),

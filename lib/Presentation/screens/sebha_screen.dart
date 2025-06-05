@@ -146,20 +146,19 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
   void _showCompletionDialog() {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: const Text('أحسنت!'),
-            content: const Text('لقد أكملت العدد المطلوب'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('حسناً'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: const Text('أحسنت!'),
+        content: const Text('لقد أكملت العدد المطلوب'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('حسناً'),
           ),
+        ],
+      ),
     );
   }
 
@@ -178,10 +177,9 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
         body: BlocBuilder<CounterCubit, CounterState>(
           builder: (context, state) {
             final cubit = CounterCubit.get(context);
-            final progress =
-                widget.maxCounter != null
-                    ? cubit.counter / widget.maxCounter!
-                    : 0.0;
+            final progress = widget.maxCounter != null
+                ? cubit.counter / widget.maxCounter!
+                : 0.0;
 
             return ScrollConfiguration(
               behavior: const ScrollBehavior().copyWith(overscroll: false),
@@ -225,29 +223,27 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
                               gradient: LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
-                                colors:
-                                    isDarkMode
-                                        ? [
-                                          const Color(0xFF2C2C2C),
-                                          const Color(0xFF1A1A1A),
-                                        ]
-                                        : [
-                                          AppColors.primaryColor.withOpacity(
-                                            0.1,
-                                          ),
-                                          AppColors.primaryColor.withOpacity(
-                                            0.05,
-                                          ),
-                                        ],
+                                colors: isDarkMode
+                                    ? [
+                                        const Color(0xFF2C2C2C),
+                                        const Color(0xFF1A1A1A),
+                                      ]
+                                    : [
+                                        AppColors.primaryColor.withOpacity(
+                                          0.1,
+                                        ),
+                                        AppColors.primaryColor.withOpacity(
+                                          0.05,
+                                        ),
+                                      ],
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color:
-                                      isDarkMode
-                                          ? Colors.black.withOpacity(0.3)
-                                          : AppColors.primaryColor.withOpacity(
-                                            0.1,
-                                          ),
+                                  color: isDarkMode
+                                      ? Colors.black.withOpacity(0.3)
+                                      : AppColors.primaryColor.withOpacity(
+                                          0.1,
+                                        ),
                                   blurRadius: 20,
                                   spreadRadius: 5,
                                 ),
@@ -258,12 +254,11 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color:
-                                      isDarkMode
-                                          ? Colors.grey.withOpacity(0.2)
-                                          : AppColors.primaryColor.withOpacity(
-                                            0.2,
-                                          ),
+                                  color: isDarkMode
+                                      ? Colors.grey.withOpacity(0.2)
+                                      : AppColors.primaryColor.withOpacity(
+                                          0.2,
+                                        ),
                                   width: 2,
                                 ),
                               ),
@@ -274,21 +269,19 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
                                         border: Border.all(
-                                          color:
-                                              isDarkMode
-                                                  ? Colors.grey.withOpacity(0.2)
-                                                  : AppColors.primaryColor
-                                                      .withOpacity(0.2),
+                                          color: isDarkMode
+                                              ? Colors.grey.withOpacity(0.2)
+                                              : AppColors.primaryColor
+                                                  .withOpacity(0.2),
                                           width: 3,
                                         ),
                                       ),
                                       child: CustomPaint(
                                         painter: ProgressPainter(
                                           progress: progress,
-                                          color:
-                                              isDarkMode
-                                                  ? Colors.grey
-                                                  : AppColors.primaryColor,
+                                          color: isDarkMode
+                                              ? Colors.grey
+                                              : AppColors.primaryColor,
                                           strokeWidth: 3,
                                         ),
                                       ),
@@ -302,22 +295,18 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
                                           animation: _counterAnimation!,
                                           builder: (context, child) {
                                             return Transform.scale(
-                                              scale:
-                                                  1.0 +
+                                              scale: 1.0 +
                                                   (_counterAnimation!.value *
                                                       0.1),
                                               child: Text(
                                                 '${cubit.counter}',
                                                 style: TextStyle(
-                                                  fontSize:
-                                                      cubit.counter < 1000
-                                                          ? 55
-                                                          : 35,
-                                                  color:
-                                                      isDarkMode
-                                                          ? Colors.grey
-                                                          : AppColors
-                                                              .primaryColor,
+                                                  fontSize: cubit.counter < 1000
+                                                      ? 55
+                                                      : 35,
+                                                  color: isDarkMode
+                                                      ? Colors.grey
+                                                      : AppColors.primaryColor,
                                                   fontWeight: FontWeight.bold,
                                                 ),
                                               ),
@@ -329,13 +318,12 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
                                           'اضغط للعد',
                                           style: TextStyle(
                                             fontSize: 16.sp,
-                                            color:
-                                                isDarkMode
-                                                    ? Colors.grey.withOpacity(
-                                                      0.7,
-                                                    )
-                                                    : AppColors.primaryColor
-                                                        .withOpacity(0.7),
+                                            color: isDarkMode
+                                                ? Colors.grey.withOpacity(
+                                                    0.7,
+                                                  )
+                                                : AppColors.primaryColor
+                                                    .withOpacity(0.7),
                                           ),
                                         ),
                                         if (widget.maxCounter != null) ...[
@@ -344,13 +332,12 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
                                             '${cubit.counter}/${widget.maxCounter}',
                                             style: TextStyle(
                                               fontSize: 14.sp,
-                                              color:
-                                                  isDarkMode
-                                                      ? Colors.grey.withOpacity(
-                                                        0.5,
-                                                      )
-                                                      : AppColors.primaryColor
-                                                          .withOpacity(0.5),
+                                              color: isDarkMode
+                                                  ? Colors.grey.withOpacity(
+                                                      0.5,
+                                                    )
+                                                  : AppColors.primaryColor
+                                                      .withOpacity(0.5),
                                             ),
                                           ),
                                         ],
@@ -384,6 +371,7 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
                           },
                           title: 'البدء من جديد',
                         ),
+                        SizedBox(height: 20.h),
                       ],
                     ),
                   ),
@@ -439,21 +427,19 @@ class ProgressPainter extends CustomPainter {
     final radius = (size.width - strokeWidth) / 2;
 
     // Draw background circle
-    final backgroundPaint =
-        Paint()
-          ..color = color.withOpacity(0.1)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth;
+    final backgroundPaint = Paint()
+      ..color = color.withOpacity(0.1)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
 
     canvas.drawCircle(center, radius, backgroundPaint);
 
     // Draw progress arc
-    final progressPaint =
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth
-          ..strokeCap = StrokeCap.round;
+    final progressPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
 
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
