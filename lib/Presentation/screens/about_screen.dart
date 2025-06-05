@@ -3,6 +3,7 @@ import 'package:serat/imports.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:serat/Presentation/Widgets/Shared/custom_app_bar.dart';
+import 'dart:math' show pi, cos, sin;
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -63,55 +64,154 @@ class _AboutScreenState extends State<AboutScreen>
                 child: SlideTransition(
                   position: _slideAnimation,
                   child: Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 25, vertical: 15),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors:
-                            isDarkMode
-                                ? [Colors.grey[800]!, Colors.black]
-                                : [
-                                  AppColors.primaryColor.withOpacity(0.1),
-                                  Colors.white,
-                                ],
-                      ),
-                      borderRadius: BorderRadius.circular(20),
+                      color: isDarkMode ? AppColors.primaryColor : Colors.white,
+                      borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: AppColors.primaryColor.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
                       ],
                     ),
-                    child: Column(
+                    child: Stack(
                       children: [
-                        Hero(
-                          tag: 'app_logo',
-                          child: Image.asset(
-                            'assets/logo.png',
-                            width: 120,
-                            height: 120,
-                            fit: BoxFit.contain,
+                        // Background pattern
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: ModernPatternPainter(
+                              color: isDarkMode
+                                  ? Colors.white.withOpacity(0.03)
+                                  : AppColors.primaryColor.withOpacity(0.02),
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 20),
-                        AppText(
-                          'تطبيق صراط',
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color:
-                              isDarkMode
-                                  ? Colors.white
-                                  : AppColors.primaryColor,
+                        // Shimmer effect
+                        Positioned.fill(
+                          child: ShimmerEffect(
+                            isDarkMode: isDarkMode,
+                          ),
                         ),
-                        const SizedBox(height: 5),
-                        AppText(
-                          'الإصدار 1.0.0',
-                          fontSize: 16,
-                          color:
-                              isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                        // Content
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 25, vertical: 15),
+                          child: Row(
+                            children: [
+                              Hero(
+                                tag: 'app_logo',
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: isDarkMode
+                                        ? Colors.white.withOpacity(0.1)
+                                        : Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.primaryColor
+                                            .withOpacity(0.2),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Image.asset(
+                                    'assets/logo.png',
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ShaderMask(
+                                      shaderCallback: (bounds) =>
+                                          LinearGradient(
+                                        colors: isDarkMode
+                                            ? [
+                                                Colors.white,
+                                                Colors.white.withOpacity(0.9),
+                                              ]
+                                            : [
+                                                AppColors.primaryColor,
+                                                AppColors.primaryColor
+                                                    .withOpacity(0.8),
+                                              ],
+                                      ).createShader(bounds),
+                                      child: const AppText(
+                                        'تطبيق صراط',
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isDarkMode
+                                            ? Colors.white.withOpacity(0.1)
+                                            : AppColors.primaryColor
+                                                .withOpacity(0.05),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: isDarkMode
+                                              ? Colors.white.withOpacity(0.1)
+                                              : AppColors.primaryColor
+                                                  .withOpacity(0.1),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.verified,
+                                            size: 14,
+                                            color: isDarkMode
+                                                ? Colors.white.withOpacity(0.7)
+                                                : AppColors.primaryColor
+                                                    .withOpacity(0.7),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          AppText(
+                                            'الإصدار 1.0.0',
+                                            fontSize: 14,
+                                            color: isDarkMode
+                                                ? Colors.white.withOpacity(0.7)
+                                                : AppColors.primaryColor
+                                                    .withOpacity(0.7),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -119,44 +219,71 @@ class _AboutScreenState extends State<AboutScreen>
                 ),
               ),
               const SizedBox(height: 30),
-              _buildFeatureSection('المميزات الرئيسية', [
-                _buildFeatureItem(
-                  'مواقيت الصلاة',
-                  'تحديد مواقيت الصلاة بدقة حسب موقعك',
-                  Icons.access_time,
-                  isDarkMode,
-                ),
-                _buildFeatureItem(
-                  'اتجاه القبلة',
-                  'تحديد اتجاه القبلة باستخدام البوصلة',
-                  Icons.explore,
-                  isDarkMode,
-                ),
-                _buildFeatureItem(
-                  'الأذكار',
-                  'أذكار الصباح والمساء مع التنبيهات',
-                  Icons.book,
-                  isDarkMode,
-                ),
-                _buildFeatureItem(
-                  'القرآن الكريم',
-                  'القرآن الكريم مع التفسير والقراء',
-                  Icons.menu_book,
-                  isDarkMode,
-                ),
-                _buildFeatureItem(
-                  'الراديو الإسلامي',
-                  'استماع للراديو الإسلامي المباشر',
-                  Icons.radio,
-                  isDarkMode,
-                ),
-                _buildFeatureItem(
-                  'التقويم الهجري',
-                  'التقويم الهجري مع المناسبات',
-                  Icons.calendar_month,
-                  isDarkMode,
-                ),
-              ], isDarkMode),
+              _buildFeatureSection(
+                  'المميزات الرئيسية',
+                  [
+                    _buildFeatureItem(
+                      'مواقيت الصلاة',
+                      'تحديد مواقيت الصلاة بدقة حسب موقعك',
+                      Icons.access_time,
+                      isDarkMode,
+                    ),
+                    _buildFeatureItem(
+                      'اتجاه القبلة',
+                      'تحديد اتجاه القبلة باستخدام البوصلة',
+                      Icons.explore,
+                      isDarkMode,
+                    ),
+                    _buildFeatureItem(
+                      'القرآن الكريم',
+                      'القرآن الكريم مع التفسير والقراء',
+                      Icons.menu_book,
+                      isDarkMode,
+                    ),
+                    _buildFeatureItem(
+                      'بطاقات القرآن',
+                      'تصفح القرآن الكريم بطريقة سهلة',
+                      Icons.book,
+                      isDarkMode,
+                    ),
+                    _buildFeatureItem(
+                      'القراء',
+                      'استماع للقراء المشهورين',
+                      Icons.record_voice_over,
+                      isDarkMode,
+                    ),
+                    _buildFeatureItem(
+                      'الراديو الإسلامي',
+                      'استماع للراديو الإسلامي المباشر',
+                      Icons.radio,
+                      isDarkMode,
+                    ),
+                    _buildFeatureItem(
+                      'روائع القصص',
+                      'قصص إسلامية هادفة',
+                      Icons.auto_stories,
+                      isDarkMode,
+                    ),
+                    _buildFeatureItem(
+                      'حاسبة الزكاة',
+                      'حساب الزكاة بسهولة',
+                      Icons.calculate,
+                      isDarkMode,
+                    ),
+                    _buildFeatureItem(
+                      'الأذكار',
+                      'أذكار الصباح والمساء مع التنبيهات',
+                      Icons.book,
+                      isDarkMode,
+                    ),
+                    _buildFeatureItem(
+                      'الأحاديث النبوية',
+                      'كتب الأحاديث النبوية الشريفة',
+                      Icons.menu_book_rounded,
+                      isDarkMode,
+                    ),
+                  ],
+                  isDarkMode),
               const SizedBox(height: 30),
               _buildActionButtons(isDarkMode),
               const SizedBox(height: 20),
@@ -348,6 +475,131 @@ class _AboutScreenState extends State<AboutScreen>
           ),
         ),
       ),
+    );
+  }
+}
+
+class ModernPatternPainter extends CustomPainter {
+  final Color color;
+
+  ModernPatternPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+
+    // Draw hexagon pattern
+    final hexSize = size.width / 8;
+    for (int i = -2; i < 10; i++) {
+      for (int j = -2; j < 6; j++) {
+        final centerX = i * hexSize * 1.5;
+        final centerY = j * hexSize * 1.732 + (i % 2) * hexSize * 0.866;
+
+        _drawHexagon(canvas, Offset(centerX, centerY), hexSize * 0.8, paint);
+      }
+    }
+
+    // Draw subtle dots
+    paint.style = PaintingStyle.fill;
+    for (int i = 0; i < 30; i++) {
+      final x = size.width * (i + 1) / 31;
+      final y = size.height * 0.2;
+      canvas.drawCircle(Offset(x, y), 1, paint);
+    }
+  }
+
+  void _drawHexagon(Canvas canvas, Offset center, double size, Paint paint) {
+    final path = Path();
+    for (int i = 0; i < 6; i++) {
+      final angle = i * pi / 3;
+      final x = center.dx + size * cos(angle);
+      final y = center.dy + size * sin(angle);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class ShimmerEffect extends StatefulWidget {
+  final bool isDarkMode;
+
+  const ShimmerEffect({
+    Key? key,
+    required this.isDarkMode,
+  }) : super(key: key);
+
+  @override
+  State<ShimmerEffect> createState() => _ShimmerEffectState();
+}
+
+class _ShimmerEffectState extends State<ShimmerEffect>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+
+    _animation = Tween<double>(begin: -1.0, end: 2.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return ShaderMask(
+          shaderCallback: (bounds) {
+            return LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                widget.isDarkMode
+                    ? Colors.white.withOpacity(0.0)
+                    : AppColors.primaryColor.withOpacity(0.0),
+                widget.isDarkMode
+                    ? Colors.white.withOpacity(0.05)
+                    : AppColors.primaryColor.withOpacity(0.05),
+                widget.isDarkMode
+                    ? Colors.white.withOpacity(0.0)
+                    : AppColors.primaryColor.withOpacity(0.0),
+              ],
+              stops: [
+                0.0,
+                _animation.value,
+                1.0,
+              ],
+            ).createShader(bounds);
+          },
+          child: Container(
+            color: Colors.transparent,
+          ),
+        );
+      },
     );
   }
 }
