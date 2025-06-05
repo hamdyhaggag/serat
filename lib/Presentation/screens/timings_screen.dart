@@ -1067,75 +1067,138 @@ class _TimingsScreenState extends State<TimingsScreen>
       child: Column(
         children: [
           Container(
-            height: 220,
+            height: 280,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isDarkMode
-                    ? [Colors.grey[800]!, Colors.black]
-                    : [AppColors.primaryColor, Colors.white],
+                    ? [
+                        AppColors.primaryColor.withOpacity(0.8),
+                        AppColors.primaryColor.withOpacity(0.4),
+                      ]
+                    : [
+                        AppColors.primaryColor,
+                        AppColors.primaryColor.withOpacity(0.7),
+                      ],
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
               ),
             ),
-            child: DrawerHeader(
-              margin: EdgeInsets.zero,
-              padding: const EdgeInsets.all(20),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(15),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Hero(
-                        tag: 'app_logo',
-                        child: Image.asset(
-                          'assets/logo.png',
-                          width: 80,
-                          height: 80,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
+            child: Stack(
+              children: [
+                // Background pattern
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: DrawerHeaderPatternPainter(
+                      color: Colors.white.withOpacity(0.1),
                     ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 5,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: AppText(
-                        'تطبيق صراط',
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color:
-                            isDarkMode ? Colors.white : AppColors.primaryColor,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                // Content
+                SafeArea(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // App Logo with animation
+                          Hero(
+                            tag: 'app_logo',
+                            child: Container(
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: Image.asset(
+                                'assets/logo.png',
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // App Name with gradient text
+                          ShaderMask(
+                            shaderCallback: (bounds) => LinearGradient(
+                              colors: [
+                                Colors.white,
+                                Colors.white.withOpacity(0.9),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ).createShader(bounds),
+                            child: const AppText(
+                              'تطبيق صراط',
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          // App Description
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.2),
+                                width: 1,
+                              ),
+                            ),
+                            child: const AppText(
+                              'تطبيق إسلامي شامل',
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Version info
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 14,
+                                  color: Colors.white.withOpacity(0.8),
+                                ),
+                                const SizedBox(width: 6),
+                                AppText(
+                                  'الإصدار 1.0.0',
+                                  fontSize: 12,
+                                  color: Colors.white.withOpacity(0.8),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -1614,4 +1677,42 @@ class EnhancedParticlePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class DrawerHeaderPatternPainter extends CustomPainter {
+  final Color color;
+
+  DrawerHeaderPatternPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+
+    // Draw diagonal lines
+    for (int i = -size.width.toInt(); i < size.width.toInt(); i += 30) {
+      canvas.drawLine(
+        Offset(i.toDouble(), 0),
+        Offset(i.toDouble() + size.height, size.height),
+        paint,
+      );
+    }
+
+    // Draw circles
+    for (int i = 0; i < 5; i++) {
+      canvas.drawCircle(
+        Offset(
+          size.width * (i + 1) / 6,
+          size.height * (i + 1) / 6,
+        ),
+        20,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
