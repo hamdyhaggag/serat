@@ -5,4 +5,14 @@
             <certificates src="system" />
         </trust-anchors>
     </base-config>
+    <domain-config>
+        <domain includeSubdomains="true">api.aladhan.com</domain>
+        <domain includeSubdomains="true">quran.com</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+        <pin-set expiration="2025-12-31">
+            <!-- Add your certificate pins here -->
+        </pin-set>
+    </domain-config>
 </network-security-config> 
