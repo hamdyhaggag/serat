@@ -35,8 +35,6 @@ class _TimingsScreenState extends State<TimingsScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  TimeOfDay? selectedTimeMorning;
-  TimeOfDay? selectedTimeEvening;
   final List<Offset> _particles = [];
   final int _particleCount = 100;
   final Random _random = Random();
@@ -58,7 +56,6 @@ class _TimingsScreenState extends State<TimingsScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
     _animationController.forward();
-    _loadSavedTimes();
     _initializeParticles();
     _startCountdownTimer();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -77,39 +74,12 @@ class _TimingsScreenState extends State<TimingsScreen>
         }
       }
     });
-
-    // Listen for prayer times updates
-    final locationCubit = location.LocationCubit.get(context);
-    if (locationCubit.timesModel != null) {
-      _schedulePrayerNotifications(locationCubit.timesModel!.data.timings);
-    }
   }
 
   void _initializeParticles() {
     for (int i = 0; i < _particleCount; i++) {
       _particles.add(
         Offset(_random.nextDouble() * 400, _random.nextDouble() * 800),
-      );
-    }
-  }
-
-  void _loadSavedTimes() {
-    final morningTime = CacheHelper.getString(key: 'Morning');
-    final eveningTime = CacheHelper.getString(key: 'Evening');
-
-    if (morningTime.isNotEmpty) {
-      final parts = morningTime.split(':');
-      selectedTimeMorning = TimeOfDay(
-        hour: int.parse(parts[0]),
-        minute: int.parse(parts[1]),
-      );
-    }
-
-    if (eveningTime.isNotEmpty) {
-      final parts = eveningTime.split(':');
-      selectedTimeEvening = TimeOfDay(
-        hour: int.parse(parts[0]),
-        minute: int.parse(parts[1]),
       );
     }
   }
@@ -1223,116 +1193,6 @@ class _TimingsScreenState extends State<TimingsScreen>
                       },
                       isDarkMode: isDarkMode,
                     ),
-                    _buildDrawerItem(
-                      icon: Icons.sunny,
-                      title: 'التنبية لأذكار الصباح',
-                      subtitle: selectedTimeMorning != null
-                          ? DateFormat('hh:mma').format(
-                              DateTime(
-                                0,
-                                1,
-                                1,
-                                selectedTimeMorning!.hour,
-                                selectedTimeMorning!.minute,
-                              ),
-                            )
-                          : 'اختر التوقيت',
-                      onTap: () async {
-                        final pickedTime = await showTimePicker(
-                          context: context,
-                          initialTime: selectedTimeMorning ?? TimeOfDay.now(),
-                        );
-
-                        if (pickedTime != null) {
-                          setState(() {
-                            selectedTimeMorning = pickedTime;
-                          });
-
-                          CacheHelper.saveData(
-                            key: 'Morning',
-                            value:
-                                "${selectedTimeMorning!.hour}:${selectedTimeMorning!.minute}",
-                          );
-
-                          // Schedule a test notification
-                          try {
-                            final notificationService = NotificationService();
-                            await notificationService.initialize();
-                            await notificationService
-                                .scheduleTestNotification();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('تم جدولة إشعار تجريبي'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('حدث خطأ: $e'),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
-                          }
-                        }
-                      },
-                      isDarkMode: isDarkMode,
-                    ),
-                    _buildDrawerItem(
-                      icon: Icons.nightlight_round,
-                      title: 'التنبية لأذكار المساء',
-                      subtitle: selectedTimeEvening != null
-                          ? DateFormat('hh:mma').format(
-                              DateTime(
-                                0,
-                                1,
-                                1,
-                                selectedTimeEvening!.hour,
-                                selectedTimeEvening!.minute,
-                              ),
-                            )
-                          : 'اختر التوقيت',
-                      onTap: () async {
-                        final pickedTime = await showTimePicker(
-                          context: context,
-                          initialTime: selectedTimeEvening ?? TimeOfDay.now(),
-                        );
-
-                        if (pickedTime != null) {
-                          setState(() {
-                            selectedTimeEvening = pickedTime;
-                          });
-
-                          CacheHelper.saveData(
-                            key: 'Evening',
-                            value:
-                                "${selectedTimeEvening!.hour}:${selectedTimeEvening!.minute}",
-                          );
-
-                          // Schedule a test notification
-                          try {
-                            final notificationService = NotificationService();
-                            await notificationService.initialize();
-                            await notificationService
-                                .scheduleTestNotification();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('تم جدولة إشعار تجريبي'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('حدث خطأ: $e'),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
-                          }
-                        }
-                      },
-                      isDarkMode: isDarkMode,
-                    ),
                   ],
                   isDarkMode: isDarkMode,
                 ),
@@ -1751,22 +1611,6 @@ class _TimingsScreenState extends State<TimingsScreen>
 
     // If no match found, return the original location
     return location;
-  }
-
-  Future<void> _schedulePrayerNotifications(Timings timings) async {
-    final notificationService = NotificationService();
-    await notificationService.initialize();
-
-    final prayerTimes = {
-      'الفجر': timings.fajr,
-      'الشروق': timings.sunrise,
-      'الظهر': timings.dhuhr,
-      'العصر': timings.asr,
-      'المغرب': timings.maghrib,
-      'العشاء': timings.isha,
-    };
-
-    await notificationService.scheduleAllPrayerTimes(prayerTimes);
   }
 }
 
