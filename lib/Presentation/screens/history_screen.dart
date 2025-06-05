@@ -13,9 +13,14 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen>
     with SingleTickerProviderStateMixin {
   List<HistoryModel> _historyItems = [];
+  List<HistoryModel> _filteredItems = [];
   bool _isLoading = true;
+  bool _isSearching = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -34,6 +39,9 @@ class _HistoryScreenState extends State<HistoryScreen>
   @override
   void dispose() {
     _animationController.dispose();
+    _scrollController.dispose();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -43,11 +51,28 @@ class _HistoryScreenState extends State<HistoryScreen>
       final items = await HistoryService.getHistory();
       setState(() {
         _historyItems = items;
+        _filteredItems = items;
         _isLoading = false;
       });
     } catch (e) {
       setState(() => _isLoading = false);
     }
+  }
+
+  void _filterHistory(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredItems = _historyItems;
+      } else {
+        _filteredItems = _historyItems.where((item) {
+          final titleLower = item.title.toLowerCase();
+          final textLower = item.text.toLowerCase();
+          final searchLower = query.toLowerCase();
+          return titleLower.contains(searchLower) ||
+              textLower.contains(searchLower);
+        }).toList();
+      }
+    });
   }
 
   void _showHistoryDetails(BuildContext context, HistoryModel item) {
@@ -74,30 +99,70 @@ class _HistoryScreenState extends State<HistoryScreen>
     return Scaffold(
       backgroundColor: isDarkMode ? const Color(0xff1F1F1F) : Colors.white,
       appBar: AppBar(
-        title: const AppText(
-          'التاريخ الإسلامي',
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  fontSize: 16,
+                  fontFamily: 'DIN',
+                ),
+                decoration: InputDecoration(
+                  hintText: 'ابحث في التاريخ الإسلامي...',
+                  hintStyle: TextStyle(
+                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                    fontFamily: 'DIN',
+                    fontSize: 16,
+                  ),
+                  border: InputBorder.none,
+                ),
+                onChanged: _filterHistory,
+                autofocus: true,
+              )
+            : const AppText(
+                'التاريخ الإسلامي',
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isSearching ? Icons.close : Icons.search,
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
+            onPressed: () {
+              setState(() {
+                _isSearching = !_isSearching;
+                if (!_isSearching) {
+                  _searchController.clear();
+                  _filterHistory('');
+                }
+              });
+            },
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _historyItems.isEmpty
+          : _filteredItems.isEmpty
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        Icons.history,
+                        _isSearching ? Icons.search_off : Icons.history,
                         size: 64,
                         color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
                       ),
                       const SizedBox(height: 16),
                       AppText(
-                        'لا توجد أحداث تاريخية',
+                        _isSearching
+                            ? 'لا توجد نتائج للبحث'
+                            : 'لا توجد أحداث تاريخية',
                         fontSize: 16,
                         color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                       ),
@@ -107,10 +172,11 @@ class _HistoryScreenState extends State<HistoryScreen>
               : FadeTransition(
                   opacity: _fadeAnimation,
                   child: ListView.builder(
+                    controller: _scrollController,
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    itemCount: _historyItems.length,
+                    itemCount: _filteredItems.length,
                     itemBuilder: (context, index) {
-                      final item = _historyItems[index];
+                      final item = _filteredItems[index];
                       return Hero(
                         tag: 'history_${item.id}',
                         child: GestureDetector(
@@ -178,21 +244,31 @@ class _HistoryScreenState extends State<HistoryScreen>
                                         ],
                                       ),
                                       const SizedBox(height: 8),
-                                      AppText(
+                                      Text(
                                         item.title,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: isDarkMode
-                                            ? Colors.white
-                                            : AppColors.primaryColor,
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDarkMode
+                                              ? Colors.white
+                                              : AppColors.primaryColor,
+                                          fontFamily: 'Cairo',
+                                          height: 1.4,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                       const SizedBox(height: 8),
-                                      AppText(
+                                      Text(
                                         item.text,
-                                        fontSize: 14,
-                                        color: isDarkMode
-                                            ? Colors.grey[300]
-                                            : Colors.grey[700],
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: isDarkMode
+                                              ? Colors.grey[300]
+                                              : Colors.grey[700],
+                                          fontFamily: 'Cairo',
+                                          height: 1.4,
+                                        ),
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -253,6 +329,7 @@ class HistoryDetailsSheet extends StatelessWidget {
           Expanded(
             child: SingleChildScrollView(
               controller: scrollController,
+              physics: const BouncingScrollPhysics(),
               padding: EdgeInsets.only(
                 left: 20,
                 right: 20,
