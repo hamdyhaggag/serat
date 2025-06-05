@@ -7,6 +7,7 @@ import 'package:serat/Presentation/screens/radio_screen.dart';
 import 'package:serat/Presentation/screens/reciters_screen.dart';
 import 'package:serat/Presentation/screens/about_screen.dart';
 import 'package:serat/Presentation/screens/islamic_quiz_screen.dart';
+import 'package:serat/Presentation/screens/history_screen.dart';
 import 'package:serat/imports.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -798,6 +799,20 @@ class _TimingsScreenState extends State<TimingsScreen>
                                             MaterialPageRoute(
                                               builder: (context) =>
                                                   const IslamicQuizScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _buildFeatureCard(
+                                        'التاريخ الإسلامي',
+                                        Icons.history,
+                                        isDarkMode,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const HistoryScreen(),
                                             ),
                                           );
                                         },
