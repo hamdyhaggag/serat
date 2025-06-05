@@ -7,7 +7,6 @@ import 'package:serat/Presentation/screens/radio_screen.dart';
 import 'package:serat/Presentation/screens/reciters_screen.dart';
 import 'package:serat/Presentation/screens/about_screen.dart';
 import 'package:serat/Presentation/screens/islamic_quiz_screen.dart';
-import 'package:serat/Presentation/screens/notifications_screen.dart';
 import 'package:serat/imports.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -21,7 +20,6 @@ import 'package:serat/features/quran/routes/quran_routes.dart';
 import 'dart:math';
 import 'dart:async';
 import 'package:serat/Data/Model/times_model.dart';
-import 'package:serat/shared/services/notification_service.dart';
 import 'dart:developer' as developer;
 
 class TimingsScreen extends StatefulWidget {
@@ -424,36 +422,6 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           ],
                                         ),
                                       ),
-                                      if (_isLoading)
-                                        Container(
-                                          width: 24,
-                                          height: 24,
-                                          decoration: BoxDecoration(
-                                            color:
-                                                Colors.white.withOpacity(0.2),
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                          ),
-                                        )
-                                      else
-                                        IconButton(
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                          icon: const Icon(
-                                            Icons.notifications_outlined,
-                                            color: Colors.white,
-                                            size: 24,
-                                          ),
-                                          onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const NotificationsScreen(),
-                                              ),
-                                            );
-                                          },
-                                        ),
                                     ],
                                   ),
                                   const Spacer(),
