@@ -1,5 +1,5 @@
 name: serat
-description: "A new Flutter project."
+description: "A comprehensive Islamic app featuring prayer times, Qibla direction, Quran reading, Azkar (supplications), and Hadith collection. Designed to help Muslims in their daily worship and spiritual journey."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
