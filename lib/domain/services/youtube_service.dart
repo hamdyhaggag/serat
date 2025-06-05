@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/video_model.dart';
 import 'logging_service.dart';
+import '../../config/api_config.dart';
 
 class YoutubeService {
   static const String _baseUrl = 'https://www.googleapis.com/youtube/v3';
   static const String _tag = 'YoutubeService';
 
-  // YouTube Data API key
-  static const String _apiKey = 'AIzaSyDEDbNBIejzhQ3rQqE5UUkpDb4eNcjZJjc';
+  static const String _apiKey = ApiConfig.youtubeApiKey;
 
   YoutubeService() {
     _validateApiKey();

@@ -39,10 +39,9 @@ Widget prayTimeRow({
                 time,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color:
-                    isDarkMode
-                        ? const Color(0xff0c8ee1)
-                        : AppColors.primaryColor,
+                color: isDarkMode
+                    ? const Color(0xff0c8ee1)
+                    : AppColors.primaryColor,
               ),
             ),
             Expanded(flex: 1, child: AppText(ar, fontSize: 20)),
@@ -136,22 +135,28 @@ Widget buildRow(IconData icon, String url, String title, Color color) {
 void showDonateDialog(BuildContext context) {
   showDialog(
     context: context,
-    builder:
-        (BuildContext context) => AppDialog(
-          content: 'هل تود دعم التطبيق ؟',
-          okAction: AppDialogAction(
-            title: 'نعم',
-            onTap: () {
-              launchUrl(Uri.parse('https://www.paypal.com/paypalme/serat'));
-            },
-          ),
-          cancelAction: AppDialogAction(
-            title: 'لا',
-            onTap: () {
-              Navigator.of(context).pop();
-            },
-          ),
-        ),
+    builder: (BuildContext context) => AppDialog(
+      content: '''هل تود دعم التطبيق؟
+
+ملاحظة: التبرع اختياري تماماً ولا يؤثر على استخدام التطبيق. جميع الميزات متاحة مجاناً.
+
+سيتم توجيهك إلى صفحة PayPal الآمنة لإتمام عملية التبرع.''',
+      okAction: AppDialogAction(
+        title: 'نعم',
+        onTap: () {
+          launchUrl(
+            Uri.parse('https://www.paypal.com/paypalme/serat'),
+            mode: LaunchMode.externalApplication,
+          );
+        },
+      ),
+      cancelAction: AppDialogAction(
+        title: 'لا',
+        onTap: () {
+          Navigator.of(context).pop();
+        },
+      ),
+    ),
   );
 }
 
@@ -167,45 +172,7 @@ showappinfo(context) {
 
 ///////////////////////////////
 
-showAlertdialogExampleDidntused(context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const AppText('Magical Portal'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const AppText('You have discovered a magical portal!'),
-            SizedBox(height: 10.h),
-            const AppText('Where would you like to go?'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('Forest'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('Mountains'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('Beach'),
-          ),
-        ],
-      );
-    },
-  );
-}
+
 
 ////////////////////////////////////////////////
 
@@ -218,7 +185,7 @@ void shareOptions(BuildContext context) async {
 
 ////////////////////////////////////////////////
 void openGooglePlayForFeedback() async {
-  const String packageName = 'com.tafakkur';
+  const String packageName = 'com.serat';
   const String googlePlayUrl = 'market://details?id=$packageName';
 
   final Uri googlePlayUri = Uri.parse(googlePlayUrl);
