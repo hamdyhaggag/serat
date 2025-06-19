@@ -12,35 +12,49 @@ class OnboardingContents {
 
 List<OnboardingContents> contents = [
   OnboardingContents(
-    title: " مرحبًا بك في تطبيق صراط ",
+    title: "مرحبًا بك في تطبيق صراط",
     image: "assets/onboarding/onboarding1.png",
-    desc: "رفيقك الشامل للإرتقاء بتجربتك الدينية",
+    desc: "رفيقك الشامل للإرتقاء بتجربتك الدينية وتقوية إيمانك",
   ),
   OnboardingContents(
-    title: "مواقيت الصلاة الدقيقة",
+    title: "القرآن الكريم",
     image: "assets/onboarding/onboarding2.png",
-    desc: "اعرف أوقات الصلاة بدقة و أدِّ الفرائض في وقتها",
-  ),
-  OnboardingContents(
-    title: "سبحة إلكترونية",
-    image: "assets/onboarding/onboarding3.png",
     desc:
-        "ارفع روحك مع الله من خلال استخدام السبحة الإلكترونية ، و قم بذكر الله في كل زمان",
+        "استمتع بتلاوة القرآن الكريم مع مجموعة متنوعة من القراء المميزين، واختر من بين العديد من التفاسير والترجمات",
   ),
   OnboardingContents(
     title: "الأذكار والأدعية",
     image: "assets/onboarding/onboarding6.png",
     desc:
-        "استمتع بمجموعة واسعة من الأذكار والأدعية لتمتلك قلبًا مطمئنًا في جميع الأوقات",
+        "احفظ أذكار الصباح والمساء، واستمتع بمجموعة واسعة من الأذكار والأدعية لتمتلك قلبًا مطمئنًا في جميع الأوقات",
   ),
   OnboardingContents(
-    title: "اتجاه القبلة",
+    title: "التقويم الهجري",
+    image: "assets/onboarding/onboarding3.png",
+    desc:
+        "تابع التقويم الهجري بسهولة، واحتفل بالمناسبات الإسلامية المهمة مع تذكيرات مخصصة",
+  ),
+  OnboardingContents(
+    title: "القبلة",
     image: "assets/onboarding/onboarding4.png",
-    desc: "دع التطبيق يرشدك لاتجاه القبلة أثناء الصلاة ، بُناءً على موقعك",
+    desc:
+        "حدد اتجاه القبلة بدقة عالية باستخدام البوصلة الإلكترونية، مع تحديثات مستمرة لموقعك",
   ),
   OnboardingContents(
-    title: "تصميم بسيط وسهل الاستخدام",
+    title: "أسماء الله الحسنى",
     image: "assets/onboarding/onboarding5.png",
-    desc: "استمتع بتجربة استخدام سلسة ، بغض النظر عن مستوى خبرتك التكنولوجية",
+    desc: "تعرف على أسماء الله الحسنى وشرحها وفضلها، مع أدعية مخصصة لكل اسم",
+  ),
+  OnboardingContents(
+    title: "التاريخ الإسلامي",
+    image: "assets/onboarding/onboarding7.png",
+    desc:
+        "اكتشف أحداث ومواقف مهمة من التاريخ الإسلامي، مع قصص ملهمة من حياة الصحابة والتابعين",
+  ),
+  OnboardingContents(
+    title: "تصميم عصري وسهل الاستخدام",
+    image: "assets/onboarding/onboarding8.png",
+    desc:
+        "استمتع بتجربة استخدام سلسة وأنيقة، مع واجهة مستخدم بسيطة وواضحة تناسب جميع المستخدمين",
   ),
 ];
