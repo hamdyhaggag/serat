@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:serat/Business_Logic/Cubit/location_cubit.dart' as location;
 import 'package:serat/Business_Logic/Cubit/theme_cubit.dart';
+import 'package:serat/Presentation/screens/about/about_screen.dart' show AboutScreen;
 import 'package:serat/Presentation/screens/qasas_screen.dart';
 import 'package:serat/Presentation/screens/quran_screen.dart';
 import 'package:serat/Presentation/screens/radio_screen.dart';
 import 'package:serat/Presentation/screens/reciters_screen.dart';
-import 'package:serat/Presentation/screens/about_screen.dart';
 import 'package:serat/Presentation/screens/islamic_quiz_screen.dart';
 import 'package:serat/Presentation/screens/history_screen.dart';
 import 'package:serat/imports.dart';

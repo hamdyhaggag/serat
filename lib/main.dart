@@ -8,7 +8,6 @@ import 'package:serat/Business_Logic/Cubit/settings_cubit.dart';
 import 'package:serat/Business_Logic/Cubit/counter_cubit.dart';
 import 'package:serat/Business_Logic/Cubit/navigation_cubit.dart' as navigation;
 import 'package:serat/Business_Logic/Cubit/app_cubit.dart';
-import 'package:serat/Business_Logic/Cubit/app_states.dart';
 import 'package:serat/Business_Logic/Cubit/qibla_cubit.dart';
 import 'package:serat/Business_Logic/Cubit/quran_video_cubit.dart';
 import 'package:serat/Data/Web_Services/quran_video_web_services.dart';
@@ -21,6 +20,7 @@ import 'dart:io' show Platform;
 import 'package:serat/features/quran/routes/quran_routes.dart';
 import 'package:serat/Business_Logic/Cubit/theme_cubit.dart';
 import 'package:serat/shared/services/notification_service.dart';
+import 'package:serat/core/theme/app_theme.dart';
 
 TimeOfDay? stringToTimeOfDay(String timeString) {
   if (timeString.isNotEmpty) {
@@ -37,20 +37,6 @@ TimeOfDay? selectedTimeMorning;
 TimeOfDay? selectedTimeEvening;
 String? selectedMorning;
 String? selectedEvening;
-
-final lightThemeData = ThemeData(
-  primaryColor: AppColors.primaryColor,
-  textTheme: const TextTheme(labelLarge: TextStyle(color: Colors.white70)),
-  brightness: Brightness.light,
-  hintColor: AppColors.primaryColor,
-);
-
-final darkThemeData = ThemeData(
-  primaryColor: AppColors.primaryColor,
-  textTheme: const TextTheme(labelLarge: TextStyle(color: Color(0xff1F1F1F))),
-  brightness: Brightness.dark,
-  hintColor: AppColors.primaryColor,
-);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -86,7 +72,7 @@ void main() async {
 
   Bloc.observer = MyGlobalObserver();
 
-  runApp(EasyDynamicThemeWidget(child: SeratApp(isLight: isLight)));
+  runApp(SeratApp(isLight: isLight));
 }
 
 Future<void> initializeAppSettings() async {
@@ -131,50 +117,27 @@ class SeratApp extends StatelessWidget {
       ],
       child: ScreenUtilInit(
         designSize: const Size(360, 690),
-        child: BlocConsumer<AppCubit, AppStates>(
-          listener: (context, state) {},
-          builder: (context, state) {
-            return BlocBuilder<ThemeCubit, ThemeState>(
-              builder: (context, themeState) {
-                return MaterialApp(
-                  navigatorKey: navigatorKey,
-                  title: "Serat - صراط",
-                  locale: const Locale('ar', 'SA'),
-                  localizationsDelegates: const [
-                    GlobalMaterialLocalizations.delegate,
-                    GlobalWidgetsLocalizations.delegate,
-                    GlobalCupertinoLocalizations.delegate,
-                  ],
-                  supportedLocales: const [Locale('ar', 'SA')],
-                  theme: lightThemeData.copyWith(
-                    textTheme: const TextTheme(
-                      titleMedium: TextStyle(fontSize: 25, fontFamily: 'DIN'),
-                      bodyMedium: TextStyle(fontSize: 30, fontFamily: 'DIN'),
-                    ),
-                  ),
-                  darkTheme: darkThemeData.copyWith(
-                    textTheme: const TextTheme(
-                      titleMedium: TextStyle(
-                        fontSize: 25,
-                        fontFamily: 'DIN',
-                        color: Colors.white,
-                      ),
-                      bodyMedium: TextStyle(
-                        fontSize: 30,
-                        fontFamily: 'DIN',
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  themeMode: ThemeCubit.get(context).isLightMode
-                      ? ThemeMode.light
-                      : ThemeMode.dark,
-                  debugShowCheckedModeBanner: false,
-                  home: const SplashScreen(),
-                  routes: {
-                    ...QuranRoutes.getRoutes(),
-                  },
-                );
+        child: BlocBuilder<ThemeCubit, ThemeState>(
+          builder: (context, themeState) {
+            return MaterialApp(
+              navigatorKey: navigatorKey,
+              title: "Serat - صراط",
+              locale: const Locale('ar', 'SA'),
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('ar', 'SA')],
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: ThemeCubit.get(context).isLightMode
+                  ? ThemeMode.light
+                  : ThemeMode.dark,
+              debugShowCheckedModeBanner: false,
+              home: const SplashScreen(),
+              routes: {
+                ...QuranRoutes.getRoutes(),
               },
             );
           },

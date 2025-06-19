@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serat/imports.dart';
+import 'package:serat/features/adhkar/screens/adhkar_screen.dart';
 import 'package:serat/Presentation/screens/Ahadith_screen/ahadith_list_screen.dart';
 
 class NavigationCubit extends Cubit<NavigationState> {
@@ -14,7 +15,7 @@ class NavigationCubit extends Cubit<NavigationState> {
   List<Widget> get buildScreens => [
         const TimingsScreen(),
         const SebhaAzkarListScreen(),
-        const AzkarScreen(),
+        const AdhkarScreen(),
         const AhadithListScreen(),
         const QiblaScreen(),
       ];
