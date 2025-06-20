@@ -47,6 +47,10 @@ class CacheHelper {
     return sharedPreferences!.getBool(key) ?? false;
   }
 
+  static double getDouble({required String key}) {
+    return sharedPreferences!.getDouble(key) ?? 0.0;
+  }
+
   //===============================================================
 
   static Future<bool> removeData({required String key}) async {

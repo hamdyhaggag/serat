@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:serat/Presentation/Widgets/Shared/custom_app_bar.dart'
+    show CustomAppBar;
 import 'package:serat/features/adhkar/models/adhkar_category.dart';
 import 'package:serat/features/adhkar/services/adhkar_progress_service.dart';
 import 'package:serat/features/adhkar/widgets/view_mode_selector.dart';
+import 'package:serat/Data/utils/cache_helper.dart';
 
 class AdhkarDetailScreen extends StatefulWidget {
   final AdhkarCategory category;
@@ -30,6 +33,13 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
   AdhkarViewMode _viewMode = AdhkarViewMode.list;
   bool _hasProgressChanged = false;
 
+  // Text size slider state
+  double _textScale = 28.0;
+  bool _showTextSizeSlider = false;
+
+  // Cache key for text scale
+  static const String _textScaleKey = 'adhkar_text_scale';
+
   @override
   void initState() {
     super.initState();
@@ -48,6 +58,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
 
     _loadProgress();
     _loadViewMode();
+    _loadTextScale();
   }
 
   @override
@@ -160,27 +171,36 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
     await _progressService.saveViewMode(mode.name);
   }
 
+  Future<void> _loadTextScale() async {
+    final savedTextScale = CacheHelper.getDouble(key: _textScaleKey);
+    if (savedTextScale > 0) {
+      setState(() {
+        _textScale = savedTextScale;
+      });
+    }
+  }
+
+  Future<void> _saveTextScale(double value) async {
+    await CacheHelper.saveData(
+      key: _textScaleKey,
+      value: value,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.of(context).pop(_hasProgressChanged);
-          },
-        ),
-        title: Text(
-          widget.category.category,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+      appBar: CustomAppBar(
+        title: widget.category.category,
         actions: [
           IconButton(
-            icon: const Icon(Icons.info_outline),
+            icon: const Icon(Icons.text_fields),
             onPressed: () {
-              _showCategoryInfo();
+              setState(() {
+                _showTextSizeSlider = !_showTextSizeSlider;
+              });
             },
           ),
         ],
@@ -192,6 +212,13 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
             padding: const EdgeInsets.all(16),
             child: _buildProfessionalProgressIndicator(),
           ),
+
+          // Text size slider
+          if (_showTextSizeSlider)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: _buildCustomTextSizeSlider(),
+            ),
 
           // View mode selector
           Container(
@@ -378,30 +405,38 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
   }
 
   Widget _buildListView() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: widget.category.array.length,
-      itemBuilder: (context, index) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: _buildAdhkarItemCard(index),
-        );
-      },
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.6,
+      ),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: widget.category.array.length,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _buildAdhkarItemCard(index),
+          );
+        },
+      ),
     );
   }
 
   Widget _buildHorizontalView() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      scrollDirection: Axis.horizontal,
-      itemCount: widget.category.array.length,
-      itemBuilder: (context, index) {
-        return Container(
-          width: 300,
-          margin: const EdgeInsets.only(right: 16),
-          child: _buildAdhkarItemCard(index),
-        );
-      },
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.6,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        scrollDirection: Axis.horizontal,
+        itemCount: widget.category.array.length,
+        itemBuilder: (context, index) {
+          return Container(
+            width: (300 + (_textScale - 28) * 6).clamp(300.0, 500.0),
+            margin: const EdgeInsets.only(right: 16),
+            child: _buildAdhkarItemCard(index),
+          );
+        },
+      ),
     );
   }
 
@@ -432,99 +467,120 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
           color: isCurrentItem
               ? theme.primaryColor.withOpacity(0.1)
               : theme.cardColor,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          child: Container(
+            constraints: BoxConstraints(
+              minHeight: 250,
+              maxHeight: MediaQuery.of(context).size.height * 0.65,
+            ),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: EdgeInsets.all(16 + (_textScale - 28) * 0.6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: isCompleted
-                            ? Colors.green.withOpacity(0.1)
-                            : theme.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        isCompleted
-                            ? Icons.check_circle
-                            : Icons.format_list_numbered,
-                        size: 20,
-                        color: isCompleted ? Colors.green : theme.primaryColor,
-                      ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: isCompleted
+                                ? Colors.green.withOpacity(0.1)
+                                : theme.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            isCompleted
+                                ? Icons.check_circle
+                                : Icons.format_list_numbered,
+                            size: 20,
+                            color:
+                                isCompleted ? Colors.green : theme.primaryColor,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'أذكار ${index + 1}',
+                                style: TextStyle(
+                                  fontSize: _textScale * 0.7,
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
+                              Text(
+                                '$currentProgress/${item.count}',
+                                style: TextStyle(
+                                  fontSize: _textScale * 0.8,
+                                  color: isCompleted
+                                      ? Colors.green
+                                      : theme.primaryColor,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'أذكار ${index + 1}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.onSurface,
-                            ),
+                    SizedBox(
+                        height:
+                            12 + (_textScale - 28) * 0.4), // Dynamic spacing
+                    LinearProgressIndicator(
+                      value:
+                          item.count > 0 ? currentProgress / item.count : 0.0,
+                      backgroundColor: theme.primaryColor.withOpacity(0.1),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        isCompleted ? Colors.green : theme.primaryColor,
+                      ),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      item.text,
+                      style: TextStyle(
+                        fontSize: _textScale * 0.6,
+                        color: theme.colorScheme.onSurface.withOpacity(0.8),
+                        height: 1.5,
+                      ),
+                      maxLines: null, // Allow unlimited lines
+                      overflow: TextOverflow.visible,
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                        height:
+                            12 + (_textScale - 28) * 0.4), // Dynamic spacing
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: isCompleted
+                            ? null
+                            : () => _updateItemProgress(index),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              isCompleted ? Colors.green : theme.primaryColor,
+                          foregroundColor: theme.colorScheme.onPrimary,
+                          padding: EdgeInsets.symmetric(
+                              vertical: 8 +
+                                  (_textScale - 28) * 0.4), // Dynamic padding
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          Text(
-                            '$currentProgress/${item.count}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isCompleted
-                                  ? Colors.green
-                                  : theme.primaryColor,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                          elevation: isCompleted ? 0 : 2,
+                        ),
+                        child: Text(
+                          isCompleted ? 'مكتمل' : 'إكمال',
+                          style: TextStyle(fontSize: _textScale * 0.6),
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                LinearProgressIndicator(
-                  value: item.count > 0 ? currentProgress / item.count : 0.0,
-                  backgroundColor: theme.primaryColor.withOpacity(0.1),
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    isCompleted ? Colors.green : theme.primaryColor,
-                  ),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  item.text,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: theme.colorScheme.onSurface.withOpacity(0.8),
-                  ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed:
-                        isCompleted ? null : () => _updateItemProgress(index),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          isCompleted ? Colors.green : theme.primaryColor,
-                      foregroundColor: theme.colorScheme.onPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation: isCompleted ? 0 : 2,
-                    ),
-                    child: Text(
-                      isCompleted ? 'مكتمل' : 'إكمال',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -563,7 +619,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                     Text(
                       '${index + 1}/${widget.category.array.length}',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: _textScale * 0.7,
                         fontWeight: FontWeight.w500,
                         color: theme.colorScheme.onSurface.withOpacity(0.7),
                       ),
@@ -572,7 +628,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                     Text(
                       '$currentProgress/${item.count}',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: _textScale * 0.8,
                         fontWeight: FontWeight.bold,
                         color: isCompleted ? Colors.green : theme.primaryColor,
                       ),
@@ -598,7 +654,9 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
           Expanded(
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(24 +
+                  (_textScale - 28) *
+                      1.0), // Dynamic padding based on text scale
               decoration: BoxDecoration(
                 color: theme.cardColor,
                 borderRadius: BorderRadius.circular(20),
@@ -618,7 +676,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                         item.text,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: _textScale,
                           height: 1.8,
                           fontWeight: FontWeight.w500,
                           color: theme.colorScheme.onSurface,
@@ -651,20 +709,20 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                           if (isCompleted) ...[
                             const Icon(Icons.check_circle, size: 20),
                             const SizedBox(width: 8),
-                            const Text(
+                            Text(
                               'مكتمل',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: _textScale * 0.8,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ] else ...[
                             const Icon(Icons.touch_app, size: 20),
                             const SizedBox(width: 8),
-                            const Text(
+                            Text(
                               'اضغط لإكمال',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: _textScale * 0.8,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -697,7 +755,10 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                     }
                   : null,
               icon: const Icon(Icons.arrow_back_ios),
-              label: const Text('السابق'),
+              label: Text(
+                'السابق',
+                style: TextStyle(fontSize: _textScale * 0.7),
+              ),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
@@ -717,7 +778,10 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                     }
                   : null,
               icon: const Icon(Icons.arrow_forward_ios),
-              label: const Text('التالي'),
+              label: Text(
+                'التالي',
+                style: TextStyle(fontSize: _textScale * 0.7),
+              ),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
@@ -731,24 +795,74 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
     );
   }
 
-  void _showCategoryInfo() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(widget.category.category),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('عدد الأذكار: ${widget.category.array.length}'),
-            const SizedBox(height: 8),
-            Text('التقدم الحالي: ${(_categoryProgress * 100).toInt()}%'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إغلاق'),
+  Widget _buildCustomTextSizeSlider() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDarkMode ? const Color(0xff2F2F2F) : Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.text_fields,
+            size: 20,
+            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 100,
+            child: SliderTheme(
+              data: SliderThemeData(
+                trackHeight: 2,
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                activeTrackColor: Theme.of(context).primaryColor,
+                inactiveTrackColor:
+                    isDarkMode ? Colors.grey[700] : Colors.grey[300],
+                thumbColor: Theme.of(context).primaryColor,
+                overlayColor: Theme.of(context).primaryColor.withOpacity(0.2),
+              ),
+              child: Slider(
+                value: _textScale,
+                min: 28.0,
+                max: 48.0,
+                divisions: 20,
+                onChanged: (value) {
+                  setState(() {
+                    _textScale = value;
+                  });
+                  _saveTextScale(value);
+                },
+              ),
+            ),
+          ),
+          Icon(
+            Icons.text_fields,
+            size: 24,
+            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.close, size: 20),
+            onPressed: () {
+              setState(() {
+                _showTextSizeSlider = false;
+              });
+            },
+            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
           ),
         ],
       ),
