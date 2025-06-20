@@ -223,22 +223,9 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
           // View mode selector
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Text(
-                  'طريقة العرض:',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                ViewModeSelector(
-                  currentMode: _viewMode,
-                  onModeChanged: _updateViewMode,
-                ),
-              ],
+            child: ViewModeSelector(
+              currentMode: _viewMode,
+              onModeChanged: _updateViewMode,
             ),
           ),
 
@@ -372,24 +359,180 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
   }
 
   Widget _buildPageIndicator() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(
-          widget.category.array.length,
-          (index) => AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            margin: const EdgeInsets.symmetric(horizontal: 2),
-            width: index == _currentItemIndex ? 24 : 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: index == _currentItemIndex
-                  ? Theme.of(context).primaryColor
-                  : Theme.of(context).primaryColor.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(4),
+    final totalItems = widget.category.array.length;
+    final currentIndex = _currentItemIndex;
+    final theme = Theme.of(context);
+
+    return Column(
+      children: [
+        // Counter display
+        Container(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            '${currentIndex + 1} من $totalItems',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
             ),
           ),
+        ),
+
+        // Dots indicator
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Previous button
+              if (currentIndex > 0)
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _currentItemIndex = currentIndex - 1;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Icon(
+                      Icons.chevron_left,
+                      size: 20,
+                      color: theme.primaryColor,
+                    ),
+                  ),
+                ),
+
+              const SizedBox(width: 12),
+
+              // Dots with smart pagination
+              ..._buildSmartDots(currentIndex, totalItems, theme),
+
+              const SizedBox(width: 12),
+
+              // Next button
+              if (currentIndex < totalItems - 1)
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _currentItemIndex = currentIndex + 1;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Icon(
+                      Icons.chevron_right,
+                      size: 20,
+                      color: theme.primaryColor,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDot(int index, int currentIndex, ThemeData theme) {
+    final isActive = index == currentIndex;
+    final progress = _itemProgress[index] ?? 0;
+    final isCompleted = progress > 0;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.symmetric(horizontal: 3),
+      width: isActive ? 24 : 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: isActive
+            ? theme.primaryColor
+            : isCompleted
+                ? Colors.green.withOpacity(0.6)
+                : theme.primaryColor.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(4),
+        boxShadow: isActive
+            ? [
+                BoxShadow(
+                  color: theme.primaryColor.withOpacity(0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
+      ),
+    );
+  }
+
+  List<Widget> _buildSmartDots(
+      int currentIndex, int totalItems, ThemeData theme) {
+    final List<Widget> dots = [];
+    final int maxVisibleDots = 5;
+
+    // Show all dots if 7 or fewer items
+    if (totalItems <= 7) {
+      for (int i = 0; i < totalItems; i++) {
+        dots.add(_buildDot(i, currentIndex, theme));
+      }
+      return dots;
+    }
+
+    // Smart pagination logic for more than 7 items
+    int startIndex = 0;
+    int endIndex = totalItems - 1;
+
+    if (currentIndex <= 2) {
+      // Near the beginning
+      endIndex = maxVisibleDots - 1;
+    } else if (currentIndex >= totalItems - 3) {
+      // Near the end
+      startIndex = totalItems - maxVisibleDots;
+    } else {
+      // In the middle
+      startIndex = currentIndex - 2;
+      endIndex = currentIndex + 2;
+    }
+
+    // Add first dot if not showing from beginning
+    if (startIndex > 0) {
+      dots.add(_buildDot(0, currentIndex, theme));
+      if (startIndex > 1) {
+        dots.add(_buildEllipsis(theme));
+      }
+    }
+
+    // Add visible dots
+    for (int i = startIndex; i <= endIndex; i++) {
+      dots.add(_buildDot(i, currentIndex, theme));
+    }
+
+    // Add last dot if not showing to end
+    if (endIndex < totalItems - 1) {
+      if (endIndex < totalItems - 2) {
+        dots.add(_buildEllipsis(theme));
+      }
+      dots.add(_buildDot(totalItems - 1, currentIndex, theme));
+    }
+
+    return dots;
+  }
+
+  Widget _buildEllipsis(ThemeData theme) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      child: Text(
+        '...',
+        style: TextStyle(
+          color: theme.primaryColor.withOpacity(0.5),
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
