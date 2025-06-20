@@ -1,4 +1,11 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:serat/Presentation/Widgets/Shared/custom_app_bar.dart'
     show CustomAppBar;
 import 'package:serat/features/adhkar/models/adhkar_category.dart';
@@ -6,6 +13,7 @@ import 'package:serat/features/adhkar/services/adhkar_progress_service.dart';
 import 'package:serat/features/adhkar/widgets/adhkar_shimmer.dart';
 import 'package:serat/features/adhkar/widgets/view_mode_selector.dart';
 import 'package:serat/Data/utils/cache_helper.dart';
+import 'package:share_plus/share_plus.dart';
 
 class AdhkarDetailScreen extends StatefulWidget {
   final AdhkarCategory category;
@@ -28,6 +36,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
   late Animation<double> _progressAnimation;
 
   final AdhkarProgressService _progressService = AdhkarProgressService();
+  final Map<int, GlobalKey> _cardKeys = {};
   int _currentItemIndex = 0;
   Map<int, int> _itemProgress = {};
   double _categoryProgress = 0.0;
@@ -484,6 +493,46 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
     );
   }
 
+  Future<void> _shareCardAsImage(GlobalKey cardKey) async {
+    try {
+      // Show a loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('جاري المعالجة...')),
+      );
+
+      // Add a small delay to allow the framework to schedule a paint.
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      if (cardKey.currentContext == null) {
+        throw Exception("Card is not visible on screen.");
+      }
+
+      RenderRepaintBoundary boundary =
+          cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+      final tempDir = await getTemporaryDirectory();
+      final file = await File('${tempDir.path}/adhkar.png').create();
+      await file.writeAsBytes(pngBytes);
+
+      // Dismiss the loading indicator
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: 'Serat Adhkar',
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error sharing Adhkar: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -912,10 +961,16 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
     return Column(
       children: List.generate(
         widget.category.array.length,
-        (index) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          child: _buildAdhkarItemCard(index),
-        ),
+        (index) {
+          final cardKey = _cardKeys.putIfAbsent(index, () => GlobalKey());
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: RepaintBoundary(
+              key: cardKey,
+              child: _buildAdhkarItemCard(index, cardKey),
+            ),
+          );
+        },
       ),
     );
   }
@@ -935,18 +990,22 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
         scrollDirection: Axis.horizontal,
         itemCount: widget.category.array.length,
         itemBuilder: (context, index) {
+          final cardKey = _cardKeys.putIfAbsent(index, () => GlobalKey());
           return Container(
             width: (280 + (_textScale - 28) * 4.0)
                 .clamp(280.0, 450.0), // Slightly increased width
             margin: const EdgeInsets.only(right: 16),
-            child: _buildHorizontalAdhkarCard(index),
+            child: RepaintBoundary(
+              key: cardKey,
+              child: _buildHorizontalAdhkarCard(index, cardKey),
+            ),
           );
         },
       ),
     );
   }
 
-  Widget _buildAdhkarItemCard(int index) {
+  Widget _buildAdhkarItemCard(int index, GlobalKey cardKey) {
     final item = widget.category.array[index];
     final currentProgress = _itemProgress[index] ?? 0;
     final isCompleted = currentProgress >= item.count;
@@ -1023,6 +1082,26 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                         ],
                       ),
                     ),
+                    IconButton(
+                      icon: const Icon(Icons.copy_all_outlined),
+                      iconSize: 22,
+                      tooltip: 'نسخ الذكر',
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: item.text));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('تم نسخ الذكر إلى الحافظة')),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.share_outlined),
+                      iconSize: 22,
+                      tooltip: 'مشاركة الذكر',
+                      onPressed: () {
+                        _shareCardAsImage(cardKey);
+                      },
+                    ),
                   ],
                 ),
                 SizedBox(
@@ -1039,11 +1118,11 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                 Text(
                   item.text,
                   style: TextStyle(
-                    fontSize: _textScale * 0.6,
-                    color: theme.colorScheme.onSurface.withOpacity(0.8),
-                    height: 1.5,
-                  ),
-                  maxLines: null, // Allow unlimited lines
+                      fontSize: _textScale * 0.6,
+                      color: theme.colorScheme.onSurface.withOpacity(0.8),
+                      height: 1.5,
+                      fontFamily: "Cairo"),
+                  maxLines: null,
                   overflow: TextOverflow.visible,
                 ),
                 const SizedBox(height: 8),
@@ -1059,8 +1138,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                           isCompleted ? Colors.green : theme.primaryColor,
                       foregroundColor: theme.colorScheme.onPrimary,
                       padding: EdgeInsets.symmetric(
-                          vertical:
-                              8 + (_textScale - 28) * 0.4), // Dynamic padding
+                          vertical: 8 + (_textScale - 28) * 0.4),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -1080,7 +1158,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
     );
   }
 
-  Widget _buildHorizontalAdhkarCard(int index) {
+  Widget _buildHorizontalAdhkarCard(int index, GlobalKey cardKey) {
     final item = widget.category.array[index];
     final currentProgress = _itemProgress[index] ?? 0;
     final isCompleted = currentProgress >= item.count;
@@ -1160,6 +1238,26 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                           ),
                         ],
                       ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.copy_all_outlined),
+                      iconSize: 18,
+                      tooltip: 'نسخ الذكر',
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: item.text));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('تم نسخ الذكر إلى الحافظة')),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.share_outlined),
+                      iconSize: 18,
+                      tooltip: 'مشاركة الذكر',
+                      onPressed: () {
+                        _shareCardAsImage(cardKey);
+                      },
                     ),
                   ],
                 ),
