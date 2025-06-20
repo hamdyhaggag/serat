@@ -217,47 +217,8 @@ class _RadioScreenState extends State<RadioScreen>
     return Scaffold(
       backgroundColor: isDarkMode ? const Color(0xff1F1F1F) : Colors.white,
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        backgroundColor:
-            isDarkMode ? const Color(0xff2F2F2F) : AppColors.primaryColor,
-        title: const AppText(
-          'الراديو',
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-          fontFamily: 'Cairo',
-        ),
-        centerTitle: true,
-        elevation: 0,
-        bottom: TabBar(
-          dividerColor: Colors.transparent,
-          controller: _tabController,
-          tabs: const [
-            Tab(
-              child: Text(
-                'جميع المحطات',
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            Tab(
-              child: Text(
-                'المحطات المفضلة',
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-        ),
+      appBar: const CustomAppBar(
+        title: 'الراديو',
       ),
       body: SafeArea(
         child: Column(

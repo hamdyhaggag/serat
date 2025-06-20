@@ -9,6 +9,7 @@ import '../../domain/models/playlist_model.dart';
 import '../../domain/models/video_model.dart';
 import '../../domain/services/youtube_service.dart';
 import '../../domain/services/logging_service.dart';
+import '../../Presentation/Widgets/Shared/custom_app_bar.dart';
 
 class PlaylistVideosScreen extends StatefulWidget {
   final PlaylistModel playlist;
@@ -186,19 +187,8 @@ class _PlaylistVideosScreenState extends State<PlaylistVideosScreen> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(widget.playlist.title),
-          centerTitle: true,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              if (_isPlayerVisible) {
-                _stopVideo();
-              } else {
-                Navigator.pop(context);
-              }
-            },
-          ),
+        appBar: CustomAppBar(
+          title: widget.playlist.title,
         ),
         body: _buildBody(),
       ),

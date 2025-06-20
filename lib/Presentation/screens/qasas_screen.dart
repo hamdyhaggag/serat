@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/services/playlist_cache_service.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'playlist_videos_screen.dart';
+import '../../Presentation/Widgets/Shared/custom_app_bar.dart';
 
 class QasasScreen extends StatefulWidget {
   const QasasScreen({super.key});
@@ -211,17 +212,8 @@ class _QasasScreenState extends State<QasasScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'قصص',
-          style: TextStyle(
-            fontFamily: 'Cairo',
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        elevation: 0,
+      appBar: CustomAppBar(
+        title: 'قصص',
         actions: [
           if (_isOffline)
             const Padding(
