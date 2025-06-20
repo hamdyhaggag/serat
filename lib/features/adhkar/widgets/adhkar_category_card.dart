@@ -56,7 +56,7 @@ class AdhkarCategoryCard extends StatelessWidget {
                   ),
                   child: Icon(
                     isCompleted ? Icons.check_circle : icon,
-                    size: 28,
+                    size: 24,
                     color: isCompleted ? Colors.green : theme.primaryColor,
                   ),
                 ),
@@ -67,11 +67,11 @@ class AdhkarCategoryCard extends StatelessWidget {
                   category.category,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 20,
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onSurface,
                   ),
-                  maxLines: 2,
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
 
@@ -79,9 +79,9 @@ class AdhkarCategoryCard extends StatelessWidget {
 
                 // Item count
                 Text(
-                  '${category.array.length} أذكار',
+                  '${category.array.length} ذِكر',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 16,
                     color: theme.colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
@@ -173,7 +173,7 @@ class AdhkarCategoryHorizontalCard extends StatelessWidget {
                       Text(
                         '${category.array.length} أذكار',
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 16,
                           color: theme.colorScheme.onSurface.withOpacity(0.6),
                         ),
                       ),

@@ -318,6 +318,27 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
         children: [
           Row(
             children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$completedItems/$totalItems',
+                    style: TextStyle(
+                      color: theme.colorScheme.onPrimary,
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'أذكار مكتملة',
+                    style: TextStyle(
+                      color: theme.colorScheme.onPrimary.withOpacity(0.8),
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -329,27 +350,6 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                   color: theme.colorScheme.onPrimary,
                   size: 28,
                 ),
-              ),
-              const Spacer(),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '$completedItems/$totalItems',
-                    style: TextStyle(
-                      color: theme.colorScheme.onPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    'أذكار مكتملة',
-                    style: TextStyle(
-                      color: theme.colorScheme.onPrimary.withOpacity(0.8),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
@@ -392,7 +392,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
             '${(_categoryProgress * 100).toInt()}% مكتمل',
             style: TextStyle(
               color: theme.colorScheme.onPrimary,
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -414,7 +414,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
           child: Text(
             '${currentIndex + 1} من $totalItems',
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 16,
               fontWeight: FontWeight.w500,
               color: theme.colorScheme.onSurface.withOpacity(0.6),
             ),
@@ -574,7 +574,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
         '...',
         style: TextStyle(
           color: theme.primaryColor.withOpacity(0.5),
-          fontSize: 12,
+          fontSize: 16,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -685,7 +685,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'أذكار ${index + 1}',
+                            'الذِكر رقم ${index + 1}',
                             style: TextStyle(
                               fontSize: _textScale * 0.7,
                               fontWeight: FontWeight.w600,
@@ -822,10 +822,9 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'أذكار ${index + 1}',
+                            'الذِكر رقم ${index + 1}',
                             style: TextStyle(
-                              fontSize:
-                                  (_textScale - 28) * 0.25 + 11, // Smaller text
+                              fontSize: (_textScale - 28) * 0.25 + 15,
                               fontWeight: FontWeight.w600,
                               color: theme.colorScheme.onSurface,
                             ),
@@ -834,7 +833,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                             '$currentProgress/${item.count}',
                             style: TextStyle(
                               fontSize:
-                                  (_textScale - 28) * 0.15 + 9, // Smaller text
+                                  (_textScale - 28) * 0.15 + 15, // Smaller text
                               color: isCompleted
                                   ? Colors.green
                                   : theme.primaryColor,
@@ -909,7 +908,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                     child: Text(
                       isCompleted ? 'مكتمل' : 'إكمال',
                       style: TextStyle(
-                        fontSize: (_textScale - 28) * 0.15 + 9, // Smaller text
+                        fontSize: (_textScale - 28) * 0.15 + 16, // Smaller text
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -948,7 +947,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
               label: Text(
                 'السابق',
                 style: TextStyle(
-                  fontSize: (_textScale - 28) * 0.2 + 10,
+                  fontSize: (_textScale - 28) * 0.2 + 16,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -986,7 +985,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
               label: Text(
                 'التالي',
                 style: TextStyle(
-                  fontSize: (_textScale - 28) * 0.2 + 10,
+                  fontSize: (_textScale - 28) * 0.2 + 16,
                   fontWeight: FontWeight.w500,
                 ),
               ),

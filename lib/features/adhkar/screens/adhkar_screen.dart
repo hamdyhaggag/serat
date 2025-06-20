@@ -391,7 +391,36 @@ class _AdhkarScreenState extends State<AdhkarScreen>
         child: Column(
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // Text column on the left
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'مرحباً بك',
+                          style: TextStyle(
+                            color: theme.colorScheme.onPrimary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'ابدأ رحلتك مع الأذكار',
+                          style: TextStyle(
+                            color: theme.colorScheme.onPrimary.withOpacity(0.8),
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Icon on the right
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -403,27 +432,6 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                     color: theme.colorScheme.onPrimary,
                     size: 28,
                   ),
-                ),
-                const Spacer(),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'مرحباً بك',
-                      style: TextStyle(
-                        color: theme.colorScheme.onPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'ابدأ رحلتك مع الأذكار',
-                      style: TextStyle(
-                        color: theme.colorScheme.onPrimary.withOpacity(0.8),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -455,7 +463,37 @@ class _AdhkarScreenState extends State<AdhkarScreen>
       child: Column(
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // Text column on the left
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'آخر فئة مفتوحة',
+                        style: TextStyle(
+                          color: theme.colorScheme.onPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '${(_lastOpenedProgress * 100).toInt()}%',
+                        style: TextStyle(
+                          color: theme.colorScheme.onPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Icon on the right
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -470,28 +508,6 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                   size: 28,
                 ),
               ),
-              const Spacer(),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'آخر فئة مفتوحة',
-                    style: TextStyle(
-                      color: theme.colorScheme.onPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Text(
-                    '${(_lastOpenedProgress * 100).toInt()}%',
-                    style: TextStyle(
-                      color: theme.colorScheme.onPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -499,7 +515,7 @@ class _AdhkarScreenState extends State<AdhkarScreen>
             _lastOpenedCategory!,
             style: TextStyle(
               color: theme.colorScheme.onPrimary,
-              fontSize: 16,
+              fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.center,

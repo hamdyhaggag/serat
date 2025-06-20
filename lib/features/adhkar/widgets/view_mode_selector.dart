@@ -69,7 +69,7 @@ class ViewModeSelector extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: 18,
+              size: 20,
               color: isSelected
                   ? theme.colorScheme.onPrimary
                   : theme.colorScheme.onSurface.withOpacity(0.7),
@@ -78,7 +78,7 @@ class ViewModeSelector extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 16,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: isSelected
                     ? theme.colorScheme.onPrimary
