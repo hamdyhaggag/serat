@@ -205,41 +205,84 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Professional progress indicator
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: _buildProfessionalProgressIndicator(),
+      body: CustomScrollView(
+        slivers: [
+          // Fixed dots section
+          SliverToBoxAdapter(
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.shadowColor.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  // Professional progress indicator
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    child: _buildProfessionalProgressIndicator(),
+                  ),
+
+                  // Text size slider
+                  if (_showTextSizeSlider)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      child: _buildCustomTextSizeSlider(),
+                    ),
+
+                  // View mode selector
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: ViewModeSelector(
+                      currentMode: _viewMode,
+                      onModeChanged: _updateViewMode,
+                    ),
+                  ),
+
+                  // Page indicator (fixed)
+                  _buildPageIndicator(),
+
+                  // Subtle separator
+                  Container(
+                    height: 1,
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.transparent,
+                          theme.dividerColor.withOpacity(0.3),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
 
-          // Text size slider
-          if (_showTextSizeSlider)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: _buildCustomTextSizeSlider(),
-            ),
-
-          // View mode selector
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ViewModeSelector(
-              currentMode: _viewMode,
-              onModeChanged: _updateViewMode,
-            ),
-          ),
-
-          // Page indicator
-          _buildPageIndicator(),
-
-          // Adhkar content
-          Expanded(
+          // Scrollable content
+          SliverToBoxAdapter(
             child: _buildAdhkarContent(),
           ),
 
-          // Navigation controls
+          // Navigation controls (if horizontal mode)
           if (_viewMode == AdhkarViewMode.horizontal)
-            _buildNavigationControls(),
+            SliverToBoxAdapter(
+              child: _buildNavigationControls(),
+            ),
+
+          // Bottom padding
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 20),
+          ),
         ],
       ),
     );
@@ -548,35 +591,37 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
   }
 
   Widget _buildListView() {
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.6,
-      ),
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: widget.category.array.length,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _buildAdhkarItemCard(index),
-          );
-        },
+    return Column(
+      children: List.generate(
+        widget.category.array.length,
+        (index) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: _buildAdhkarItemCard(index),
+        ),
       ),
     );
   }
 
   Widget _buildHorizontalView() {
+    // Calculate responsive height based on text scale - increased for better text display
+    final baseHeight = 320.0; // Increased base height for better text display
+    final heightMultiplier = (_textScale - 28) *
+        3.0; // Increased multiplier for more responsive scaling
+    final responsiveHeight =
+        (baseHeight + heightMultiplier).clamp(320.0, 500.0); // Increased range
+
     return Container(
-      height: MediaQuery.of(context).size.height * 0.6,
+      height: responsiveHeight,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         scrollDirection: Axis.horizontal,
         itemCount: widget.category.array.length,
         itemBuilder: (context, index) {
           return Container(
-            width: (300 + (_textScale - 28) * 6).clamp(300.0, 500.0),
+            width: (280 + (_textScale - 28) * 4.0)
+                .clamp(280.0, 450.0), // Slightly increased width
             margin: const EdgeInsets.only(right: 16),
-            child: _buildAdhkarItemCard(index),
+            child: _buildHorizontalAdhkarCard(index),
           );
         },
       ),
@@ -610,175 +655,60 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
           color: isCurrentItem
               ? theme.primaryColor.withOpacity(0.1)
               : theme.cardColor,
-          child: Container(
-            constraints: BoxConstraints(
-              minHeight: 250,
-              maxHeight: MediaQuery.of(context).size.height * 0.65,
-            ),
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: EdgeInsets.all(16 + (_textScale - 28) * 0.6),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: isCompleted
-                                ? Colors.green.withOpacity(0.1)
-                                : theme.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            isCompleted
-                                ? Icons.check_circle
-                                : Icons.format_list_numbered,
-                            size: 20,
-                            color:
-                                isCompleted ? Colors.green : theme.primaryColor,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'أذكار ${index + 1}',
-                                style: TextStyle(
-                                  fontSize: _textScale * 0.7,
-                                  fontWeight: FontWeight.w600,
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                              ),
-                              Text(
-                                '$currentProgress/${item.count}',
-                                style: TextStyle(
-                                  fontSize: _textScale * 0.8,
-                                  color: isCompleted
-                                      ? Colors.green
-                                      : theme.primaryColor,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(
-                        height:
-                            12 + (_textScale - 28) * 0.4), // Dynamic spacing
-                    LinearProgressIndicator(
-                      value:
-                          item.count > 0 ? currentProgress / item.count : 0.0,
-                      backgroundColor: theme.primaryColor.withOpacity(0.1),
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        isCompleted ? Colors.green : theme.primaryColor,
-                      ),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      item.text,
-                      style: TextStyle(
-                        fontSize: _textScale * 0.6,
-                        color: theme.colorScheme.onSurface.withOpacity(0.8),
-                        height: 1.5,
-                      ),
-                      maxLines: null, // Allow unlimited lines
-                      overflow: TextOverflow.visible,
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                        height:
-                            12 + (_textScale - 28) * 0.4), // Dynamic spacing
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: isCompleted
-                            ? null
-                            : () => _updateItemProgress(index),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              isCompleted ? Colors.green : theme.primaryColor,
-                          foregroundColor: theme.colorScheme.onPrimary,
-                          padding: EdgeInsets.symmetric(
-                              vertical: 8 +
-                                  (_textScale - 28) * 0.4), // Dynamic padding
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: isCompleted ? 0 : 2,
-                        ),
-                        child: Text(
-                          isCompleted ? 'مكتمل' : 'إكمال',
-                          style: TextStyle(fontSize: _textScale * 0.6),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAdhkarItem(int index) {
-    final item = widget.category.array[index];
-    final currentProgress = _itemProgress[index] ?? 0;
-    final isCompleted = currentProgress >= item.count;
-    final theme = Theme.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Item progress
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: theme.cardColor,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.shadowColor.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
+          child: Padding(
+            padding: EdgeInsets.all(16 + (_textScale - 28) * 0.6),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
                   children: [
-                    Text(
-                      '${index + 1}/${widget.category.array.length}',
-                      style: TextStyle(
-                        fontSize: _textScale * 0.7,
-                        fontWeight: FontWeight.w500,
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isCompleted
+                            ? Colors.green.withOpacity(0.1)
+                            : theme.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        isCompleted
+                            ? Icons.check_circle
+                            : Icons.format_list_numbered,
+                        size: 20,
+                        color: isCompleted ? Colors.green : theme.primaryColor,
                       ),
                     ),
-                    const Spacer(),
-                    Text(
-                      '$currentProgress/${item.count}',
-                      style: TextStyle(
-                        fontSize: _textScale * 0.8,
-                        fontWeight: FontWeight.bold,
-                        color: isCompleted ? Colors.green : theme.primaryColor,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'أذكار ${index + 1}',
+                            style: TextStyle(
+                              fontSize: _textScale * 0.7,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          Text(
+                            '$currentProgress/${item.count}',
+                            style: TextStyle(
+                              fontSize: _textScale * 0.8,
+                              color: isCompleted
+                                  ? Colors.green
+                                  : theme.primaryColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(
+                    height: 12 + (_textScale - 28) * 0.4), // Dynamic spacing
                 LinearProgressIndicator(
                   value: item.count > 0 ? currentProgress / item.count : 0.0,
                   backgroundColor: theme.primaryColor.withOpacity(0.1),
@@ -787,107 +717,221 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                   ),
                   borderRadius: BorderRadius.circular(4),
                 ),
+                const SizedBox(height: 12),
+                Text(
+                  item.text,
+                  style: TextStyle(
+                    fontSize: _textScale * 0.6,
+                    color: theme.colorScheme.onSurface.withOpacity(0.8),
+                    height: 1.5,
+                  ),
+                  maxLines: null, // Allow unlimited lines
+                  overflow: TextOverflow.visible,
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                    height: 12 + (_textScale - 28) * 0.4), // Dynamic spacing
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed:
+                        isCompleted ? null : () => _updateItemProgress(index),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          isCompleted ? Colors.green : theme.primaryColor,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                      padding: EdgeInsets.symmetric(
+                          vertical:
+                              8 + (_textScale - 28) * 0.4), // Dynamic padding
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: isCompleted ? 0 : 2,
+                    ),
+                    child: Text(
+                      isCompleted ? 'مكتمل' : 'إكمال',
+                      style: TextStyle(fontSize: _textScale * 0.6),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
 
-          const SizedBox(height: 24),
+  Widget _buildHorizontalAdhkarCard(int index) {
+    final item = widget.category.array[index];
+    final currentProgress = _itemProgress[index] ?? 0;
+    final isCompleted = currentProgress >= item.count;
+    final isCurrentItem = index == _currentItemIndex;
+    final theme = Theme.of(context);
 
-          // Adhkar text
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(24 +
-                  (_textScale - 28) *
-                      1.0), // Dynamic padding based on text scale
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.shadowColor.withOpacity(0.1),
-                    blurRadius: 15,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Text(
-                        item.text,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: _textScale,
-                          height: 1.8,
-                          fontWeight: FontWeight.w500,
-                          color: theme.colorScheme.onSurface,
-                        ),
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _currentItemIndex = index;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        child: Card(
+          elevation: isCurrentItem ? 8.0 : 4.0,
+          shadowColor: theme.primaryColor.withOpacity(0.3),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: isCurrentItem
+                ? BorderSide(color: theme.primaryColor, width: 2)
+                : BorderSide.none,
+          ),
+          color: isCurrentItem
+              ? theme.primaryColor.withOpacity(0.1)
+              : theme.cardColor,
+          child: Padding(
+            padding: EdgeInsets.all(
+                14 + (_textScale - 28) * 0.4), // Increased padding
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Compact header with icon and progress - reduced height
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(
+                          5 + (_textScale - 28) * 0.1), // Reduced padding
+                      decoration: BoxDecoration(
+                        color: isCompleted
+                            ? Colors.green.withOpacity(0.1)
+                            : theme.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Icon(
+                        isCompleted
+                            ? Icons.check_circle
+                            : Icons.format_list_numbered,
+                        size: 14 + (_textScale - 28) * 0.2, // Smaller icon
+                        color: isCompleted ? Colors.green : theme.primaryColor,
                       ),
                     ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Action button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed:
-                          isCompleted ? null : () => _updateItemProgress(index),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            isCompleted ? Colors.green : theme.primaryColor,
-                        foregroundColor: theme.colorScheme.onPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: isCompleted ? 0 : 4,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (isCompleted) ...[
-                            const Icon(Icons.check_circle, size: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              'مكتمل',
-                              style: TextStyle(
-                                fontSize: _textScale * 0.8,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          Text(
+                            'أذكار ${index + 1}',
+                            style: TextStyle(
+                              fontSize:
+                                  (_textScale - 28) * 0.25 + 11, // Smaller text
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.onSurface,
                             ),
-                          ] else ...[
-                            const Icon(Icons.touch_app, size: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              'اضغط لإكمال',
-                              style: TextStyle(
-                                fontSize: _textScale * 0.8,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          ),
+                          Text(
+                            '$currentProgress/${item.count}',
+                            style: TextStyle(
+                              fontSize:
+                                  (_textScale - 28) * 0.15 + 9, // Smaller text
+                              color: isCompleted
+                                  ? Colors.green
+                                  : theme.primaryColor,
+                              fontWeight: FontWeight.w500,
                             ),
-                          ],
+                          ),
                         ],
                       ),
                     ),
+                  ],
+                ),
+
+                SizedBox(
+                    height: 6 + (_textScale - 28) * 0.15), // Reduced spacing
+
+                // Compact progress indicator - reduced height
+                LinearProgressIndicator(
+                  value: item.count > 0 ? currentProgress / item.count : 0.0,
+                  backgroundColor: theme.primaryColor.withOpacity(0.1),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    isCompleted ? Colors.green : theme.primaryColor,
                   ),
-                ],
-              ),
+                  borderRadius: BorderRadius.circular(3),
+                  minHeight: 3 + (_textScale - 28) * 0.08, // Reduced height
+                ),
+
+                SizedBox(
+                    height: 6 + (_textScale - 28) * 0.15), // Reduced spacing
+
+                // Expanded adhkar text - now takes most of the space
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Text(
+                      item.text,
+                      style: TextStyle(
+                        fontSize:
+                            (_textScale - 28) * 0.5 + 16, // Increased text size
+                        color: theme.colorScheme.onSurface
+                            .withOpacity(0.9), // Better contrast
+                        height: 1.5, // Better line height
+                        fontWeight: FontWeight.w400,
+                      ),
+                      maxLines: null,
+                      overflow: TextOverflow.visible,
+                      textAlign: TextAlign.justify, // Better text alignment
+                    ),
+                  ),
+                ),
+
+                SizedBox(
+                    height: 6 + (_textScale - 28) * 0.15), // Reduced spacing
+
+                // Compact action button - reduced height
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed:
+                        isCompleted ? null : () => _updateItemProgress(index),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          isCompleted ? Colors.green : theme.primaryColor,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                      padding: EdgeInsets.symmetric(
+                          vertical:
+                              5 + (_textScale - 28) * 0.15), // Reduced padding
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      elevation: isCompleted ? 0 : 1, // Reduced elevation
+                    ),
+                    child: Text(
+                      isCompleted ? 'مكتمل' : 'إكمال',
+                      style: TextStyle(
+                        fontSize: (_textScale - 28) * 0.15 + 9, // Smaller text
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildNavigationControls() {
+    final theme = Theme.of(context);
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.symmetric(
+          horizontal: 16, vertical: 8 + (_textScale - 28) * 0.2),
       child: Row(
         children: [
+          // Previous button
           Expanded(
             child: ElevatedButton.icon(
               onPressed: _currentItemIndex > 0
@@ -897,20 +941,35 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                       });
                     }
                   : null,
-              icon: const Icon(Icons.arrow_back_ios),
+              icon: Icon(
+                Icons.chevron_left,
+                size: 16 + (_textScale - 28) * 0.2,
+              ),
               label: Text(
                 'السابق',
-                style: TextStyle(fontSize: _textScale * 0.7),
+                style: TextStyle(
+                  fontSize: (_textScale - 28) * 0.2 + 10,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                backgroundColor: theme.primaryColor.withOpacity(0.1),
+                foregroundColor: theme.primaryColor,
+                padding: EdgeInsets.symmetric(
+                  vertical: 8 + (_textScale - 28) * 0.2,
+                  horizontal: 12,
                 ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
               ),
             ),
           ),
-          const SizedBox(width: 16),
+
+          const SizedBox(width: 12),
+
+          // Next button
           Expanded(
             child: ElevatedButton.icon(
               onPressed: _currentItemIndex < widget.category.array.length - 1
@@ -920,16 +979,28 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                       });
                     }
                   : null,
-              icon: const Icon(Icons.arrow_forward_ios),
+              icon: Icon(
+                Icons.chevron_right,
+                size: 16 + (_textScale - 28) * 0.2,
+              ),
               label: Text(
                 'التالي',
-                style: TextStyle(fontSize: _textScale * 0.7),
+                style: TextStyle(
+                  fontSize: (_textScale - 28) * 0.2 + 10,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                backgroundColor: theme.primaryColor.withOpacity(0.1),
+                foregroundColor: theme.primaryColor,
+                padding: EdgeInsets.symmetric(
+                  vertical: 8 + (_textScale - 28) * 0.2,
+                  horizontal: 12,
                 ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
               ),
             ),
           ),
