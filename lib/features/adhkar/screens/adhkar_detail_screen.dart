@@ -3,6 +3,7 @@ import 'package:serat/Presentation/Widgets/Shared/custom_app_bar.dart'
     show CustomAppBar;
 import 'package:serat/features/adhkar/models/adhkar_category.dart';
 import 'package:serat/features/adhkar/services/adhkar_progress_service.dart';
+import 'package:serat/features/adhkar/widgets/adhkar_shimmer.dart';
 import 'package:serat/features/adhkar/widgets/view_mode_selector.dart';
 import 'package:serat/Data/utils/cache_helper.dart';
 
@@ -32,6 +33,8 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
   double _categoryProgress = 0.0;
   AdhkarViewMode _viewMode = AdhkarViewMode.list;
   bool _hasProgressChanged = false;
+  bool _isLoading = true;
+  bool _isResetting = false;
 
   // Text size slider state
   double _textScale = 28.0;
@@ -56,9 +59,25 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
       CurvedAnimation(parent: _progressController, curve: Curves.easeInOut),
     );
 
-    _loadProgress();
-    _loadViewMode();
-    _loadTextScale();
+    _initializeScreen();
+  }
+
+  Future<void> _initializeScreen() async {
+    await _loadProgress();
+    await _loadViewMode();
+    await _loadTextScale();
+
+    // Check if we should show the continuation dialog
+    if (mounted) {
+      await _checkAndShowContinuationDialog();
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+      _progressController.forward();
+    }
   }
 
   @override
@@ -66,6 +85,261 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
     _animationController.dispose();
     _progressController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkAndShowContinuationDialog() async {
+    final hasProgress =
+        await _progressService.hasCategoryProgress(widget.category.id);
+
+    if (hasProgress) {
+      final shouldShow =
+          await _progressService.shouldShowResetDialog(widget.category.id);
+
+      if (shouldShow && mounted) {
+        await _showContinuationDialog();
+      }
+    }
+  }
+
+  Future<void> _showContinuationDialog() async {
+    final lastCompleted =
+        await _progressService.getLastCompletedAdhkar(widget.category.id);
+    final sessionData =
+        await _progressService.getSessionData(widget.category.id);
+
+    if (!mounted) return;
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) =>
+          _buildContinuationDialog(lastCompleted, sessionData),
+    );
+
+    if (result != null && mounted) {
+      if (result) {
+        // Continue from where left off
+        await _continueFromLastPosition(sessionData);
+      } else {
+        // Start fresh
+        await _resetAndStartFresh();
+      }
+
+      // Mark dialog as shown
+      await _progressService.markResetDialogShown(widget.category.id);
+    }
+  }
+
+  Widget _buildContinuationDialog(
+      Map<String, dynamic>? lastCompleted, Map<String, dynamic>? sessionData) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    String dialogTitle = 'مرحباً بك مرة أخرى!';
+    String dialogMessage = 'هل تريد الاستمرار من حيث توقفت أم البدء من جديد؟';
+
+    if (lastCompleted != null) {
+      final itemText = lastCompleted['itemText'] as String? ?? '';
+      final shortText =
+          itemText.length > 50 ? '${itemText.substring(0, 50)}...' : itemText;
+      dialogMessage =
+          'آخر ذكر قمت به:\n"$shortText"\n\nهل تريد الاستمرار من حيث توقفت أم البدء من جديد؟';
+    }
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      backgroundColor: theme.cardColor,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.play_circle_outline,
+                size: 48,
+                color: theme.primaryColor,
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Title
+            Text(
+              dialogTitle,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 16),
+
+            // Message
+            Text(
+              dialogMessage,
+              style: TextStyle(
+                fontSize: 16,
+                color: theme.colorScheme.onSurface.withOpacity(0.8),
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 24),
+
+            // Buttons
+            Row(
+              children: [
+                // Continue button
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    icon: const Icon(Icons.play_arrow, size: 20),
+                    label: const Text('استمر'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.primaryColor,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // Reset button
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    icon: const Icon(Icons.refresh, size: 20),
+                    label: const Text('ابدأ من جديد'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: theme.primaryColor,
+                      side: BorderSide(color: theme.primaryColor),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _continueFromLastPosition(
+      Map<String, dynamic>? sessionData) async {
+    if (sessionData != null) {
+      final savedIndex = sessionData['currentItemIndex'] as int? ?? 0;
+      setState(() {
+        _currentItemIndex = savedIndex;
+      });
+    } else {
+      // Find next incomplete item
+      final nextIndex = await _progressService.getNextIncompleteItemIndex(
+        widget.category.id,
+        widget.category.array,
+      );
+      setState(() {
+        _currentItemIndex = nextIndex;
+      });
+    }
+  }
+
+  Future<void> _resetAndStartFresh() async {
+    setState(() {
+      _isResetting = true;
+    });
+
+    await _progressService.resetCategoryProgress(
+      widget.category.id,
+      widget.category.category,
+    );
+
+    // Simulate a small delay for the shimmer effect to be visible
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    setState(() {
+      _currentItemIndex = 0;
+      _itemProgress.clear();
+      _categoryProgress = 0.0;
+      _isResetting = false;
+    });
+
+    await _loadProgress();
+  }
+
+  Future<void> _showResetConfirmationDialog() async {
+    final theme = Theme.of(context);
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: theme.cardColor,
+        title: Row(
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.orange,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            const Text('إعادة تعيين التقدم'),
+          ],
+        ),
+        content: const Text(
+          'هل أنت متأكد من أنك تريد إعادة تعيين جميع التقدم المحفوظ؟\n\nلا يمكن التراجع عن هذا الإجراء.',
+          style: TextStyle(fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('إعادة تعيين'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true && mounted) {
+      await _resetAndStartFresh();
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('تم إعادة تعيين التقدم بنجاح'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _loadViewMode() async {
@@ -109,9 +383,15 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
     // Update last opened progress
     await _progressService.updateLastOpenedProgress(_categoryProgress);
 
+    // Save session data
+    await _progressService.saveSessionData(
+      widget.category.id,
+      _currentItemIndex,
+      _categoryProgress,
+    );
+
     if (mounted) {
       setState(() {});
-      _progressController.forward();
     }
   }
 
@@ -129,6 +409,16 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
         item.id,
         newProgress,
       );
+
+      // Save last completed adhkar
+      if (newProgress >= item.count) {
+        await _progressService.saveLastCompletedAdhkar(
+          widget.category.id,
+          itemIndex,
+          item.id,
+          item.text,
+        );
+      }
 
       // Update category progress
       double totalProgress = 0.0;
@@ -150,6 +440,13 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
 
       // Update last opened progress
       await _progressService.updateLastOpenedProgress(_categoryProgress);
+
+      // Save session data
+      await _progressService.saveSessionData(
+        widget.category.id,
+        _currentItemIndex,
+        _categoryProgress,
+      );
 
       if (mounted) {
         setState(() {});
@@ -191,10 +488,26 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    if (_isLoading) {
+      return Scaffold(
+        appBar: CustomAppBar(title: widget.category.category),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: CustomAppBar(
         title: widget.category.category,
         actions: [
+          // Reset button
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _showResetConfirmationDialog,
+            tooltip: 'إعادة تعيين التقدم',
+          ),
+          // Text size button
           IconButton(
             icon: const Icon(Icons.text_fields),
             onPressed: () {
@@ -202,6 +515,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                 _showTextSizeSlider = !_showTextSizeSlider;
               });
             },
+            tooltip: 'حجم النص',
           ),
         ],
       ),
@@ -582,6 +896,10 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
   }
 
   Widget _buildAdhkarContent() {
+    if (_isResetting) {
+      return const AdhkarShimmer();
+    }
+
     switch (_viewMode) {
       case AdhkarViewMode.list:
         return _buildListView();

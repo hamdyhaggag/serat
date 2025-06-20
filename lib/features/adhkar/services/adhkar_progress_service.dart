@@ -5,6 +5,9 @@ class AdhkarProgressService {
   static const String _progressKey = 'adhkar_progress';
   static const String _itemProgressKey = 'adhkar_item_progress';
   static const String _viewModeKey = 'adhkar_view_mode';
+  static const String _lastCompletedKey = 'last_completed_adhkar';
+  static const String _sessionKey = 'adhkar_session';
+  static const String _resetDialogShownKey = 'reset_dialog_shown';
 
   // Get progress for a specific category
   Future<double> getProgress(String category) async {
@@ -124,6 +127,30 @@ class AdhkarProgressService {
     }
   }
 
+  // Reset progress for a specific category with item tracking
+  Future<void> resetCategoryProgress(
+      int categoryId, String categoryName) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Remove category progress
+    await prefs.remove('${_progressKey}_$categoryName');
+
+    // Remove all item progress for this category
+    final keys = prefs.getKeys();
+    final categoryKeys = keys
+        .where((key) => key.startsWith('${_itemProgressKey}_${categoryId}_'));
+
+    for (final key in categoryKeys) {
+      await prefs.remove(key);
+    }
+
+    // Clear session data for this category
+    await prefs.remove('${_sessionKey}_$categoryId');
+
+    // Clear last completed data for this category
+    await prefs.remove('${_lastCompletedKey}_$categoryId');
+  }
+
   // Get saved view mode
   Future<String> getViewMode() async {
     final prefs = await SharedPreferences.getInstance();
@@ -208,5 +235,146 @@ class AdhkarProgressService {
   Future<void> updateLastOpenedProgress(double progress) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('last_opened_progress', progress);
+  }
+
+  // NEW METHODS FOR PROFESSIONAL FEATURES
+
+  // Save last completed adhkar item for a category
+  Future<void> saveLastCompletedAdhkar(
+      int categoryId, int itemIndex, int itemId, String itemText) async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastCompleted = {
+      'itemIndex': itemIndex,
+      'itemId': itemId,
+      'itemText': itemText,
+      'timestamp': DateTime.now().toIso8601String(),
+      'progress': await getItemProgress(categoryId, itemId),
+    };
+
+    await prefs.setString(
+        '${_lastCompletedKey}_$categoryId', json.encode(lastCompleted));
+  }
+
+  // Get last completed adhkar item for a category
+  Future<Map<String, dynamic>?> getLastCompletedAdhkar(int categoryId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getString('${_lastCompletedKey}_$categoryId');
+
+    if (data != null) {
+      try {
+        return json.decode(data);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  // Save session data for a category
+  Future<void> saveSessionData(
+      int categoryId, int currentItemIndex, double categoryProgress) async {
+    final prefs = await SharedPreferences.getInstance();
+    final sessionData = {
+      'currentItemIndex': currentItemIndex,
+      'categoryProgress': categoryProgress,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+
+    await prefs.setString(
+        '${_sessionKey}_$categoryId', json.encode(sessionData));
+  }
+
+  // Get session data for a category
+  Future<Map<String, dynamic>?> getSessionData(int categoryId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getString('${_sessionKey}_$categoryId');
+
+    if (data != null) {
+      try {
+        return json.decode(data);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  // Check if reset dialog should be shown
+  Future<bool> shouldShowResetDialog(int categoryId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastShown = prefs.getString('${_resetDialogShownKey}_$categoryId');
+
+    if (lastShown == null) return true;
+
+    final lastShownDate = DateTime.tryParse(lastShown);
+    if (lastShownDate == null) return true;
+
+    // Show dialog once per day
+    final now = DateTime.now();
+    final difference = now.difference(lastShownDate).inDays;
+
+    return difference >= 1;
+  }
+
+  // Mark reset dialog as shown
+  Future<void> markResetDialogShown(int categoryId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('${_resetDialogShownKey}_$categoryId',
+        DateTime.now().toIso8601String());
+  }
+
+  // Get completion statistics for a category
+  Future<Map<String, dynamic>> getCategoryStats(
+      int categoryId, int totalItems) async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys();
+    final categoryKeys = keys
+        .where((key) => key.startsWith('${_itemProgressKey}_${categoryId}_'));
+
+    int completedItems = 0;
+    int totalCompletedCount = 0;
+
+    for (final key in categoryKeys) {
+      final progress = prefs.getInt(key) ?? 0;
+      if (progress > 0) {
+        completedItems++;
+        totalCompletedCount += progress;
+      }
+    }
+
+    return {
+      'completedItems': completedItems,
+      'totalItems': totalItems,
+      'totalCompletedCount': totalCompletedCount,
+      'completionPercentage':
+          totalItems > 0 ? (completedItems / totalItems) * 100 : 0.0,
+    };
+  }
+
+  // Check if category has any progress
+  Future<bool> hasCategoryProgress(int categoryId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys();
+    final categoryKeys = keys
+        .where((key) => key.startsWith('${_itemProgressKey}_${categoryId}_'));
+
+    for (final key in categoryKeys) {
+      final progress = prefs.getInt(key) ?? 0;
+      if (progress > 0) return true;
+    }
+    return false;
+  }
+
+  // Get next incomplete item index
+  Future<int> getNextIncompleteItemIndex(
+      int categoryId, List<dynamic> items) async {
+    for (int i = 0; i < items.length; i++) {
+      final item = items[i];
+      final progress = await getItemProgress(categoryId, item['id']);
+      if (progress < item['count']) {
+        return i;
+      }
+    }
+    return 0; // Return first item if all are completed
   }
 }

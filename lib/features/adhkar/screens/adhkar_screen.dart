@@ -210,34 +210,7 @@ class _AdhkarScreenState extends State<AdhkarScreen>
     }
   }
 
-  Future<void> _resetAllProgress() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('مسح التقدم'),
-        content: const Text('هل أنت متأكد من مسح جميع التقدم؟'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('إلغاء'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('مسح'),
-          ),
-        ],
-      ),
-    );
 
-    if (confirmed == true) {
-      for (final category in _categoryProgress.keys) {
-        await _progressService.resetProgress(category);
-      }
-      _loadAllProgress();
-      _loadLastOpenedCategory();
-    }
-  }
 
   IconData _getIconForCategory(String categoryName) {
     if (categoryName.contains('الصباح')) {
@@ -286,10 +259,7 @@ class _AdhkarScreenState extends State<AdhkarScreen>
               });
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _resetAllProgress,
-          ),
+         
         ],
       ),
       body: FadeTransition(
