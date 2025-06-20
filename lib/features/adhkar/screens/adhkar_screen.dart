@@ -5,6 +5,7 @@ import 'package:serat/features/adhkar/services/adhkar_service.dart';
 import 'package:serat/features/adhkar/widgets/adhkar_category_card.dart';
 import 'package:serat/features/adhkar/widgets/adhkar_search_widget.dart';
 import 'package:serat/features/adhkar/screens/adhkar_detail_screen.dart';
+import 'package:serat/shared/constants/app_colors.dart';
 
 class AdhkarScreen extends StatefulWidget {
   const AdhkarScreen({super.key});
@@ -196,21 +197,15 @@ class _AdhkarScreenState extends State<AdhkarScreen>
       ),
     );
 
-    // Reload progress when returning from detail screen
-    if (result == true && mounted) {
-      // Update only the specific category that was modified
+    // Always update progress and last opened category after returning
+    if (mounted) {
       await _updateSpecificCategoryProgress(category.category);
       await _updateLastOpenedCategoryProgress();
-    }
-
-    if (mounted) {
       setState(() {
         _selectedCategory = null;
       });
     }
   }
-
-
 
   IconData _getIconForCategory(String categoryName) {
     if (categoryName.contains('الصباح')) {
@@ -241,11 +236,19 @@ class _AdhkarScreenState extends State<AdhkarScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
+      backgroundColor:
+          isDarkMode ? AppColors.darkBackgroundColor : Colors.white,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'الأذكار',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 23,
+            fontFamily: 'DIN',
+            fontWeight: FontWeight.w700,
+            color: isDarkMode ? Colors.white : AppColors.primaryColor,
+          ),
         ),
         actions: [
           IconButton(
@@ -259,7 +262,6 @@ class _AdhkarScreenState extends State<AdhkarScreen>
               });
             },
           ),
-         
         ],
       ),
       body: FadeTransition(

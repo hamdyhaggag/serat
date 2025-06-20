@@ -494,59 +494,58 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
 
     if (currentProgress < item.count) {
       final newProgress = currentProgress + 1;
-      _itemProgress[itemIndex] = newProgress;
-      _hasProgressChanged = true;
-
-      await _progressService.saveItemProgress(
-        widget.category.id,
-        item.id,
-        newProgress,
-      );
-
-      // Save last completed adhkar
-      if (newProgress >= item.count) {
-        await _progressService.saveLastCompletedAdhkar(
-          widget.category.id,
-          itemIndex,
-          item.id,
-          item.text,
-        );
-      }
-
-      // Update category progress
-      double totalProgress = 0.0;
-      int totalItems = widget.category.array.length;
-
-      for (int i = 0; i < totalItems; i++) {
-        final item = widget.category.array[i];
-        final progress = _itemProgress[i] ?? 0;
-        if (item.count > 0) {
-          totalProgress += progress / item.count;
+      // Optimistically update UI state first
+      setState(() {
+        _itemProgress[itemIndex] = newProgress;
+        _hasProgressChanged = true;
+        // Optionally update _categoryProgress for instant feedback
+        double totalProgress = 0.0;
+        int totalItems = widget.category.array.length;
+        for (int i = 0; i < totalItems; i++) {
+          final item = widget.category.array[i];
+          final progress = _itemProgress[i] ?? 0;
+          if (item.count > 0) {
+            totalProgress += progress / item.count;
+          }
         }
-      }
+        _categoryProgress = totalItems > 0 ? totalProgress / totalItems : 0.0;
+      });
+      _animationController
+          .forward()
+          .then((_) => _animationController.reverse());
 
-      _categoryProgress = totalItems > 0 ? totalProgress / totalItems : 0.0;
+      // Perform async operations in the background
+      () async {
+        await _progressService.saveItemProgress(
+          widget.category.id,
+          item.id,
+          newProgress,
+        );
 
-      // Save category progress for the main screen
-      await _progressService.saveProgress(
-          widget.category.category, _categoryProgress);
+        // Save last completed adhkar
+        if (newProgress >= item.count) {
+          await _progressService.saveLastCompletedAdhkar(
+            widget.category.id,
+            itemIndex,
+            item.id,
+            item.text,
+          );
+        }
 
-      // Update last opened progress
-      await _progressService.updateLastOpenedProgress(_categoryProgress);
+        // Save category progress for the main screen
+        await _progressService.saveProgress(
+            widget.category.category, _categoryProgress);
 
-      // Save session data
-      await _progressService.saveSessionData(
-        widget.category.id,
-        _currentItemIndex,
-        _categoryProgress,
-      );
+        // Update last opened progress
+        await _progressService.updateLastOpenedProgress(_categoryProgress);
 
-      if (mounted) {
-        setState(() {});
-        _animationController
-            .forward()
-            .then((_) => _animationController.reverse());
-      }
+        // Save session data
+        await _progressService.saveSessionData(
+          widget.category.id,
+          _currentItemIndex,
+          _categoryProgress,
+        );
+      }();
 
       return true;
     }
