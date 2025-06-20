@@ -15,6 +15,88 @@ import 'package:serat/features/adhkar/widgets/view_mode_selector.dart';
 import 'package:serat/Data/utils/cache_helper.dart';
 import 'package:share_plus/share_plus.dart';
 
+// Widget for sharing: includes card, logo, and text at the bottom
+class AdhkarShareCard extends StatelessWidget {
+  final Widget cardContent;
+  const AdhkarShareCard({Key? key, required this.cardContent})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark ? const Color(0xFF23272F) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final dividerColor = isDark ? Colors.grey[700] : Colors.grey[300];
+    final logoAsset = isDark
+        ? 'assets/logo.png'
+        : 'assets/logo.png'; // Change to 'assets/logo_dark.png' if you have a dark logo
+
+    return Container(
+      color: backgroundColor,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          cardContent,
+          const SizedBox(height: 24),
+          Divider(thickness: 1, color: dividerColor),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                logoAsset,
+                width: 32,
+                height: 32,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                ' تمت المشاركة من تطبيق صِراط',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
+                  fontFamily: 'Cairo',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Helper to capture a widget to image
+Future<RenderRepaintBoundary> _captureWidgetToImage(
+    Widget widget, GlobalKey key, Size logicalSize) async {
+  final repaintBoundary = RenderRepaintBoundary();
+  final view = WidgetsBinding.instance.platformDispatcher.implicitView ??
+      WidgetsBinding.instance.platformDispatcher.views.first;
+  final renderView = RenderView(
+    child: repaintBoundary,
+    configuration: ViewConfiguration(
+      devicePixelRatio: 3.0,
+    ),
+    view: view,
+  );
+  final pipelineOwner = PipelineOwner();
+  pipelineOwner.rootNode = renderView;
+  final buildOwner = BuildOwner(focusManager: FocusManager());
+  final renderElement = RenderObjectToWidgetAdapter<RenderBox>(
+    container: repaintBoundary,
+    child: widget,
+  ).attachToRenderTree(buildOwner);
+  buildOwner.buildScope(renderElement);
+  buildOwner.finalizeTree();
+  pipelineOwner.flushLayout();
+  pipelineOwner.flushCompositingBits();
+  pipelineOwner.flushPaint();
+  return repaintBoundary;
+}
+
 class AdhkarDetailScreen extends StatefulWidget {
   final AdhkarCategory category;
   final int initialItemIndex;
@@ -37,6 +119,8 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
 
   final AdhkarProgressService _progressService = AdhkarProgressService();
   final Map<int, GlobalKey> _cardKeys = {};
+  final GlobalKey _shareBoundaryKey = GlobalKey();
+  int? _shareCardIndex; // null means not sharing
   int _currentItemIndex = 0;
   Map<int, int> _itemProgress = {};
   double _categoryProgress = 0.0;
@@ -493,49 +577,43 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
     );
   }
 
-  Future<void> _shareCardAsImage(GlobalKey cardKey) async {
-    try {
-      // Show a loading indicator
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('جاري المعالجة...')),
-      );
-
-      // Add a small delay to allow the framework to schedule a paint.
-      await Future.delayed(const Duration(milliseconds: 50));
-
-      if (cardKey.currentContext == null) {
-        throw Exception("Card is not visible on screen.");
-      }
-
-      RenderRepaintBoundary boundary =
-          cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
-      Uint8List pngBytes = byteData!.buffer.asUint8List();
-
-      final tempDir = await getTemporaryDirectory();
-      final file = await File('${tempDir.path}/adhkar.png').create();
-      await file.writeAsBytes(pngBytes);
-
-      // Dismiss the loading indicator
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: 'Serat Adhkar',
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sharing Adhkar: $e')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    // Offstage share widget (for screenshot)
+    Widget? offstageShareWidget;
+    if (_shareCardIndex != null) {
+      final item = widget.category.array[_shareCardIndex!];
+      final currentProgress = _itemProgress[_shareCardIndex!] ?? 0;
+      final isCompleted = currentProgress >= item.count;
+      final isCurrentItem = _shareCardIndex == _currentItemIndex;
+      offstageShareWidget = Offstage(
+        offstage: false,
+        child: Material(
+          type: MaterialType.transparency,
+          child: Center(
+            child: RepaintBoundary(
+              key: _shareBoundaryKey,
+              child: Theme(
+                data: Theme.of(context),
+                child: AdhkarShareCard(
+                  cardContent: _buildAdhkarItemCardContent(
+                    _shareCardIndex!,
+                    isCurrentItem,
+                    isCompleted,
+                    currentProgress,
+                    item,
+                    theme,
+                    forShare: true,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     if (_isLoading) {
       return Scaffold(
@@ -546,108 +624,113 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
       );
     }
 
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: widget.category.category,
-        actions: [
-          // Reset button
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _showResetConfirmationDialog,
-            tooltip: 'إعادة تعيين التقدم',
-          ),
-          // Text size button
-          IconButton(
-            icon: const Icon(Icons.text_fields),
-            onPressed: () {
-              setState(() {
-                _showTextSizeSlider = !_showTextSizeSlider;
-              });
-            },
-            tooltip: 'حجم النص',
-          ),
-        ],
-      ),
-      body: CustomScrollView(
-        slivers: [
-          // Fixed dots section
-          SliverToBoxAdapter(
-            child: Container(
-              decoration: BoxDecoration(
-                color: theme.scaffoldBackgroundColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.shadowColor.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: CustomAppBar(
+            title: widget.category.category,
+            actions: [
+              // Reset button
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: _showResetConfirmationDialog,
+                tooltip: 'إعادة تعيين التقدم',
               ),
-              child: Column(
-                children: [
-                  // Professional progress indicator
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    child: _buildProfessionalProgressIndicator(),
-                  ),
-
-                  // Text size slider
-                  if (_showTextSizeSlider)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      child: _buildCustomTextSizeSlider(),
-                    ),
-
-                  // View mode selector
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: ViewModeSelector(
-                      currentMode: _viewMode,
-                      onModeChanged: _updateViewMode,
-                    ),
-                  ),
-
-                  // Page indicator (fixed)
-                  _buildPageIndicator(),
-
-                  // Subtle separator
-                  Container(
-                    height: 1,
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.transparent,
-                          theme.dividerColor.withOpacity(0.3),
-                          Colors.transparent,
-                        ],
+              // Text size button
+              IconButton(
+                icon: const Icon(Icons.text_fields),
+                onPressed: () {
+                  setState(() {
+                    _showTextSizeSlider = !_showTextSizeSlider;
+                  });
+                },
+                tooltip: 'حجم النص',
+              ),
+            ],
+          ),
+          body: CustomScrollView(
+            slivers: [
+              // Fixed dots section
+              SliverToBoxAdapter(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: theme.scaffoldBackgroundColor,
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.shadowColor.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                  child: Column(
+                    children: [
+                      // Professional progress indicator
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        child: _buildProfessionalProgressIndicator(),
+                      ),
+
+                      // Text size slider
+                      if (_showTextSizeSlider)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          child: _buildCustomTextSizeSlider(),
+                        ),
+
+                      // View mode selector
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: ViewModeSelector(
+                          currentMode: _viewMode,
+                          onModeChanged: _updateViewMode,
+                        ),
+                      ),
+
+                      // Page indicator (fixed)
+                      _buildPageIndicator(),
+
+                      // Subtle separator
+                      Container(
+                        height: 1,
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.transparent,
+                              theme.dividerColor.withOpacity(0.3),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
 
-          // Scrollable content
-          SliverToBoxAdapter(
-            child: _buildAdhkarContent(),
-          ),
+              // Scrollable content
+              SliverToBoxAdapter(
+                child: _buildAdhkarContent(),
+              ),
 
-          // Navigation controls (if horizontal mode)
-          if (_viewMode == AdhkarViewMode.horizontal)
-            SliverToBoxAdapter(
-              child: _buildNavigationControls(),
-            ),
+              // Navigation controls (if horizontal mode)
+              if (_viewMode == AdhkarViewMode.horizontal)
+                SliverToBoxAdapter(
+                  child: _buildNavigationControls(),
+                ),
 
-          // Bottom padding
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 20),
+              // Bottom padding
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 20),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        if (offstageShareWidget != null) offstageShareWidget,
+      ],
     );
   }
 
@@ -1098,8 +1181,37 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                       icon: const Icon(Icons.share_outlined),
                       iconSize: 22,
                       tooltip: 'مشاركة الذكر',
-                      onPressed: () {
-                        _shareCardAsImage(cardKey);
+                      onPressed: () async {
+                        setState(() {
+                          _shareCardIndex = index;
+                        });
+                        await Future.delayed(const Duration(milliseconds: 50));
+                        await WidgetsBinding.instance.endOfFrame;
+                        try {
+                          RenderRepaintBoundary boundary = _shareBoundaryKey
+                              .currentContext!
+                              .findRenderObject() as RenderRepaintBoundary;
+                          var image = await boundary.toImage(pixelRatio: 3.0);
+                          ByteData? byteData = await image.toByteData(
+                              format: ui.ImageByteFormat.png);
+                          Uint8List pngBytes = byteData!.buffer.asUint8List();
+                          final tempDir = await getTemporaryDirectory();
+                          final file =
+                              await File('${tempDir.path}/adhkar.png').create();
+                          await file.writeAsBytes(pngBytes);
+                          await Share.shareXFiles(
+                            [XFile(file.path)],
+                            subject: 'Serat Adhkar',
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error sharing Adhkar: $e')),
+                          );
+                        } finally {
+                          setState(() {
+                            _shareCardIndex = null;
+                          });
+                        }
                       },
                     ),
                   ],
@@ -1255,8 +1367,37 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                       icon: const Icon(Icons.share_outlined),
                       iconSize: 18,
                       tooltip: 'مشاركة الذكر',
-                      onPressed: () {
-                        _shareCardAsImage(cardKey);
+                      onPressed: () async {
+                        setState(() {
+                          _shareCardIndex = index;
+                        });
+                        await Future.delayed(const Duration(milliseconds: 50));
+                        await WidgetsBinding.instance.endOfFrame;
+                        try {
+                          RenderRepaintBoundary boundary = _shareBoundaryKey
+                              .currentContext!
+                              .findRenderObject() as RenderRepaintBoundary;
+                          var image = await boundary.toImage(pixelRatio: 3.0);
+                          ByteData? byteData = await image.toByteData(
+                              format: ui.ImageByteFormat.png);
+                          Uint8List pngBytes = byteData!.buffer.asUint8List();
+                          final tempDir = await getTemporaryDirectory();
+                          final file =
+                              await File('${tempDir.path}/adhkar.png').create();
+                          await file.writeAsBytes(pngBytes);
+                          await Share.shareXFiles(
+                            [XFile(file.path)],
+                            subject: 'Serat Adhkar',
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error sharing Adhkar: $e')),
+                          );
+                        } finally {
+                          setState(() {
+                            _shareCardIndex = null;
+                          });
+                        }
                       },
                     ),
                   ],
@@ -1494,6 +1635,103 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
             constraints: const BoxConstraints(),
           ),
         ],
+      ),
+    );
+  }
+
+  // Helper to build the card content for sharing (no buttons, no gestures)
+  Widget _buildAdhkarItemCardContent(
+    int index,
+    bool isCurrentItem,
+    bool isCompleted,
+    int currentProgress,
+    dynamic item,
+    ThemeData theme, {
+    bool forShare = false,
+  }) {
+    return Card(
+      elevation: 8.0,
+      shadowColor: theme.primaryColor.withOpacity(0.3),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.primaryColor, width: 2),
+      ),
+      color: theme.primaryColor.withOpacity(0.1),
+      child: Padding(
+        padding: EdgeInsets.all(16 + (_textScale - 28) * 0.6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isCompleted
+                        ? Colors.green.withOpacity(0.1)
+                        : theme.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    isCompleted
+                        ? Icons.check_circle
+                        : Icons.format_list_numbered,
+                    size: 20,
+                    color: isCompleted ? Colors.green : theme.primaryColor,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'الذِكر رقم ${index + 1}',
+                        style: TextStyle(
+                          fontSize: _textScale * 0.7,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      Text(
+                        '$currentProgress/${item.count}',
+                        style: TextStyle(
+                          fontSize: _textScale * 0.8,
+                          color:
+                              isCompleted ? Colors.green : theme.primaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12 + (_textScale - 28) * 0.4), // Dynamic spacing
+            LinearProgressIndicator(
+              value: item.count > 0 ? currentProgress / item.count : 0.0,
+              backgroundColor: theme.primaryColor.withOpacity(0.1),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isCompleted ? Colors.green : theme.primaryColor,
+              ),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              item.text,
+              style: TextStyle(
+                fontSize: _textScale * 0.6,
+                color: theme.colorScheme.onSurface.withOpacity(0.8),
+                height: 1.5,
+              ),
+              maxLines: null, // Allow unlimited lines
+              overflow: TextOverflow.visible,
+            ),
+            const SizedBox(height: 8),
+            SizedBox(height: 12 + (_textScale - 28) * 0.4), // Dynamic spacing
+          ],
+        ),
       ),
     );
   }
