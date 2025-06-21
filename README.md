@@ -25,19 +25,22 @@
 | :---: | :---: | :---: |
 | <img src="assets/screenshots/4.png" alt="Screenshot 4" width="250"/> | <img src="assets="assets/screenshots/5.png" alt="Screenshot 5" width="250"/> | <img src="assets/screenshots/6.png" alt="Screenshot 6" width="250"/> |
 
+```markdown
 ## ✨ Features
 
-- Prayer Times & Qibla Direction
-- Full Quran with Tafsir
-- Morning & Evening Azkar (Supplications)
-- Hadith Collection (Al-Nawawi's Forty Hadith)
-- Digital Tasbih (Sebha)
-- Islamic Radio & Quran Videos
-- Hijri Calendar & Zakat Calculator
-- Daily Goal Tracking
-- Customizable Notifications
-- Light & Dark Mode Support
-- Arabic Language Support
+-   **Prayer Times & Qibla Direction:** Accurate prayer times with customizable alarms and a compass-based Qibla finder.
+-   **Full Quran:** Read the complete Holy Quran with a Mushaf-like interface, audio recitations from various Qaris, and verse/page bookmarking.
+-   **Tafsir (Interpretation):** Access detailed interpretations for deeper understanding of Quranic verses.
+-   **Extensive Hadith Collection:** Browse and search major Hadith books, including a dedicated section for Imam al-Nawawi's Forty Hadith.
+-   **Daily Azkar & Digital Tasbih:** Categorized morning, evening, and post-prayer supplications with counters, and a digital Tasbih with haptic feedback.
+-   **Islamic Quiz:** Test and expand your knowledge on various Islamic topics.
+-   **Quran Videos & Islamic Radio:** Watch curated Quran-related videos and stream live Islamic radio channels.
+-   **Hijri Calendar:** View the Islamic calendar, track important dates, and see upcoming holidays.
+-   **Daily Goal Tracking:** Set, track, and achieve personal daily worship goals.
+-   **Light & Dark Mode:** Beautifully designed interface supporting both light and dark themes.
+-   **Onboarding Experience:** A guided tour to introduce new users to all app features.
+-   **Multilingual Support:** The app is available in multiple languages to serve a global audience.
+```
 
 ## 🛠 Tech Stack
 
