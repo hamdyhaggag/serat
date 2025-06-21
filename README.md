@@ -25,7 +25,7 @@
 | :---: | :---: | :---: |
 | <img src="assets/screenshots/4.png" alt="Screenshot 4" width="250"/> | <img src="assets="assets/screenshots/5.png" alt="Screenshot 5" width="250"/> | <img src="assets/screenshots/6.png" alt="Screenshot 6" width="250"/> |
 
-```markdown
+
 ## ✨ Features
 
 -   **Prayer Times & Qibla Direction:** Accurate prayer times with customizable alarms and a compass-based Qibla finder.
@@ -40,7 +40,6 @@
 -   **Light & Dark Mode:** Beautifully designed interface supporting both light and dark themes.
 -   **Onboarding Experience:** A guided tour to introduce new users to all app features.
 -   **Multilingual Support:** The app is available in multiple languages to serve a global audience.
-```
 
 ## 🛠 Tech Stack
 
