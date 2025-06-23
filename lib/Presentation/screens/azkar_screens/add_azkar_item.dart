@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:serat/Presentation/Widgets/Shared/custom_reset_button.dart' show AppButton;
+import 'package:serat/Presentation/Widgets/Shared/custom_reset_button.dart'
+    show AppButton;
 import 'package:serat/Presentation/screens/azkar_screens/sebha_list_screen.dart';
 import 'package:serat/Presentation/Widgets/Azkar/sebha_azkar_service.dart';
 import 'package:serat/imports.dart';
@@ -42,139 +43,129 @@ class AddAzkarScreenState extends State<AddAzkarScreen>
     super.dispose();
   }
 
-  void _showSuccessDialog(BuildContext context, String text) {
-    showDialog(
+  Future<bool?> _showSuccessDialog(
+      BuildContext context, String text, int count, String reward) {
+    _animationController.forward();
+    return showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder:
-          (context) => Dialog(
-            backgroundColor: Colors.transparent,
-            child: ScaleTransition(
-              scale: _scaleAnimation,
-              child: Container(
-                padding: EdgeInsets.all(20.w),
-                decoration: BoxDecoration(
-                  color:
-                      Theme.of(context).brightness == Brightness.dark
-                          ? const Color(0xff2C2C2C)
-                          : Colors.white,
-                  borderRadius: BorderRadius.circular(20.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      spreadRadius: 5,
-                    ),
-                  ],
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: ScaleTransition(
+          scale: _scaleAnimation,
+          child: Container(
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xff2C2C2C)
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(20.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  spreadRadius: 5,
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(15.w),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.check_circle,
+                    color: AppColors.primaryColor,
+                    size: 50.sp,
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                Text(
+                  'تمت الإضافة بنجاح',
+                  style: TextStyle(
+                    fontFamily: 'DIN',
+                    fontSize: 24.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : AppColors.primaryColor,
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                Text(
+                  text,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'DIN',
+                    fontSize: 16.sp,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey
+                        : Colors.grey[600],
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      padding: EdgeInsets.all(15.w),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryColor.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.check_circle,
-                        color: AppColors.primaryColor,
-                        size: 50.sp,
-                      ),
-                    ),
-                    SizedBox(height: 20.h),
-                    Text(
-                      'تمت الإضافة بنجاح',
-                      style: TextStyle(
-                        fontFamily: 'DIN',
-                        fontSize: 24.sp,
-                        fontWeight: FontWeight.bold,
-                        color:
-                            Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white
-                                : AppColors.primaryColor,
-                      ),
-                    ),
-                    SizedBox(height: 10.h),
-                    Text(
-                      text,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'DIN',
-                        fontSize: 16.sp,
-                        color:
-                            Theme.of(context).brightness == Brightness.dark
-                                ? Colors.grey
-                                : Colors.grey[600],
-                      ),
-                    ),
-                    SizedBox(height: 20.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            Navigator.pop(context);
-                          },
-                          child: Text(
-                            'العودة للقائمة',
-                            style: TextStyle(
-                              fontFamily: 'DIN',
-                              fontSize: 16.sp,
-                              color: Colors.grey[600],
-                            ),
-                          ),
+                    OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(context, false);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                            color: AppColors.primaryColor, width: 1.5),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 18.w, vertical: 10.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.r),
                         ),
-                        SizedBox(width: 20.w),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => Sebha(
-                                      title: text,
-                                      subtitle: _rewardController.text,
-                                      beadCount: int.parse(
-                                        _countController.text,
-                                      ),
-                                      maxCounter: int.parse(
-                                        _countController.text,
-                                      ),
-                                    ),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryColor,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 20.w,
-                              vertical: 12.h,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.r),
-                            ),
-                          ),
-                          child: Text(
-                            'بدء التسبيح',
-                            style: TextStyle(
-                              fontFamily: 'DIN',
-                              fontSize: 16.sp,
-                              color: Colors.white,
-                            ),
-                          ),
+                      ),
+                      child: Text(
+                        'العودة للقائمة',
+                        style: TextStyle(
+                          fontFamily: 'DIN',
+                          fontSize: 16.sp,
+                          color: AppColors.primaryColor,
                         ),
-                      ],
+                      ),
+                    ),
+                    SizedBox(width: 20.w),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context, true);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryColor,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 20.w,
+                          vertical: 12.h,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.r),
+                        ),
+                        elevation: 2,
+                      ),
+                      child: Text(
+                        'بدء التسبيح',
+                        style: TextStyle(
+                          fontFamily: 'DIN',
+                          fontSize: 16.sp,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
+              ],
             ),
           ),
+        ),
+      ),
     );
-    _animationController.forward();
   }
 
   Future<void> _addAzkar() async {
@@ -190,8 +181,21 @@ class AddAzkarScreenState extends State<AddAzkarScreen>
         await saveSebhaCounter(text, 0, 0, 0);
 
         if (mounted) {
-          Vibration.vibrate();
-          _showSuccessDialog(context, text);
+          final result = await _showSuccessDialog(context, text, count, reward);
+          if (result == true) {
+            // Navigate to Sebha screen for this item
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Sebha(
+                  title: text,
+                  subtitle: reward,
+                  beadCount: count,
+                  maxCounter: count,
+                ),
+              ),
+            );
+          }
         }
       } catch (e) {
         if (mounted) {

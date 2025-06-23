@@ -170,65 +170,79 @@ class AboutScreen extends StatelessWidget {
 
   Widget _buildDeveloperCardModern(
       BuildContext context, DeveloperInfo developer, bool isDarkMode) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color:
-          isDarkMode ? const Color.fromRGBO(255, 255, 255, 0.07) : Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: isDarkMode
-                  ? Colors.tealAccent.withOpacity(0.2)
-                  : Colors.teal.withOpacity(0.2),
-              child: Icon(Icons.person,
-                  size: 32,
-                  color: isDarkMode ? Colors.tealAccent : Colors.teal),
-            ),
-            const SizedBox(width: 18),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppText(
-                    developer.name,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode
-                        ? const Color.fromRGBO(255, 255, 255, 0.9)
-                        : Colors.black87,
-                  ),
-                  const SizedBox(height: 4),
-                  AppText(
-                    developer.role,
-                    fontSize: 14,
-                    color: isDarkMode
-                        ? const Color.fromRGBO(255, 255, 255, 0.7)
-                        : Colors.black54,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: developer.socialLinks.entries.map((entry) {
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: InkWell(
-                          onTap: () => _launchURL(entry.value),
-                          child: Icon(
-                            _getSocialIcon(entry.key),
-                            size: 22,
-                            color: isDarkMode ? Colors.tealAccent : Colors.teal,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (context) => DeveloperDialog(
+            developerInfo: developer,
+            isDarkMode: isDarkMode,
+          ),
+        );
+      },
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        color: isDarkMode
+            ? const Color.fromRGBO(255, 255, 255, 0.07)
+            : Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: isDarkMode
+                    ? Colors.tealAccent.withOpacity(0.2)
+                    : Colors.teal.withOpacity(0.2),
+                child: Icon(Icons.person,
+                    size: 32,
+                    color: isDarkMode ? Colors.tealAccent : Colors.teal),
               ),
-            ),
-          ],
+              const SizedBox(width: 18),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppText(
+                      developer.name,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDarkMode
+                          ? const Color.fromRGBO(255, 255, 255, 0.9)
+                          : Colors.black87,
+                    ),
+                    const SizedBox(height: 4),
+                    AppText(
+                      developer.role,
+                      fontSize: 14,
+                      color: isDarkMode
+                          ? const Color.fromRGBO(255, 255, 255, 0.7)
+                          : Colors.black54,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: developer.socialLinks.entries.map((entry) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: InkWell(
+                            onTap: () => _launchURL(entry.value),
+                            child: Icon(
+                              _getSocialIcon(entry.key),
+                              size: 22,
+                              color:
+                                  isDarkMode ? Colors.tealAccent : Colors.teal,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

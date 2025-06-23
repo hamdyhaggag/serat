@@ -11,7 +11,7 @@ class ThemeCubit extends Cubit<ThemeState> {
   bool isLightMode = true;
 
   void _loadThemeFromCache() {
-    final cachedTheme = CacheHelper.getBoolean(key: 'isLight');
+    final cachedTheme = CacheHelper.sharedPreferences!.getBool('isLight');
     if (cachedTheme != null) {
       isLightMode = cachedTheme;
       emit(ThemeChangeModeState());

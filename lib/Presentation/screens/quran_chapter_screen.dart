@@ -6,6 +6,9 @@ import 'package:serat/Core/models/quran_verse.dart';
 import 'package:serat/Core/services/quran_service.dart';
 import 'package:serat/Core/services/cache_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../Presentation/Widgets/Shared/custom_app_bar.dart';
+import 'package:serat/Presentation/Config/constants/colors.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class QuranChapterScreen extends StatefulWidget {
   final QuranChapter chapter;
@@ -451,51 +454,31 @@ class _QuranChapterScreenState extends State<QuranChapterScreen> {
       },
       child: Scaffold(
         backgroundColor: scaffoldBgColor,
-        appBar: AppBar(
-          backgroundColor: appBarColor,
-          elevation: isDarkMode ? 0.5 : 1.0,
-          scrolledUnderElevation: 2.0,
-          centerTitle: true,
-          title: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                isWithinChapter
-                    ? "سورة ${widget.chapter.name['ar'] ?? ''}"
-                    : "صفحة ${_toArabicNumbers(actualPageNumber.toString())}",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: isDarkMode ? Colors.white : Colors.white,
-                  fontFamily: 'Amiri',
-                ),
-              ),
-              AnimatedOpacity(
-                opacity: 1.0,
-                duration: const Duration(milliseconds: 300),
+        appBar: CustomAppBar(
+          title: isWithinChapter
+              ? "سورة ${widget.chapter.name['ar'] ?? ''}"
+              : "صفحة ${_toArabicNumbers(actualPageNumber.toString())}",
+          actions: [
+            AnimatedOpacity(
+              opacity: 1.0,
+              duration: const Duration(milliseconds: 300),
+              child: Padding(
+                padding:
+                    const EdgeInsets.only(top: 12.0, right: 8.0, left: 8.0),
                 child: Text(
                   '${_toArabicNumbers(actualPageNumber.toString())} / ${_toArabicNumbers(_totalPages.toString())}',
                   style: TextStyle(
-                    color: (isDarkMode ? Colors.white : Colors.white)
-                        .withAlpha(200),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withAlpha(200)
+                        : AppColors.primaryColor.withAlpha(200),
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     fontFamily: 'Cairo',
                   ),
                 ),
               ),
-            ],
-          ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 22),
-            color: isDarkMode ? Colors.white : Colors.white,
-            tooltip: 'Back to Chapters',
-            onPressed: () {
-              _saveCurrentPage();
-              context.read<QuranCubit>().returnToChapters();
-              Navigator.of(context).pop();
-            },
-          ),
+            ),
+          ],
         ),
         body: LayoutBuilder(
           builder: (context, constraints) {

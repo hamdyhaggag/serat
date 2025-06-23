@@ -5,6 +5,7 @@ import 'package:flutter_compass/flutter_compass.dart';
 import 'package:serat/Business_Logic/Cubit/qibla_cubit.dart';
 import 'package:serat/Business_Logic/Cubit/location_cubit.dart';
 import 'package:serat/Presentation/widgets/error_widget.dart';
+import 'package:serat/Presentation/widgets/custom_app_bar.dart';
 import 'package:serat/imports.dart';
 
 class QiblaScreen extends StatefulWidget {
@@ -87,24 +88,8 @@ class QiblaScreenState extends State<QiblaScreen>
         final locationCubit = LocationCubit.get(context);
         return Scaffold(
           backgroundColor: isDarkMode ? const Color(0xff1F1F1F) : Colors.white,
-          appBar: AppBar(
-            systemOverlayStyle: SystemUiOverlayStyle(
-              statusBarColor: Colors.transparent,
-              statusBarIconBrightness:
-                  isDarkMode ? Brightness.light : Brightness.dark,
-            ),
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-            title: Text(
-              'القبلة',
-              style: TextStyle(
-                fontFamily: 'DIN',
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: isDarkMode ? Colors.white : AppColors.primaryColor,
-              ),
-            ),
-            centerTitle: true,
+          appBar: CustomAppBar(
+            title: 'القبلة',
           ),
           body: state is GetQiblaDirectionLoading
               ? const Center(child: CircularProgressIndicator())

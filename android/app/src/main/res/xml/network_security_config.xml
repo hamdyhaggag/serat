@@ -11,8 +11,6 @@
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
-        <pin-set expiration="2025-12-31">
-            <!-- Add your certificate pins here -->
-        </pin-set>
+       
     </domain-config>
 </network-security-config> 
