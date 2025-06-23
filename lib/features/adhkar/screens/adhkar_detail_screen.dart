@@ -664,12 +664,6 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                   ),
                   child: Column(
                     children: [
-                      // Professional progress indicator
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        child: _buildProfessionalProgressIndicator(),
-                      ),
-
                       // Text size slider
                       if (_showTextSizeSlider)
                         Container(
@@ -727,121 +721,30 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
               ),
             ],
           ),
+          bottomNavigationBar: _viewMode == AdhkarViewMode.list
+              ? _buildPersistentProgressBar(context)
+              : null,
         ),
         if (offstageShareWidget != null) offstageShareWidget,
       ],
     );
   }
 
-  Widget _buildProfessionalProgressIndicator() {
+  Widget _buildPersistentProgressBar(BuildContext context) {
     final theme = Theme.of(context);
-    final completedItems = _itemProgress.values.where((p) => p > 0).length;
-    final totalItems = widget.category.array.length;
-    final isCompleted = _categoryProgress >= 1.0;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.primaryColor,
-            theme.primaryColor.withOpacity(0.8),
-          ],
+    return SafeArea(
+      child: Container(
+        width: double.infinity,
+        color: theme.scaffoldBackgroundColor,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        child: LinearProgressIndicator(
+          value: _categoryProgress,
+          minHeight: 6,
+          backgroundColor: theme.primaryColor.withOpacity(0.15),
+          valueColor: AlwaysStoppedAnimation<Color>(
+            _categoryProgress >= 1.0 ? Colors.green : theme.primaryColor,
+          ),
         ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: theme.primaryColor.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '$completedItems/$totalItems',
-                    style: TextStyle(
-                      color: theme.colorScheme.onPrimary,
-                      fontSize: 19,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    'أذكار مكتملة',
-                    style: TextStyle(
-                      color: theme.colorScheme.onPrimary.withOpacity(0.8),
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onPrimary.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  isCompleted ? Icons.celebration : Icons.auto_awesome,
-                  color: theme.colorScheme.onPrimary,
-                  size: 28,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Stack(
-            children: [
-              Container(
-                height: 12,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onPrimary.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeInOut,
-                height: 12,
-                width:
-                    MediaQuery.of(context).size.width * 0.8 * _categoryProgress,
-                decoration: BoxDecoration(
-                  color:
-                      isCompleted ? Colors.green : theme.colorScheme.onPrimary,
-                  borderRadius: BorderRadius.circular(6),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (isCompleted
-                              ? Colors.green
-                              : theme.colorScheme.onPrimary)
-                          .withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${(_categoryProgress * 100).toInt()}% مكتمل',
-            style: TextStyle(
-              color: theme.colorScheme.onPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ),
     );
   }
