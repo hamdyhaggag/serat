@@ -13,29 +13,49 @@ class AboutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const AppText(
-          'عن التطبيق',
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-        centerTitle: true,
-      ),
+      appBar: const CustomAppBar(title: 'عن التطبيق'),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _buildAppInfo(isDarkMode),
+              // App Logo
+              Center(
+                child: CircleAvatar(
+                  radius: 44,
+                  backgroundColor: isDarkMode
+                      ? Colors.white.withOpacity(0.08)
+                      : Colors.black.withOpacity(0.05),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Image.asset(
+                      'assets/logo.png',
+                      fit: BoxFit.contain,
+                      height: 64,
+                      width: 64,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              _buildAppInfoCard(isDarkMode),
               const SizedBox(height: 30),
-              _buildFeaturesList(isDarkMode),
+              _buildSectionHeader('المميزات', isDarkMode),
+              const SizedBox(height: 10),
+              _buildFeaturesHorizontalList(isDarkMode, size),
               const SizedBox(height: 30),
-              _buildDevelopersSection(context, isDarkMode),
+              _buildSectionHeader('المطور', isDarkMode),
+              const SizedBox(height: 10),
+              _buildDeveloperCardModern(
+                  context, AboutScreenConstants.developers.first, isDarkMode),
               const SizedBox(height: 30),
-              _buildActionButtons(context, isDarkMode),
+              _buildSectionHeader('روابط سريعة', isDarkMode),
+              const SizedBox(height: 10),
+              _buildActionButtonsRow(context, isDarkMode),
             ],
           ),
         ),
@@ -43,236 +63,223 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAppInfo(bool isDarkMode) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: isDarkMode
-                ? const Color.fromRGBO(255, 255, 255, 0.05)
-                : const Color.fromRGBO(0, 0, 0, 0.02),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: isDarkMode
-                      ? const Color.fromRGBO(255, 255, 255, 0.1)
-                      : const Color.fromRGBO(0, 0, 0, 0.05),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.info_outline,
-                  size: 40,
-                  color: isDarkMode
-                      ? const Color.fromRGBO(255, 255, 255, 0.9)
-                      : const Color.fromRGBO(0, 0, 0, 0.9),
-                ),
-              ),
-              const SizedBox(height: 20),
-              AppText(
-                AboutScreenConstants.appName,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: isDarkMode
-                    ? const Color.fromRGBO(255, 255, 255, 0.9)
-                    : const Color.fromRGBO(0, 0, 0, 0.9),
-              ),
-              const SizedBox(height: 8),
-              AppText(
-                AboutScreenConstants.appVersion,
-                fontSize: 16,
-                color: isDarkMode
-                    ? const Color.fromRGBO(255, 255, 255, 0.7)
-                    : const Color.fromRGBO(0, 0, 0, 0.7),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        AppText(
-          AboutScreenConstants.appDescription,
-          fontSize: 16,
-          color: isDarkMode
-              ? const Color.fromRGBO(255, 255, 255, 0.7)
-              : const Color.fromRGBO(0, 0, 0, 0.7),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFeaturesList(bool isDarkMode) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppText(
-          'المميزات',
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: isDarkMode
-              ? const Color.fromRGBO(255, 255, 255, 0.9)
-              : const Color.fromRGBO(0, 0, 0, 0.9),
-        ),
-        const SizedBox(height: 15),
-        ...AboutScreenConstants.features.map(
-          (feature) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: FeatureItemWidget(
-              feature: feature,
-              isDarkMode: isDarkMode,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDevelopersSection(BuildContext context, bool isDarkMode) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppText(
-          'المطورون',
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: isDarkMode
-              ? const Color.fromRGBO(255, 255, 255, 0.9)
-              : const Color.fromRGBO(0, 0, 0, 0.9),
-        ),
-        const SizedBox(height: 15),
-        ...AboutScreenConstants.developers.map(
-          (developer) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _buildDeveloperCard(context, developer, isDarkMode),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDeveloperCard(
-    BuildContext context,
-    DeveloperInfo developer,
-    bool isDarkMode,
-  ) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _showDeveloperDialog(context, developer, isDarkMode),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(15),
-          decoration: BoxDecoration(
-            color: isDarkMode
-                ? const Color.fromRGBO(255, 255, 255, 0.05)
-                : const Color.fromRGBO(0, 0, 0, 0.02),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
+  Widget _buildAppInfoCard(bool isDarkMode) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      color:
+          isDarkMode ? const Color.fromRGBO(255, 255, 255, 0.05) : Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 18),
+        child: Column(
+          children: [
+            AppText(
+              AboutScreenConstants.appName,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
               color: isDarkMode
-                  ? const Color.fromRGBO(255, 255, 255, 0.1)
-                  : const Color.fromRGBO(0, 0, 0, 0.05),
+                  ? const Color.fromRGBO(255, 255, 255, 0.9)
+                  : Colors.black87,
+              align: TextAlign.center,
             ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: isDarkMode
-                      ? const Color.fromRGBO(255, 255, 255, 0.1)
-                      : const Color.fromRGBO(0, 0, 0, 0.05),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.person,
-                  size: 24,
-                  color: isDarkMode
-                      ? const Color.fromRGBO(255, 255, 255, 0.9)
-                      : const Color.fromRGBO(0, 0, 0, 0.9),
-                ),
-              ),
-              const SizedBox(width: 15),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppText(
-                      developer.name,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isDarkMode
-                          ? const Color.fromRGBO(255, 255, 255, 0.9)
-                          : const Color.fromRGBO(0, 0, 0, 0.9),
-                    ),
-                    const SizedBox(height: 4),
-                    AppText(
-                      developer.role,
-                      fontSize: 14,
-                      color: isDarkMode
-                          ? const Color.fromRGBO(255, 255, 255, 0.7)
-                          : const Color.fromRGBO(0, 0, 0, 0.7),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: isDarkMode
-                    ? const Color.fromRGBO(255, 255, 255, 0.7)
-                    : const Color.fromRGBO(0, 0, 0, 0.7),
-              ),
-            ],
-          ),
+            const SizedBox(height: 8),
+            AppText(
+              AboutScreenConstants.appVersion,
+              fontSize: 16,
+              color: isDarkMode
+                  ? const Color.fromRGBO(255, 255, 255, 0.7)
+                  : Colors.black54,
+              align: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            AppText(
+              AboutScreenConstants.appDescription,
+              fontSize: 16,
+              color: isDarkMode
+                  ? const Color.fromRGBO(255, 255, 255, 0.7)
+                  : Colors.black54,
+              align: TextAlign.center,
+              maxLines: null,
+              overflow: TextOverflow.visible,
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, bool isDarkMode) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppText(
-          'روابط سريعة',
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: isDarkMode
-              ? const Color.fromRGBO(255, 255, 255, 0.9)
-              : const Color.fromRGBO(0, 0, 0, 0.9),
-        ),
-        const SizedBox(height: 15),
-        ...AboutScreenConstants.actionButtons.map(
-          (button) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: ActionButtonWidget(
-              title: button.title,
-              icon: button.icon,
-              onTap: () => _handleActionButtonTap(context, button),
-              isDarkMode: isDarkMode,
-            ),
-          ),
-        ),
-      ],
+  Widget _buildSectionHeader(String title, bool isDarkMode) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: AppText(
+        title,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+        color: isDarkMode
+            ? const Color.fromRGBO(255, 255, 255, 0.9)
+            : Colors.black87,
+      ),
     );
   }
 
-  void _showDeveloperDialog(
-    BuildContext context,
-    DeveloperInfo developer,
-    bool isDarkMode,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => DeveloperDialog(
-        developerInfo: developer,
-        isDarkMode: isDarkMode,
+  Widget _buildFeaturesHorizontalList(bool isDarkMode, Size size) {
+    return SizedBox(
+      height: 110,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: AboutScreenConstants.features.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 14),
+        itemBuilder: (context, index) {
+          final feature = AboutScreenConstants.features[index];
+          return Card(
+            elevation: 2,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            color: isDarkMode
+                ? const Color.fromRGBO(255, 255, 255, 0.07)
+                : Colors.white,
+            child: Container(
+              width: size.width * 0.38,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    feature.icon,
+                    size: 32,
+                    color: isDarkMode ? Colors.tealAccent : Colors.teal,
+                  ),
+                  const SizedBox(height: 10),
+                  AppText(
+                    feature.title,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode
+                        ? const Color.fromRGBO(255, 255, 255, 0.9)
+                        : Colors.black87,
+                    align: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
+  }
+
+  Widget _buildDeveloperCardModern(
+      BuildContext context, DeveloperInfo developer, bool isDarkMode) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color:
+          isDarkMode ? const Color.fromRGBO(255, 255, 255, 0.07) : Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: isDarkMode
+                  ? Colors.tealAccent.withOpacity(0.2)
+                  : Colors.teal.withOpacity(0.2),
+              child: Icon(Icons.person,
+                  size: 32,
+                  color: isDarkMode ? Colors.tealAccent : Colors.teal),
+            ),
+            const SizedBox(width: 18),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppText(
+                    developer.name,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode
+                        ? const Color.fromRGBO(255, 255, 255, 0.9)
+                        : Colors.black87,
+                  ),
+                  const SizedBox(height: 4),
+                  AppText(
+                    developer.role,
+                    fontSize: 14,
+                    color: isDarkMode
+                        ? const Color.fromRGBO(255, 255, 255, 0.7)
+                        : Colors.black54,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: developer.socialLinks.entries.map((entry) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: InkWell(
+                          onTap: () => _launchURL(entry.value),
+                          child: Icon(
+                            _getSocialIcon(entry.key),
+                            size: 22,
+                            color: isDarkMode ? Colors.tealAccent : Colors.teal,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtonsRow(BuildContext context, bool isDarkMode) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: AboutScreenConstants.actionButtons.map((button) {
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                backgroundColor: isDarkMode
+                    ? Colors.tealAccent.withOpacity(0.15)
+                    : Colors.teal.withOpacity(0.15),
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              onPressed: () => _handleActionButtonTap(context, button),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    button.icon,
+                    color: isDarkMode ? Colors.tealAccent : Colors.teal,
+                    size: 24,
+                  ),
+                  const SizedBox(height: 6),
+                  AppText(
+                    button.title,
+                    fontSize: 13,
+                    color: isDarkMode
+                        ? const Color.fromRGBO(255, 255, 255, 0.9)
+                        : Colors.black87,
+                    align: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  void _launchURL(String url) {
+    // TODO: Implement URL launcher logic
   }
 
   void _handleActionButtonTap(BuildContext context, ActionButton button) {
@@ -286,6 +293,19 @@ class AboutScreen extends StatelessWidget {
       case ActionButtonType.feedback:
         // TODO: Implement feedback functionality
         break;
+    }
+  }
+
+  IconData _getSocialIcon(String social) {
+    switch (social) {
+      case 'GitHub':
+        return Icons.code;
+      case 'LinkedIn':
+        return Icons.work;
+      case 'Facebook':
+        return Icons.facebook;
+      default:
+        return Icons.link;
     }
   }
 }

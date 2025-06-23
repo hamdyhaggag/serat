@@ -1281,7 +1281,7 @@ class _TimingsScreenState extends State<TimingsScreen>
                       icon: Icons.code,
                       title: 'تطوير التطبيق',
                       onTap: () =>
-                          launchUrl(Uri.parse('https://github.com/serat')),
+                          launchUrl(Uri.parse('https://github.com/hamdyhaggag/serat')),
                       isDarkMode: isDarkMode,
                     ),
                     _buildDrawerItem(
