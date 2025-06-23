@@ -31,6 +31,7 @@ class _RadioScreenState extends State<RadioScreen>
   String? _error;
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   late SharedPreferences _prefs;
 
   @override
@@ -41,6 +42,9 @@ class _RadioScreenState extends State<RadioScreen>
     _initPrefs();
     _initNotificationService();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      setState(() {});
+    });
   }
 
   Future<void> _initPrefs() async {
@@ -150,6 +154,7 @@ class _RadioScreenState extends State<RadioScreen>
     }
     _tabController.dispose();
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -224,15 +229,9 @@ class _RadioScreenState extends State<RadioScreen>
         child: Column(
           children: [
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildUnifiedLayout(_filteredStations.isEmpty
-                      ? _stations
-                      : _filteredStations),
-                  _buildUnifiedLayout(_bookmarkedStations),
-                ],
-              ),
+              child: _buildUnifiedLayout(_tabController.index == 0
+                  ? (_filteredStations.isEmpty ? _stations : _filteredStations)
+                  : _bookmarkedStations),
             ),
           ],
         ),
@@ -375,6 +374,7 @@ class _RadioScreenState extends State<RadioScreen>
     }
 
     return SingleChildScrollView(
+      controller: _scrollController,
       child: Column(
         children: [
           Container(
@@ -519,6 +519,14 @@ class _RadioScreenState extends State<RadioScreen>
               child: TextField(
                 controller: _searchController,
                 onChanged: _filterStations,
+                onTap: () {
+                  // Scroll to top when search field is tapped
+                  _scrollController.animateTo(
+                    0,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
                 decoration: InputDecoration(
                   hintText: 'ابحث عن محطة...',
                   hintStyle: TextStyle(
@@ -544,93 +552,248 @@ class _RadioScreenState extends State<RadioScreen>
               ),
             ),
           ),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(20),
-            itemCount: stations.length,
-            itemBuilder: (context, index) {
-              final station = stations[index];
-              final isSelected = station.url == _currentStation;
-              final isBookmarked = _bookmarkedStations.any(
-                (s) => s.url == station.url,
-              );
-
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                margin: const EdgeInsets.only(bottom: 15),
-                decoration: BoxDecoration(
-                  color: isDarkMode ? const Color(0xff2F2F2F) : Colors.white,
-                  borderRadius: BorderRadius.circular(15),
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDarkMode ? const Color(0xff2F2F2F) : Colors.grey[50],
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: TabBar(
+                controller: _tabController,
+                indicator: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primaryColor,
+                      AppColors.primaryColor.withOpacity(0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
+                      color: AppColors.primaryColor.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ],
-                  border: isSelected
-                      ? Border.all(color: AppColors.primaryColor, width: 2)
-                      : null,
                 ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelColor: Colors.white,
+                unselectedLabelColor:
+                    isDarkMode ? Colors.white60 : Colors.grey[600],
+                labelStyle: const TextStyle(
+                  fontFamily: 'Cairo',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontFamily: 'Cairo',
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                ),
+                dividerColor: Colors.transparent,
+                padding: const EdgeInsets.all(4),
+                tabs: [
+                  Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.radio,
+                          size: 18,
+                          color: _tabController.index == 0
+                              ? Colors.white
+                              : (isDarkMode
+                                  ? Colors.white60
+                                  : Colors.grey[600]),
+                        ),
+                        const SizedBox(width: 6),
+                        const Text('كل المحطات'),
+                      ],
+                    ),
                   ),
-                  leading: Container(
-                    width: 50,
-                    height: 50,
+                  Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.bookmark,
+                          size: 18,
+                          color: _tabController.index == 1
+                              ? Colors.white
+                              : (isDarkMode
+                                  ? Colors.white60
+                                  : Colors.grey[600]),
+                        ),
+                        const SizedBox(width: 6),
+                        const Text('المفضلة'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_tabController.index == 1 && _bookmarkedStations.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(40.0),
+              child: Column(
+                children: [
+                  Container(
+                    width: 120,
+                    height: 120,
                     decoration: BoxDecoration(
-                      color: isDarkMode
-                          ? Colors.grey[800]
-                          : AppColors.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                      shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      Icons.radio,
-                      color: isDarkMode ? Colors.white : AppColors.primaryColor,
+                      Icons.bookmark_border,
+                      size: 60,
+                      color: isDarkMode ? Colors.white60 : Colors.grey[600],
                     ),
                   ),
-                  title: Text(
-                    station.name,
+                  const SizedBox(height: 20),
+                  Text(
+                    'لا توجد محطات مفضلة',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: isDarkMode ? Colors.white : AppColors.primaryColor,
+                      color: isDarkMode ? Colors.white : Colors.grey[800],
                       fontFamily: 'Cairo',
                     ),
                   ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                          color: isDarkMode
-                              ? Colors.white
-                              : AppColors.primaryColor,
-                        ),
-                        onPressed: () => _toggleBookmark(station),
+                  const SizedBox(height: 10),
+                  Text(
+                    'اضغط على أيقونة المفضلة لإضافة محطات إلى قائمة المفضلة',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDarkMode ? Colors.white60 : Colors.grey[600],
+                      fontFamily: 'Cairo',
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      _tabController.animateTo(0);
+                    },
+                    icon: const Icon(Icons.radio),
+                    label: const Text('استكشف المحطات'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
                       ),
-                      IconButton(
-                        icon: Icon(
-                          isSelected && _isPlaying
-                              ? Icons.pause
-                              : Icons.play_arrow,
-                          color: isDarkMode
-                              ? Colors.white
-                              : AppColors.primaryColor,
-                        ),
-                        onPressed: () =>
-                            _playStation(station.url, station.name),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(20),
+              itemCount: stations.length,
+              itemBuilder: (context, index) {
+                final station = stations[index];
+                final isSelected = station.url == _currentStation;
+                final isBookmarked = _bookmarkedStations.any(
+                  (s) => s.url == station.url,
+                );
+
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  margin: const EdgeInsets.only(bottom: 15),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? const Color(0xff2F2F2F) : Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
                       ),
                     ],
+                    border: isSelected
+                        ? Border.all(color: AppColors.primaryColor, width: 2)
+                        : null,
                   ),
-                ),
-              );
-            },
-          ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    leading: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: isDarkMode
+                            ? Colors.grey[800]
+                            : AppColors.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        Icons.radio,
+                        color:
+                            isDarkMode ? Colors.white : AppColors.primaryColor,
+                      ),
+                    ),
+                    title: Text(
+                      station.name,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color:
+                            isDarkMode ? Colors.white : AppColors.primaryColor,
+                        fontFamily: 'Cairo',
+                      ),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            isBookmarked
+                                ? Icons.bookmark
+                                : Icons.bookmark_border,
+                            color: isDarkMode
+                                ? Colors.white
+                                : AppColors.primaryColor,
+                          ),
+                          onPressed: () => _toggleBookmark(station),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            isSelected && _isPlaying
+                                ? Icons.pause
+                                : Icons.play_arrow,
+                            color: isDarkMode
+                                ? Colors.white
+                                : AppColors.primaryColor,
+                          ),
+                          onPressed: () =>
+                              _playStation(station.url, station.name),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );

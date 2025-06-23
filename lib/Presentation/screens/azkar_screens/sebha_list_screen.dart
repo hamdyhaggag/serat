@@ -60,9 +60,7 @@ class _SebhaAzkarListScreenState extends State<SebhaAzkarListScreen> {
               context,
               MaterialPageRoute(builder: (context) => const AddAzkarScreen()),
             );
-            if (result == true) {
-              _loadAzkarItems();
-            }
+            _loadAzkarItems();
           },
           title: 'إضافة ذكر',
         ),

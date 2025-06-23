@@ -114,6 +114,12 @@ class AddAzkarScreenState extends State<AddAzkarScreen>
                     OutlinedButton(
                       onPressed: () {
                         Navigator.pop(context, false);
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SebhaAzkarListScreen(),
+                          ),
+                        );
                       },
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(
@@ -175,9 +181,44 @@ class AddAzkarScreenState extends State<AddAzkarScreen>
       final reward = _rewardController.text;
 
       try {
+        // Check if item already exists
+        final exists = await _service.itemExists(text);
+        if (exists) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded, color: Colors.white),
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      child: Text(
+                        'هذا الذكر موجود بالفعل في القائمة',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'DIN',
+                          fontSize: 16.sp,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                duration: const Duration(seconds: 3),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: Colors.orange,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                margin: EdgeInsets.all(10.w),
+              ),
+            );
+          }
+          return;
+        }
+
         final newAzkar = AzkarItem(text: text, count: count, reward: reward);
         await _service.addAzkarItem(newAzkar);
-        azkarNotifier.value = List.from(azkarNotifier.value)..add(newAzkar);
         await saveSebhaCounter(text, 0, 0, 0);
 
         if (mounted) {

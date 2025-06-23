@@ -6,6 +6,7 @@ import 'package:serat/features/adhkar/widgets/adhkar_category_card.dart';
 import 'package:serat/features/adhkar/widgets/adhkar_search_widget.dart';
 import 'package:serat/features/adhkar/screens/adhkar_detail_screen.dart';
 import 'package:serat/shared/constants/app_colors.dart';
+import 'package:serat/features/adhkar/widgets/view_mode_selector.dart';
 
 class AdhkarScreen extends StatefulWidget {
   const AdhkarScreen({super.key});
@@ -337,18 +338,27 @@ class _AdhkarScreenState extends State<AdhkarScreen>
   }
 
   Widget _buildLastOpenedProgressHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      alignment: Alignment.center,
-      child: const Text(
-        'ابدأ رحلتك مع الأذكار',
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
+    if (_lastOpenedCategory != null && _lastOpenedCategory!.isNotEmpty) {
+      return AdhkarProgressHeader(
+        title: 'آخر قسم تم فتحه: ${_lastOpenedCategory!}',
+        progress: _lastOpenedProgress,
+        onReset: () {}, // No reset for last opened
+        showResetButton: false,
+      );
+    } else {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        alignment: Alignment.center,
+        child: const Text(
+          'ابدأ رحلتك مع الأذكار',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
         ),
-        textAlign: TextAlign.center,
-      ),
-    );
+      );
+    }
   }
 
   Widget _buildCategoriesView(List<AdhkarCategory> categories) {

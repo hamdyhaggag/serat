@@ -38,6 +38,13 @@ class SebhaAzkarService {
 
   Future<void> addAzkarItem(AzkarItem item) async {
     final items = await loadAzkarItems();
+    // Check if item with same text already exists
+    final existingItem =
+        items.where((existing) => existing.text == item.text).firstOrNull;
+    if (existingItem != null) {
+      // Item already exists, don't add duplicate
+      return;
+    }
     items.add(item);
     await saveAzkarItems(items);
   }
@@ -55,6 +62,11 @@ class SebhaAzkarService {
       items[index] = updatedItem;
       await saveAzkarItems(items);
     }
+  }
+
+  Future<bool> itemExists(String text) async {
+    final items = await loadAzkarItems();
+    return items.any((item) => item.text == text);
   }
 
   List<AzkarItem> _defaultAzkarItems() => [
@@ -125,9 +137,7 @@ class SebhaAzkarService {
             count: 100,
             reward: 'من أجمع الدعاء وأحبه إلى الله، ودعاء يستجيب الله له',
             isDefault: true),
-        
-      
-       
+
         AzkarItem(
             text: 'رضيت بالله رباً وبالإسلام ديناً وبمحمد رسولاً',
             count: 3,
@@ -146,7 +156,7 @@ class SebhaAzkarService {
             reward:
                 'من الدعاء بأسماء الله الحسنى، وقيل إنه اسم الله الأعظم الذي إذا دعي به أجاب',
             isDefault: true),
-       
+
         AzkarItem(
             text: 'سبحان الله وبحمده سبحان الله العظيم',
             count: 10,
