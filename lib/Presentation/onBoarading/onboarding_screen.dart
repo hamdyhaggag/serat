@@ -31,7 +31,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
     );
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.2),
+      begin: const Offset(-0.2, 0.0),
       end: Offset.zero,
     ).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
