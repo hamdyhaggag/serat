@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:serat/features/adhkar/models/adhkar_category.dart';
+import 'package:serat/shared/constants/app_colors.dart';
 
 class ViewModeSelector extends StatelessWidget {
   final AdhkarViewMode currentMode;
@@ -108,135 +109,151 @@ class AdhkarProgressHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final isCompleted = progress >= 1.0;
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            theme.primaryColor,
-            theme.primaryColor.withOpacity(0.8),
-          ],
+          colors: isDarkMode
+              ? [
+                  AppColors.primaryColor.withOpacity(0.8),
+                  AppColors.primaryColor.withOpacity(0.4),
+                ]
+              : [
+                  AppColors.primaryColor,
+                  AppColors.primaryColor.withOpacity(0.7),
+                ],
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: theme.primaryColor.withOpacity(0.3),
+            color: AppColors.primaryColor.withOpacity(0.2),
             blurRadius: 20,
-            offset: const Offset(0, 8),
+            offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onPrimary.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  isCompleted ? Icons.celebration : Icons.auto_awesome,
-                  color: theme.colorScheme.onPrimary,
-                  size: 28,
-                ),
-              ),
-              const Spacer(),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: Text(
-                  '${(progress * 100).toInt()}%',
-                  key: ValueKey(progress),
-                  style: TextStyle(
-                    color: theme.colorScheme.onPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Text(
-            title,
-            style: TextStyle(
-              color: theme.colorScheme.onPrimary,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            isCompleted ? 'تم الإكمال بنجاح!' : 'نسبة الإكمال',
-            style: TextStyle(
-              color: theme.colorScheme.onPrimary.withOpacity(0.8),
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Stack(
-            children: [
-              Container(
-                height: 8,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onPrimary.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeInOut,
-                height: 8,
-                width: MediaQuery.of(context).size.width * 0.8 * progress,
-                decoration: BoxDecoration(
-                  color:
-                      isCompleted ? Colors.green : theme.colorScheme.onPrimary,
-                  borderRadius: BorderRadius.circular(4),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (isCompleted
-                              ? Colors.green
-                              : theme.colorScheme.onPrimary)
-                          .withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (showResetButton) ...[
-            const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: ElevatedButton.icon(
-                onPressed: onReset,
-                icon: const Icon(Icons.refresh, size: 18),
-                label: const Text(
-                  'مسح التقدم',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.onPrimary,
-                  foregroundColor: theme.primaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    child: Icon(
+                      isCompleted ? Icons.celebration : Icons.auto_awesome,
+                      color: Colors.white,
+                      size: 28,
+                    ),
                   ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  const Spacer(),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: Text(
+                      '${(progress * 100).toInt()}%',
+                      key: ValueKey(progress),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-          ],
-        ],
+              const SizedBox(height: 4),
+              Text(
+                isCompleted ? 'تم الإكمال بنجاح!' : 'نسبة الإكمال',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Stack(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                    height: 8,
+                    width: constraints.maxWidth * progress,
+                    decoration: BoxDecoration(
+                      color: isCompleted ? Colors.green : Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (isCompleted ? Colors.green : Colors.white)
+                              .withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (showResetButton) ...[
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: ElevatedButton.icon(
+                    onPressed: onReset,
+                    icon: const Icon(Icons.refresh, size: 18),
+                    label: const Text(
+                      'مسح التقدم',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      elevation: 4,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          );
+        },
       ),
     );
   }

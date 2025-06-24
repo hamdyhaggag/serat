@@ -279,25 +279,88 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Theme.of(context).colorScheme.error,
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[800]
+                            : Colors.grey[200],
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       'حدث خطأ في تحميل البيانات',
                       style: TextStyle(
-                        fontSize: 16,
-                        color: Theme.of(context).colorScheme.error,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : AppColors.primaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'يرجى المحاولة مرة أخرى',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[400]
+                            : Colors.grey[600],
                       ),
                     ),
                   ],
                 ),
               );
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(
-                child: Text('لا توجد بيانات متاحة'),
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[800]
+                            : Colors.grey[200],
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.inbox_outlined,
+                        size: 48,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[400]
+                            : Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'لا توجد بيانات متاحة',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : AppColors.primaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'يرجى التحقق من الاتصال بالإنترنت',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[400]
+                            : Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
               );
             } else {
               final categories = snapshot.data!;
@@ -324,9 +387,13 @@ class _AdhkarScreenState extends State<AdhkarScreen>
         ],
 
         // Header with last opened category progress
-        Container(
-          padding: const EdgeInsets.all(16),
-          child: _buildLastOpenedProgressHeader(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              Expanded(child: _buildLastOpenedProgressHeader()),
+            ],
+          ),
         ),
 
         // Categories content
@@ -338,27 +405,74 @@ class _AdhkarScreenState extends State<AdhkarScreen>
   }
 
   Widget _buildLastOpenedProgressHeader() {
-    if (_lastOpenedCategory != null && _lastOpenedCategory!.isNotEmpty) {
-      return AdhkarProgressHeader(
-        title: 'آخر قسم تم فتحه: ${_lastOpenedCategory!}',
-        progress: _lastOpenedProgress,
-        onReset: () {}, // No reset for last opened
-        showResetButton: false,
-      );
-    } else {
-      return Container(
-        padding: const EdgeInsets.all(20),
-        alignment: Alignment.center,
-        child: const Text(
-          'ابدأ رحلتك مع الأذكار',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-          textAlign: TextAlign.center,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: Theme.of(context).brightness == Brightness.dark
+              ? [
+                  AppColors.primaryColor.withOpacity(0.8),
+                  AppColors.primaryColor.withOpacity(0.4),
+                ]
+              : [
+                  AppColors.primaryColor,
+                  AppColors.primaryColor.withOpacity(0.7),
+                ],
         ),
-      );
-    }
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryColor.withOpacity(0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.auto_awesome,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'ابدأ رحلتك مع الأذكار',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'اختر قسم الأذكار المفضل لديك',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white.withOpacity(0.8),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildCategoriesView(List<AdhkarCategory> categories) {
@@ -367,17 +481,41 @@ class _AdhkarScreenState extends State<AdhkarScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.search_off,
-              size: 64,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[800]
+                    : Colors.grey[200],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.search_off,
+                size: 48,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[400]
+                    : Colors.grey[600],
+              ),
             ),
             const SizedBox(height: 16),
             Text(
               'لا توجد نتائج',
               style: TextStyle(
-                fontSize: 16,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : AppColors.primaryColor,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'جرب البحث بكلمات مختلفة',
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[400]
+                    : Colors.grey[600],
               ),
             ),
           ],
@@ -390,12 +528,12 @@ class _AdhkarScreenState extends State<AdhkarScreen>
 
   Widget _buildGridView(List<AdhkarCategory> categories) {
     return GridView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.85,
+        crossAxisSpacing: 15,
+        mainAxisSpacing: 15,
+        childAspectRatio: 1.2,
       ),
       itemCount: categories.length,
       itemBuilder: (context, index) {

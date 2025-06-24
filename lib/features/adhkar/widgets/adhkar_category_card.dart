@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:serat/features/adhkar/models/adhkar_category.dart';
+import 'package:serat/shared/constants/app_colors.dart';
 
 class AdhkarCategoryCard extends StatelessWidget {
   final AdhkarCategory category;
@@ -19,75 +20,107 @@ class AdhkarCategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final isCompleted = progress >= 1.0;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      child: Card(
-        elevation: isSelected ? 8.0 : 4.0,
-        shadowColor: theme.primaryColor.withOpacity(0.3),
-        shape: RoundedRectangleBorder(
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDarkMode
+                ? [const Color(0xff2F2F2F), const Color(0xff252525)]
+                : [Colors.white, Colors.grey[50]!],
+          ),
           borderRadius: BorderRadius.circular(20),
-          side: isSelected
-              ? BorderSide(color: theme.primaryColor, width: 2)
-              : BorderSide.none,
+          boxShadow: [
+            BoxShadow(
+              color: isDarkMode
+                  ? Colors.black.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
-        color:
-            isSelected ? theme.primaryColor.withOpacity(0.1) : theme.cardColor,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Icon without progress ring
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isCompleted
+                      ? [
+                          Colors.green.withOpacity(0.3),
+                          Colors.green.withOpacity(0.1),
+                        ]
+                      : isDarkMode
+                          ? [
+                              AppColors.primaryColor.withOpacity(0.3),
+                              AppColors.primaryColor.withOpacity(0.1),
+                            ]
+                          : [
+                              AppColors.primaryColor.withOpacity(0.2),
+                              AppColors.primaryColor.withOpacity(0.05),
+                            ],
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
                     color: isCompleted
                         ? Colors.green.withOpacity(0.1)
-                        : theme.primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
+                        : AppColors.primaryColor.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
                   ),
-                  child: Icon(
-                    isCompleted ? Icons.check_circle : icon,
-                    size: 24,
-                    color: isCompleted ? Colors.green : theme.primaryColor,
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Category name
-                Text(
-                  category.category,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-                const SizedBox(height: 8),
-
-                // Item count
-                Text(
-                  '${category.array.length} ذِكر',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
-                  ),
-                ),
-              ],
+                ],
+              ),
+              child: Icon(
+                isCompleted ? Icons.check_circle : icon,
+                color: isDarkMode ? Colors.white : AppColors.primaryColor,
+                size: 28,
+              ),
             ),
-          ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                category.category,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isDarkMode ? Colors.white : AppColors.primaryColor,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: isDarkMode
+                    ? Colors.grey[800]
+                    : AppColors.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${category.array.length} ذِكر',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDarkMode ? Colors.grey[300] : AppColors.primaryColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
