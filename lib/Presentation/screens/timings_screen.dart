@@ -1116,7 +1116,7 @@ class _TimingsScreenState extends State<TimingsScreen>
       child: Column(
         children: [
           Container(
-            height: 280,
+            height: 360,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isDarkMode
