@@ -20,14 +20,14 @@
 | Screenshot | Screenshot | Screenshot |
 |:---:|:---:|:---:|
 | <img src="screenshots/1.png" alt="Home" width="250"/><br/>Home | <img src="screenshots/2.png" alt="Prayer Times" width="250"/><br/>Prayer Times | <img src="screenshots/3.png" alt="Quran" width="250"/><br/>Quran |
-| <img src="screenshots/4.png" alt="Hadith" width="250"/><br/>Hadith | <img src="screenshots/5.png" alt="Azkar" width="250"/><br/>Azkar | <img src="screenshots/6.png" alt="Sebha" width="250"/><br/>Sebha |
+| <img src="screenshots/4.png" alt="Hadith" width="250"/><br/>Hadith | <img src="screenshots/27.png" alt="Azkar" width="250"/><br/>Azkar | <img src="screenshots/6.png" alt="Sebha" width="250"/><br/>Sebha |
 | <img src="screenshots/7.png" alt="Screenshot 7" width="250"/><br/>Screenshot 7 | <img src="screenshots/8.png" alt="Screenshot 8" width="250"/><br/>Screenshot 8 | <img src="screenshots/9.png" alt="Screenshot 9" width="250"/><br/>Screenshot 9 |
 | <img src="screenshots/10.png" alt="Screenshot 10" width="250"/><br/>Screenshot 10 | <img src="screenshots/11.png" alt="Screenshot 11" width="250"/><br/>Screenshot 11 | <img src="screenshots/12.png" alt="Screenshot 12" width="250"/><br/>Screenshot 12 |
 | <img src="screenshots/13.png" alt="Screenshot 13" width="250"/><br/>Screenshot 13 | <img src="screenshots/14.png" alt="Screenshot 14" width="250"/><br/>Screenshot 14 | <img src="screenshots/15.png" alt="Screenshot 15" width="250"/><br/>Screenshot 15 |
 | <img src="screenshots/16.png" alt="Screenshot 16" width="250"/><br/>Screenshot 16 | <img src="screenshots/17.png" alt="Screenshot 17" width="250"/><br/>Screenshot 17 | <img src="screenshots/18.png" alt="Screenshot 18" width="250"/><br/>Screenshot 18 |
 | <img src="screenshots/19.png" alt="Screenshot 19" width="250"/><br/>Screenshot 19 | <img src="screenshots/20.png" alt="Screenshot 20" width="250"/><br/>Screenshot 20 | <img src="screenshots/21.png" alt="Screenshot 21" width="250"/><br/>Screenshot 21 |
 | <img src="screenshots/22.png" alt="Screenshot 22" width="250"/><br/>Screenshot 22 | <img src="screenshots/23.png" alt="Screenshot 23" width="250"/><br/>Screenshot 23 | <img src="screenshots/24.png" alt="Screenshot 24" width="250"/><br/>Screenshot 24 |
-| <img src="screenshots/25.png" alt="Screenshot 25" width="250"/><br/>Screenshot 25 | <img src="screenshots/26.png" alt="Screenshot 26" width="250"/><br/>Screenshot 26 | <img src="screenshots/27.png" alt="Screenshot 27" width="250"/><br/>Screenshot 27 |
+| <img src="screenshots/25.png" alt="Screenshot 25" width="250"/><br/>Screenshot 25 | <img src="screenshots/26.png" alt="Screenshot 26" width="250"/><br/>Screenshot 26 |  |
 
 ## ✨ Features
 
