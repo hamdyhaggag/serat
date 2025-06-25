@@ -1319,7 +1319,7 @@ class _TimingsScreenState extends State<TimingsScreen>
                       title: 'تقييم التطبيق',
                       onTap: () => launchUrl(
                         Uri.parse(
-                          'https://play.google.com/store/apps/details?id=com.serat.app',
+                          'https://play.google.com/store/apps/details?id=com.serat.app.serat',
                         ),
                       ),
                       isDarkMode: isDarkMode,
@@ -1464,7 +1464,7 @@ class _TimingsScreenState extends State<TimingsScreen>
       '• الوضع الليلي\n'
       '• دعم اللغة العربية\n\n'
       'تحميل التطبيق من هنا:\n'
-      'https://play.google.com/store/apps/details?id=com.serat.app',
+      'https://play.google.com/store/apps/details?id=com.serat.app.serat',
     );
   }
 

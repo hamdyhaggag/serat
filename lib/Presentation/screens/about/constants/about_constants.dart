@@ -94,5 +94,5 @@ class AboutConstants {
 • دعم اللغة العربية
 
 تحميل التطبيق من هنا:
-https://play.google.com/store/apps/details?id=com.serat.app''';
+https://play.google.com/store/apps/details?id=com.serat.app.serat''';
 }

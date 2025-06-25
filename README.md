@@ -119,4 +119,5 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 ## 📧 Contact
 
 - Email: arabianatech@gmail.com
-- App Page: [Google Play Store](https://play.google.com/store/apps/details?id=com.serat.app)
+- App Page: [Google Play Store](https://play.google.com/store/apps/details?id=com.serat.app.serat)
+- Privacy Policy: [Privacy Policy](https://github.com/Serrat-App/serat/blob/main/privacy-policy.md)
