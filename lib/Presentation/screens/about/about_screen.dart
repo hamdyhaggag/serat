@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:serat/Presentation/screens/about/models/feature_item.dart';
-import 'package:serat/Presentation/screens/about/models/developer_info.dart';
-import 'package:serat/Presentation/screens/about/widgets/feature_item_widget.dart';
-import 'package:serat/Presentation/screens/about/widgets/action_button_widget.dart';
 import 'package:serat/Presentation/screens/about/widgets/developer_dialog.dart';
 import 'package:serat/Presentation/screens/about/about_screen_constants.dart';
 import 'package:serat/imports.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:io';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:serat/Presentation/screens/about/models/developer_info.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({Key? key}) : super(key: key);
@@ -227,7 +228,7 @@ class AboutScreen extends StatelessWidget {
                         return Padding(
                           padding: const EdgeInsets.only(right: 8.0),
                           child: InkWell(
-                            onTap: () => _launchURL(entry.value),
+                            onTap: () => _launchURL(Uri.parse(entry.value)),
                             child: Icon(
                               _getSocialIcon(entry.key),
                               size: 22,
@@ -292,20 +293,67 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  void _launchURL(String url) {
-    // TODO: Implement URL launcher logic
+  void _launchURL(Uri uri) async {
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint("Could not launch $uri: $e");
+    }
   }
 
-  void _handleActionButtonTap(BuildContext context, ActionButton button) {
+  void _handleActionButtonTap(BuildContext context, ActionButton button) async {
     switch (button.type) {
       case ActionButtonType.rate:
-        // TODO: Implement rate functionality
+        final packageInfo = await PackageInfo.fromPlatform();
+        final appId = packageInfo.packageName;
+        // TODO: Add your iOS app ID here
+        final uri = Uri.parse(
+          Platform.isAndroid
+              ? 'market://details?id=$appId'
+              : 'https://apps.apple.com/app/idYOUR_IOS_APP_ID',
+        );
+        _launchURL(uri);
         break;
       case ActionButtonType.share:
-        // TODO: Implement share functionality
+        final packageInfo = await PackageInfo.fromPlatform();
+        final appId = packageInfo.packageName;
+        // TODO: Add your iOS app ID here
+        final storeUrl = Platform.isAndroid
+            ? 'https://play.google.com/store/apps/details?id=$appId'
+            : 'https://apps.apple.com/app/id/YOUR_IOS_APP_ID';
+        Share.share(''''
+تطبيق صراط هو تطبيق إسلامي شامل يحتوي على العديد من المميزات مثل:
+
+• مواقيت الصلاة
+• اتجاه القبلة
+• الأذكار الصباحية والمسائية
+• الأربعين النووية
+• السبحة الإلكترونية
+• القرآن الكريم مع التفسير
+• القراء المشهورين
+• الراديو الإسلامي
+• فيديوهات القرآن الكريم
+• التقويم الهجري
+• حاسبة الزكاة
+• الهدف اليومي
+• التنبيهات والإشعارات
+• الوضع الليلي
+• دعم اللغة العربية
+
+تحميل التطبيق من هنا:
+https://play.google.com/store/apps/details?id=com.serat.app.serat''');
         break;
       case ActionButtonType.feedback:
-        // TODO: Implement feedback functionality
+        final String email = 'arabianatech@gmail.com';
+        final String subject = 'ملاحظات حول تطبيق صراط';
+        final String body = 'هذه ملاحظاتي:\n';
+        final Uri emailUri = Uri(
+          scheme: 'mailto',
+          path: email,
+          query:
+              'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
+        );
+        _launchURL(emailUri);
         break;
     }
   }
