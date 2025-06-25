@@ -95,4 +95,5 @@ class AdhkarItem {
 enum AdhkarViewMode {
   list,
   horizontal,
+  grid,
 }

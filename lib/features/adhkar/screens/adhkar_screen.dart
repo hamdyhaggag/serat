@@ -54,6 +54,65 @@ class _AdhkarScreenState extends State<AdhkarScreen>
     super.dispose();
   }
 
+  // Responsive helper methods
+  bool _isSmallScreen(BuildContext context) {
+    return MediaQuery.of(context).size.width < 600;
+  }
+
+  bool _isMediumScreen(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    return width >= 600 && width < 900;
+  }
+
+  bool _isLargeScreen(BuildContext context) {
+    return MediaQuery.of(context).size.width >= 900;
+  }
+
+  bool _isTablet(BuildContext context) {
+    return MediaQuery.of(context).size.width >= 600;
+  }
+
+  double _getResponsiveFontSize(BuildContext context, double baseSize) {
+    final width = MediaQuery.of(context).size.width;
+    if (width < 360) return baseSize * 0.8;
+    if (width < 600) return baseSize;
+    if (width < 900) return baseSize * 1.1;
+    return baseSize * 1.2;
+  }
+
+  double _getResponsivePadding(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width < 360) return 12.0;
+    if (width < 600) return 16.0;
+    if (width < 900) return 20.0;
+    return 24.0;
+  }
+
+  int _getGridCrossAxisCount(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width < 360) return 1;
+    if (width < 600) return 2;
+    if (width < 900) return 3;
+    if (width < 1200) return 4;
+    return 5;
+  }
+
+  double _getGridChildAspectRatio(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width < 360) return 1.4;
+    if (width < 600) return 1.2;
+    if (width < 900) return 1.1;
+    return 1.0;
+  }
+
+  double _getGridSpacing(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width < 360) return 8.0;
+    if (width < 600) return 12.0;
+    if (width < 900) return 16.0;
+    return 20.0;
+  }
+
   Future<void> _loadAllProgress() async {
     final progress = await _progressService.getAllProgress();
     if (mounted) {
@@ -238,6 +297,10 @@ class _AdhkarScreenState extends State<AdhkarScreen>
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = _isSmallScreen(context);
+    final isTablet = _isTablet(context);
+
     return Scaffold(
       backgroundColor:
           isDarkMode ? AppColors.darkBackgroundColor : Colors.white,
@@ -245,13 +308,23 @@ class _AdhkarScreenState extends State<AdhkarScreen>
         title: Text(
           'الأذكار',
           style: TextStyle(
-            fontSize: 23,
+            fontSize: _getResponsiveFontSize(context, 23),
             fontFamily: 'DIN',
             fontWeight: FontWeight.w700,
             color: isDarkMode ? Colors.white : AppColors.primaryColor,
           ),
         ),
         actions: [
+          // Add view mode selector for tablets and larger screens
+          if (isTablet) ...[
+            ViewModeSelector(
+              currentMode: AdhkarViewMode.grid,
+              onModeChanged: (mode) {
+                // Handle view mode change
+              },
+            ),
+            const SizedBox(width: 8),
+          ],
           IconButton(
             icon: Icon(_showSearch ? Icons.close : Icons.search),
             onPressed: () {
@@ -275,99 +348,15 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                 child: CircularProgressIndicator(),
               );
             } else if (snapshot.hasError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey[800]
-                            : Colors.grey[200],
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.error_outline,
-                        size: 48,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'حدث خطأ في تحميل البيانات',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : AppColors.primaryColor,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'يرجى المحاولة مرة أخرى',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey[400]
-                            : Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              );
+              return _buildErrorWidget(context, isDarkMode);
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey[800]
-                            : Colors.grey[200],
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.inbox_outlined,
-                        size: 48,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey[400]
-                            : Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'لا توجد بيانات متاحة',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : AppColors.primaryColor,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'يرجى التحقق من الاتصال بالإنترنت',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey[400]
-                            : Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              );
+              return _buildEmptyWidget(context, isDarkMode);
             } else {
               final categories = snapshot.data!;
               if (_displayedCategories.isEmpty && !_showSearch) {
                 _displayedCategories = categories;
               }
-              return _buildContent(categories);
+              return _buildContent(categories, context);
             }
           },
         ),
@@ -375,38 +364,137 @@ class _AdhkarScreenState extends State<AdhkarScreen>
     );
   }
 
-  Widget _buildContent(List<AdhkarCategory> categories) {
-    return Column(
-      children: [
-        // Search widget
-        if (_showSearch) ...[
-          AdhkarSearchWidget(
-            allCategories: categories,
-            onSearchResults: _onSearchResults,
-          ),
-        ],
-
-        // Header with last opened category progress
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: [
-              Expanded(child: _buildLastOpenedProgressHeader()),
-            ],
-          ),
+  Widget _buildErrorWidget(BuildContext context, bool isDarkMode) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(_getResponsivePadding(context)),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: EdgeInsets.all(_isSmallScreen(context) ? 16 : 20),
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.error_outline,
+                size: _isSmallScreen(context) ? 40 : 48,
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+            SizedBox(height: _isSmallScreen(context) ? 12 : 16),
+            Text(
+              'حدث خطأ في تحميل البيانات',
+              style: TextStyle(
+                fontSize: _getResponsiveFontSize(context, 18),
+                fontWeight: FontWeight.w600,
+                color: isDarkMode ? Colors.white : AppColors.primaryColor,
+              ),
+            ),
+            SizedBox(height: _isSmallScreen(context) ? 6 : 8),
+            Text(
+              'يرجى المحاولة مرة أخرى',
+              style: TextStyle(
+                fontSize: _getResponsiveFontSize(context, 14),
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ),
+          ],
         ),
-
-        // Categories content
-        Expanded(
-          child: _buildCategoriesView(_displayedCategories),
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _buildLastOpenedProgressHeader() {
+  Widget _buildEmptyWidget(BuildContext context, bool isDarkMode) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(_getResponsivePadding(context)),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: EdgeInsets.all(_isSmallScreen(context) ? 16 : 20),
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.inbox_outlined,
+                size: _isSmallScreen(context) ? 40 : 48,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ),
+            SizedBox(height: _isSmallScreen(context) ? 12 : 16),
+            Text(
+              'لا توجد بيانات متاحة',
+              style: TextStyle(
+                fontSize: _getResponsiveFontSize(context, 18),
+                fontWeight: FontWeight.w600,
+                color: isDarkMode ? Colors.white : AppColors.primaryColor,
+              ),
+            ),
+            SizedBox(height: _isSmallScreen(context) ? 6 : 8),
+            Text(
+              'يرجى التحقق من الاتصال بالإنترنت',
+              style: TextStyle(
+                fontSize: _getResponsiveFontSize(context, 14),
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent(List<AdhkarCategory> categories, BuildContext context) {
+    final isSmallScreen = _isSmallScreen(context);
+    final isTablet = _isTablet(context);
+
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // Search widget
+          if (_showSearch) ...[
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: _getResponsivePadding(context),
+                vertical: isSmallScreen ? 8 : 12,
+              ),
+              child: AdhkarSearchWidget(
+                allCategories: categories,
+                onSearchResults: _onSearchResults,
+              ),
+            ),
+          ],
+
+          // Header with last opened category progress
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: _getResponsivePadding(context),
+              vertical: isSmallScreen ? 8 : 12,
+            ),
+            child: Row(
+              children: [
+                Expanded(child: _buildLastOpenedProgressHeader(context)),
+              ],
+            ),
+          ),
+
+          // Categories content
+          _buildCategoriesView(_displayedCategories, context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLastOpenedProgressHeader(BuildContext context) {
+    final isSmallScreen = _isSmallScreen(context);
+    final isTablet = _isTablet(context);
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -421,51 +509,51 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                   AppColors.primaryColor.withOpacity(0.7),
                 ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(isSmallScreen ? 16 : 20),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryColor.withOpacity(0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            blurRadius: isSmallScreen ? 15 : 20,
+            offset: Offset(0, isSmallScreen ? 8 : 10),
           ),
         ],
       ),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(isSmallScreen ? 10 : 12),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
+                  blurRadius: isSmallScreen ? 6 : 8,
+                  offset: Offset(0, isSmallScreen ? 3 : 4),
                 ),
               ],
             ),
-            child: const Icon(
+            child: Icon(
               Icons.auto_awesome,
               color: Colors.white,
-              size: 28,
+              size: isSmallScreen ? 24 : 28,
             ),
           ),
-          const SizedBox(height: 16),
-          const Text(
+          SizedBox(height: isSmallScreen ? 12 : 16),
+          Text(
             'ابدأ رحلتك مع الأذكار',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: _getResponsiveFontSize(context, 20),
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: isSmallScreen ? 6 : 8),
           Text(
             'اختر قسم الأذكار المفضل لديك',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: _getResponsiveFontSize(context, 14),
               color: Colors.white.withOpacity(0.8),
             ),
             textAlign: TextAlign.center,
@@ -475,69 +563,75 @@ class _AdhkarScreenState extends State<AdhkarScreen>
     );
   }
 
-  Widget _buildCategoriesView(List<AdhkarCategory> categories) {
+  Widget _buildCategoriesView(
+      List<AdhkarCategory> categories, BuildContext context) {
     if (categories.isEmpty) {
-      return Center(
+      return _buildNoResultsWidget(context);
+    }
+
+    return _buildGridView(categories, context);
+  }
+
+  Widget _buildNoResultsWidget(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isSmallScreen = _isSmallScreen(context);
+
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(_getResponsivePadding(context)),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
               decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.grey[800]
-                    : Colors.grey[200],
+                color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.search_off,
-                size: 48,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.grey[400]
-                    : Colors.grey[600],
+                size: isSmallScreen ? 40 : 48,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: isSmallScreen ? 12 : 16),
             Text(
               'لا توجد نتائج',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: _getResponsiveFontSize(context, 18),
                 fontWeight: FontWeight.w600,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : AppColors.primaryColor,
+                color: isDarkMode ? Colors.white : AppColors.primaryColor,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: isSmallScreen ? 6 : 8),
             Text(
               'جرب البحث بكلمات مختلفة',
               style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.grey[400]
-                    : Colors.grey[600],
+                fontSize: _getResponsiveFontSize(context, 14),
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
               ),
             ),
           ],
         ),
-      );
-    }
-
-    return _buildGridView(categories);
+      ),
+    );
   }
 
-  Widget _buildGridView(List<AdhkarCategory> categories) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(20),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 15,
-        mainAxisSpacing: 15,
-        childAspectRatio: 1.2,
-      ),
-      itemCount: categories.length,
-      itemBuilder: (context, index) {
-        final category = categories[index];
+  Widget _buildGridView(List<AdhkarCategory> categories, BuildContext context) {
+    final crossAxisCount = _getGridCrossAxisCount(context);
+    final childAspectRatio = _getGridChildAspectRatio(context);
+    final spacing = _getGridSpacing(context);
+    final padding = _getResponsivePadding(context);
+
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.all(padding),
+      crossAxisCount: crossAxisCount,
+      crossAxisSpacing: spacing,
+      mainAxisSpacing: spacing,
+      childAspectRatio: childAspectRatio,
+      children: categories.map((category) {
         final isSelected = _selectedCategory == category.category;
         final progress = _categoryProgress[category.category] ?? 0.0;
 
@@ -548,7 +642,7 @@ class _AdhkarScreenState extends State<AdhkarScreen>
           isSelected: isSelected,
           progress: progress,
         );
-      },
+      }).toList(),
     );
   }
 }

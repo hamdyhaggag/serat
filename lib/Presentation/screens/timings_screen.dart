@@ -1116,7 +1116,7 @@ class _TimingsScreenState extends State<TimingsScreen>
       child: Column(
         children: [
           Container(
-            height: 360,
+            height: 200,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isDarkMode
@@ -1144,106 +1144,117 @@ class _TimingsScreenState extends State<TimingsScreen>
                 ),
                 // Content
                 SafeArea(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // App Logo with animation
-                          Hero(
-                            tag: 'app_logo',
-                            child: Container(
-                              padding: const EdgeInsets.all(15),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 8),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Top row with logo and app name
+                        Row(
+                          children: [
+                            // App Logo with animation
+                            Hero(
+                              tag: 'app_logo',
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.15),
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: Image.asset(
+                                  'assets/logo.png',
+                                  width: 50,
+                                  height: 50,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            // App Name and description in a column
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // App Name with gradient text
+                                  ShaderMask(
+                                    shaderCallback: (bounds) => LinearGradient(
+                                      colors: [
+                                        Colors.white,
+                                        Colors.white.withOpacity(0.9),
+                                      ],
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                    ).createShader(bounds),
+                                    child: const AppText(
+                                      'تطبيق صراط',
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  // App Description
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.2),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: const AppText(
+                                      'تطبيق إسلامي شامل',
+                                      fontSize: 11,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ],
                               ),
-                              child: Image.asset(
-                                'assets/logo.png',
-                                width: 80,
-                                height: 80,
-                                fit: BoxFit.contain,
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        // Version info
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.info_outline,
+                                size: 10,
+                                color: Colors.white.withOpacity(0.8),
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          // App Name with gradient text
-                          ShaderMask(
-                            shaderCallback: (bounds) => LinearGradient(
-                              colors: [
-                                Colors.white,
-                                Colors.white.withOpacity(0.9),
-                              ],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                            ).createShader(bounds),
-                            child: const AppText(
-                              'تطبيق صراط',
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          // App Description
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.2),
-                                width: 1,
+                              const SizedBox(width: 3),
+                              AppText(
+                                'الإصدار 1.0.0',
+                                fontSize: 10,
+                                color: Colors.white.withOpacity(0.8),
                               ),
-                            ),
-                            child: const AppText(
-                              'تطبيق إسلامي شامل',
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
+                            ],
                           ),
-                          const SizedBox(height: 12),
-                          // Version info
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.info_outline,
-                                  size: 14,
-                                  color: Colors.white.withOpacity(0.8),
-                                ),
-                                const SizedBox(width: 6),
-                                AppText(
-                                  'الإصدار 1.0.0',
-                                  fontSize: 12,
-                                  color: Colors.white.withOpacity(0.8),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

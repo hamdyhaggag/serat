@@ -969,6 +969,8 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
         return _buildListView();
       case AdhkarViewMode.horizontal:
         return _buildHorizontalView();
+      case AdhkarViewMode.grid:
+        return _buildGridView();
     }
   }
 
@@ -1077,6 +1079,59 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
           );
         },
       ),
+    );
+  }
+
+  Widget _buildGridView() {
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 1.2,
+      ),
+      itemCount: widget.category.array.length,
+      itemBuilder: (context, index) {
+        final cardKey = _cardKeys.putIfAbsent(index, () => GlobalKey());
+        final item = widget.category.array[index];
+        final currentProgress = _itemProgress[index] ?? 0;
+        final isCompleted = currentProgress >= item.count;
+        final isCurrentItem = index == _currentItemIndex;
+        
+        return RepaintBoundary(
+          key: cardKey,
+          child: AdhkarItemCard(
+            index: index,
+            item: item,
+            currentProgress: currentProgress,
+            isCompleted: isCompleted,
+            isCurrentItem: isCurrentItem,
+            textScale: _textScale,
+            isHorizontal: false,
+            forShare: false,
+            onTap: () {
+              setState(() {
+                _currentItemIndex = index;
+              });
+            },
+            onCopy: () {
+              Clipboard.setData(ClipboardData(text: item.text));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('تم نسخ الذكر إلى الحافظة')),
+              );
+            },
+            onShare: () async {
+              setState(() {
+                _shareCardIndex = index;
+              });
+              await _shareAdhkarCardWithLogo(index);
+            },
+            onComplete:
+                isCompleted ? null : () => _updateItemProgress(index),
+          ),
+        );
+      },
     );
   }
 
