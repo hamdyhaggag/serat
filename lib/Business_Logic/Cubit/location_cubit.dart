@@ -27,6 +27,7 @@ class LocationCubit extends Cubit<LocationState> {
       // First check if location services are enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
+        errorStatus = true;
         errorMessage = 'خدمة الموقع غير مفعلة. يرجى تفعيل خدمة الموقع.';
         emit(GetCurrentLocationError());
         return;
@@ -39,6 +40,7 @@ class LocationCubit extends Cubit<LocationState> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
+          errorStatus = true;
           errorMessage =
               'تم رفض إذن الوصول للموقع. يرجى السماح بالوصول للموقع.';
           emit(GetCurrentLocationError());
@@ -47,6 +49,7 @@ class LocationCubit extends Cubit<LocationState> {
       }
 
       if (permission == LocationPermission.deniedForever) {
+        errorStatus = true;
         errorMessage =
             'تم رفض إذن الوصول للموقع بشكل دائم. يرجى تفعيله من إعدادات التطبيق.';
         emit(GetCurrentLocationError());
@@ -62,6 +65,7 @@ class LocationCubit extends Cubit<LocationState> {
         ).timeout(
           const Duration(seconds: 10),
           onTimeout: () {
+            errorStatus = true;
             errorMessage = 'انتهت مهلة طلب الموقع. يرجى المحاولة مرة أخرى.';
             throw TimeoutException(errorMessage);
           },
@@ -70,6 +74,7 @@ class LocationCubit extends Cubit<LocationState> {
         if (position != null) {
           await _getLocationData(position!.latitude, position!.longitude);
         }
+        errorStatus = false;
         emit(GetCurrentLocationSuccess());
       }
     } catch (error) {
@@ -103,11 +108,12 @@ class LocationCubit extends Cubit<LocationState> {
         method: radioValue,
       );
 
-      log('API Response: ${response.data}');
+      log('API Response: [32m${response.data}[0m');
 
       // Check if response is HTML (indicating a redirection or error page)
       if (response.data is String &&
           (response.data as String).contains('<!DOCTYPE html>')) {
+        errorStatus = true;
         errorMessage = 'خطأ في الاتصال بالإنترنت. يرجى التحقق من اتصالك.';
         throw Exception(errorMessage);
       }
@@ -116,13 +122,16 @@ class LocationCubit extends Cubit<LocationState> {
         try {
           timesModel = TimesModel.fromJson(response.data);
           saveTimeModel(timeModel: timesModel!);
+          errorStatus = false;
           emit(GetTimingsSuccess());
         } catch (parseError) {
+          errorStatus = true;
           errorMessage =
               'خطأ في تحليل بيانات أوقات الصلاة. يرجى المحاولة مرة أخرى.';
           throw Exception(errorMessage);
         }
       } else {
+        errorStatus = true;
         errorMessage = 'تنسيق استجابة غير صالح. يرجى المحاولة مرة أخرى.';
         throw Exception(errorMessage);
       }
@@ -182,6 +191,7 @@ class LocationCubit extends Cubit<LocationState> {
       errorStatus = true;
       emit(GetTimingsError());
     } else {
+      errorStatus = false;
       emit(GetTimingsSuccess());
     }
   }

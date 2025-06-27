@@ -25,6 +25,7 @@ import 'package:serat/Data/Model/times_model.dart';
 import 'dart:developer' as developer;
 import 'package:serat/Features/NamesOfAllah/Presentation/Screens/names_of_allah_screen.dart';
 import 'package:serat/shared/constants/app_colors.dart' as shared_colors;
+import 'package:geolocator/geolocator.dart';
 
 class TimingsScreen extends StatefulWidget {
   const TimingsScreen({super.key});
@@ -236,6 +237,120 @@ class _TimingsScreenState extends State<TimingsScreen>
                   : Colors.grey[200],
               borderRadius: BorderRadius.circular(4),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationAlertCard() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDarkMode
+            ? Colors.red[900]!.withOpacity(0.15)
+            : Colors.red[50]!.withOpacity(0.85),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.red.withOpacity(0.5),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.red.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(10),
+                child: Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.red[700],
+                  size: 32,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppText(
+                      'الموقع غير مفعل',
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red[700],
+                    ),
+                    const SizedBox(height: 6),
+                    AppText(
+                      'لا يمكن عرض مواقيت الصلاة بدقة. يرجى تفعيل الموقع أو السماح للتطبيق بالوصول إلى موقعك.',
+                      fontSize: 14,
+                      color: isDarkMode ? Colors.white : Colors.black87,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Divider(
+            color: Colors.red.withOpacity(0.15),
+            thickness: 1,
+            height: 1,
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red[700],
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.refresh, size: 20),
+                label: const Text('إعادة المحاولة',
+                    style:
+                        TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                onPressed: () async {
+                  setState(() => _isLoading = true);
+                  LocationPermission permission =
+                      await Geolocator.requestPermission();
+                  if (permission == LocationPermission.deniedForever) {
+                    await Geolocator.openAppSettings();
+                    setState(() => _isLoading = false);
+                    return;
+                  }
+                  if (permission == LocationPermission.denied) {
+                    setState(() => _isLoading = false);
+                    return;
+                  }
+                  await location.LocationCubit.get(context)
+                      .getMyCurrentLocation();
+                },
+              ),
+            ],
           ),
         ],
       ),
@@ -528,7 +643,13 @@ class _TimingsScreenState extends State<TimingsScreen>
                             ),
                           ),
                         ),
-                        if (_isLoading)
+                        // Timings section
+                        if (locationCubit.errorStatus == true)
+                          Transform.translate(
+                            offset: const Offset(0, -30),
+                            child: _buildLocationAlertCard(),
+                          )
+                        else if (_isLoading)
                           Transform.translate(
                             offset: const Offset(0, -30),
                             child: Container(
@@ -676,6 +797,7 @@ class _TimingsScreenState extends State<TimingsScreen>
                               ),
                             ),
                           ),
+                        // Always show the feature cards section
                         Transform.translate(
                           offset: const Offset(0, -60),
                           child: Container(
@@ -684,7 +806,8 @@ class _TimingsScreenState extends State<TimingsScreen>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (_isLoading)
+                                if (_isLoading &&
+                                    locationCubit.errorStatus != true)
                                   GridView.count(
                                     shrinkWrap: true,
                                     physics:
