@@ -129,6 +129,21 @@ class NotificationService {
                 enableLights: true,
               ),
             );
+        await _notifications
+            .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>()
+            ?.createNotificationChannel(
+              const AndroidNotificationChannel(
+                'general_channel',
+                'General Notifications',
+                description: 'Notifications for general information',
+                importance: Importance.max,
+                playSound: true,
+                enableVibration: true,
+                showBadge: true,
+                enableLights: true,
+              ),
+            );
         developer.log('Android notification channel created',
             name: 'NotificationService');
       }
@@ -190,6 +205,46 @@ class NotificationService {
     } catch (e) {
       // Error handling without logging
     }
+  }
+
+  Future<void> showGeneralNotification({
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    const androidDetails = AndroidNotificationDetails(
+      'general_channel',
+      'General Notifications',
+      channelDescription: 'Notifications for general information',
+      importance: Importance.max,
+      priority: Priority.max,
+      enableVibration: true,
+      playSound: true,
+      fullScreenIntent: true,
+      category: AndroidNotificationCategory.alarm,
+      visibility: NotificationVisibility.public,
+      showWhen: true,
+      ticker: 'New message',
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notifications.show(
+      DateTime.now().millisecond, // Unique ID
+      title,
+      body,
+      details,
+      payload: payload,
+    );
   }
 
   Future<void> schedulePrayerNotification({

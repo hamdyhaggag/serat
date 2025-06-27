@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "892670150443",
+    "project_id": "serat-5ec61",
+    "storage_bucket": "serat-5ec61.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:892670150443:android:94f00611f0ae721b05a76e",
+        "android_client_info": {
+          "package_name": "com.serat.app.serat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCIGaLUNhyB_vuTxKttXLyEDPpCdH8uoYU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

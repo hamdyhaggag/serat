@@ -22,6 +22,8 @@ import 'package:serat/Business_Logic/Cubit/theme_cubit.dart';
 import 'package:serat/shared/services/notification_service.dart';
 import 'package:serat/core/theme/app_theme.dart';
 import 'package:upgrader/upgrader.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:serat/services/firebase_messaging_service.dart';
 
 TimeOfDay? stringToTimeOfDay(String timeString) {
   if (timeString.isNotEmpty) {
@@ -41,6 +43,7 @@ String? selectedEvening;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   await CacheHelper.init();
   await initializeAppSettings();
 
@@ -70,6 +73,9 @@ void main() async {
   // Initialize notification service
   final notificationService = NotificationService();
   await notificationService.initialize();
+
+  // Initialize Firebase Messaging
+  await FirebaseMessagingService().initNotifications();
 
   Bloc.observer = MyGlobalObserver();
 
