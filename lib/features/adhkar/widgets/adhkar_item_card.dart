@@ -67,78 +67,80 @@ class AdhkarItemCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: isHorizontal ? MainAxisSize.max : MainAxisSize.min,
       children: [
-        // Header row
-        Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(iconPadding),
-              decoration: BoxDecoration(
-                color: isCompleted
-                    ? Colors.green.withOpacity(0.1)
-                    : theme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(borderRadius),
+        // Header row (icon, number, progress) - hide if forShare
+        if (!forShare) ...[
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(iconPadding),
+                decoration: BoxDecoration(
+                  color: isCompleted
+                      ? Colors.green.withOpacity(0.1)
+                      : theme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(borderRadius),
+                ),
+                child: Icon(
+                  isCompleted ? Icons.check_circle : Icons.format_list_numbered,
+                  size: iconSize,
+                  color: isCompleted ? Colors.green : theme.primaryColor,
+                ),
               ),
-              child: Icon(
-                isCompleted ? Icons.check_circle : Icons.format_list_numbered,
-                size: iconSize,
-                color: isCompleted ? Colors.green : theme.primaryColor,
-              ),
-            ),
-            SizedBox(width: isHorizontal ? 8 : 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'الذِكر رقم ${index + 1}',
-                    style: TextStyle(
-                      fontSize: labelFontSize,
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSurface,
+              SizedBox(width: isHorizontal ? 8 : 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'الذِكر رقم ${index + 1}',
+                      style: TextStyle(
+                        fontSize: labelFontSize,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
+                      ),
                     ),
-                  ),
-                  Text(
-                    '$currentProgress/${item.count}',
-                    style: TextStyle(
-                      fontSize: countFontSize,
-                      color: isCompleted ? Colors.green : theme.primaryColor,
-                      fontWeight: FontWeight.w500,
+                    Text(
+                      '$currentProgress/${item.count}',
+                      style: TextStyle(
+                        fontSize: countFontSize,
+                        color: isCompleted ? Colors.green : theme.primaryColor,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            if (!forShare) ...[
-              IconButton(
-                icon: const Icon(Icons.copy_all_outlined),
-                iconSize: isHorizontal ? 18 : 22,
-                tooltip: 'نسخ الذكر',
-                onPressed: onCopy,
-              ),
-              IconButton(
-                icon: const Icon(Icons.share_outlined),
-                iconSize: isHorizontal ? 18 : 22,
-                tooltip: 'مشاركة الذكر',
-                onPressed: onShare,
-              ),
+              if (!forShare) ...[
+                IconButton(
+                  icon: const Icon(Icons.copy_all_outlined),
+                  iconSize: isHorizontal ? 18 : 22,
+                  tooltip: 'نسخ الذكر',
+                  onPressed: onCopy,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.share_outlined),
+                  iconSize: isHorizontal ? 18 : 22,
+                  tooltip: 'مشاركة الذكر',
+                  onPressed: onShare,
+                ),
+              ],
             ],
-          ],
-        ),
-        SizedBox(
-            height: isHorizontal
-                ? 6 + (textScale - 28) * 0.15
-                : 12 + (textScale - 28) * 0.4),
-        // Progress bar
-        LinearProgressIndicator(
-          value: item.count > 0 ? currentProgress / item.count : 0.0,
-          backgroundColor: theme.primaryColor.withOpacity(0.1),
-          valueColor: AlwaysStoppedAnimation<Color>(
-            isCompleted ? Colors.green : theme.primaryColor,
           ),
-          borderRadius: BorderRadius.circular(progressBarRadius),
-          minHeight: progressBarHeight,
-        ),
-        SizedBox(height: isHorizontal ? 6 + (textScale - 28) * 0.15 : 12),
+          SizedBox(
+              height: isHorizontal
+                  ? 6 + (textScale - 28) * 0.15
+                  : 12 + (textScale - 28) * 0.4),
+          // Progress bar
+          LinearProgressIndicator(
+            value: item.count > 0 ? currentProgress / item.count : 0.0,
+            backgroundColor: theme.primaryColor.withOpacity(0.1),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              isCompleted ? Colors.green : theme.primaryColor,
+            ),
+            borderRadius: BorderRadius.circular(progressBarRadius),
+            minHeight: progressBarHeight,
+          ),
+          SizedBox(height: isHorizontal ? 6 + (textScale - 28) * 0.15 : 12),
+        ],
         // Adhkar text
         isHorizontal
             ? Expanded(

@@ -494,7 +494,7 @@
 	},
 	{
 		"id": 4,
-		"category": "أذكار الاستيقاظ من النوم",
+		"category": "أذكار الاستيقاظ ",
 		"audio": "/audio/ar_7esn_AlMoslem_by_Doors_002.mp3",
 		"filename": "ar_7esn_AlMoslem_by_Doors_002",
 		"array": [
@@ -545,7 +545,7 @@
 	},
 	{
 		"id": 6,
-		"category": "دعاء الخروج من الخلاء",
+		"category": "الخروج من الخلاء",
 		"audio": "/audio/ar_7esn_AlMoslem_by_Doors_008.mp3",
 		"filename": "ar_7esn_AlMoslem_by_Doors_008",
 		"array": [
@@ -575,7 +575,7 @@
 	},
 	{
 		"id": 8,
-		"category": "الذكر بعد الفراغ من الوضوء",
+		"category": "الفراغ من الوضوء",
 		"audio": "/audio/ar_7esn_AlMoslem_by_Doors_010.mp3",
 		"filename": "ar_7esn_AlMoslem_by_Doors_010",
 		"array": [
@@ -604,7 +604,7 @@
 	},
 	{
 		"id": 9,
-		"category": "الذكر عند الخروج من المنزل",
+		"category": "عند الخروج من المنزل",
 		"audio": "/audio/ar_7esn_AlMoslem_by_Doors_011.mp3",
 		"filename": "ar_7esn_AlMoslem_by_Doors_011",
 		"array": [
@@ -626,7 +626,7 @@
 	},
 	{
 		"id": 10,
-		"category": "الذكر عند دخول المنزل",
+		"category": "عند دخول المنزل",
 		"audio": "/audio/ar_7esn_AlMoslem_by_Doors_012.mp3",
 		"filename": "ar_7esn_AlMoslem_by_Doors_012",
 		"array": [
@@ -641,7 +641,7 @@
 	},
 	{
 		"id": 11,
-		"category": "دعاء الذهاب إلى المسجد",
+		"category": "الذهاب إلى المسجد",
 		"audio": "/audio/ar_7esn_AlMoslem_by_Doors_013.mp3",
 		"filename": "ar_7esn_AlMoslem_by_Doors_013",
 		"array": [
@@ -671,7 +671,7 @@
 	},
 	{
 		"id": 13,
-		"category": "دعاء الخروج من المسجد",
+		"category": "الخروج من المسجد",
 		"audio": "/audio/ar_7esn_AlMoslem_by_Doors_015.mp3",
 		"filename": "ar_7esn_AlMoslem_by_Doors_015",
 		"array": [
@@ -975,7 +975,7 @@
 	},
 	{
 		"id": 23,
-		"category": "دعاء الجلسة بين السجدتين",
+		"category": "الجلسة بين السجدتين",
 		"audio": "/audio/ar_7esn_AlMoslem_by_Doors_021.mp3",
 		"filename": "ar_7esn_AlMoslem_by_Doors_021",
 		"array": [
@@ -2390,7 +2390,7 @@
 		]
 	},
 	{
-					"id": 95,
+		"id": 95,
 		"category": "دعاء كراهية الطيرة",
 		"audio": "/audio/ar_7esn_AlMoslem_by_Doors_095.mp3",
 		"filename": "ar_7esn_AlMoslem_by_Doors_095",
@@ -3021,7 +3021,7 @@
 		]
 	},
 	{
-				"id": 131,
+		"id": 131,
 		"category": "فضل التسبيح و التحميد، و التهليل، و التكبير",
 		"audio": "/audio/ar_7esn_AlMoslem_by_Doors_131.mp3",
 		"filename": "ar_7esn_AlMoslem_by_Doors_131",
