@@ -60,6 +60,12 @@ class QiblaScreenState extends State<QiblaScreen>
         latitude: locationCubit.position!.latitude,
         longitude: locationCubit.position!.longitude,
       );
+    } else if (mounted) {
+      // Try to load cached qibla direction if location is not available
+      await QiblaCubit.get(context).getQiblaDirection(
+        latitude: 0.0,
+        longitude: 0.0,
+      );
     }
   }
 
@@ -85,6 +91,7 @@ class QiblaScreenState extends State<QiblaScreen>
       },
       builder: (context, state) {
         final locationCubit = LocationCubit.get(context);
+        final qiblaCubit = QiblaCubit.get(context);
         return Scaffold(
           backgroundColor: isDarkMode ? const Color(0xff1F1F1F) : Colors.white,
           appBar: const CustomAppBar(
@@ -128,7 +135,33 @@ class QiblaScreenState extends State<QiblaScreen>
                           builder: (context) {
                             return Column(
                               children: <Widget>[
-                                Expanded(child: _buildCompass())
+                                if (qiblaCubit.isFromCache)
+                                  Container(
+                                    width: double.infinity,
+                                    color: AppColors.primaryColor
+                                        .withOpacity(0.10),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8, horizontal: 16),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.wifi_off,
+                                            color: AppColors.primaryColor,
+                                            size: 20),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'يتم عرض اتجاه القبلة من البيانات المحفوظة.',
+                                          style: TextStyle(
+                                            color: AppColors.primaryColor,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                Expanded(child: _buildCompass()),
                               ],
                             );
                           },

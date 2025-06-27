@@ -14,6 +14,12 @@ class DirectionModel {
         status: json["status"],
         data: Data.fromJson(json["data"]),
       );
+
+  Map<String, dynamic> toJson() => {
+        "code": code,
+        "status": status,
+        "data": data.toJson(),
+      };
 }
 
 class Data {
@@ -32,4 +38,10 @@ class Data {
         longitude: json["longitude"].toDouble(),
         direction: json["direction"].toDouble(),
       );
+
+  Map<String, dynamic> toJson() => {
+        "latitude": latitude,
+        "longitude": longitude,
+        "direction": direction,
+      };
 }
