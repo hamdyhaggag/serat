@@ -96,6 +96,7 @@ class AdhkarItemCard extends StatelessWidget {
                         fontSize: labelFontSize,
                         fontWeight: FontWeight.w600,
                         color: theme.colorScheme.onSurface,
+                        fontFamily: isHorizontal ? 'Cairo' : null,
                       ),
                     ),
                     Text(
@@ -104,6 +105,7 @@ class AdhkarItemCard extends StatelessWidget {
                         fontSize: countFontSize,
                         color: isCompleted ? Colors.green : theme.primaryColor,
                         fontWeight: FontWeight.w500,
+                        fontFamily: isHorizontal ? 'Cairo' : null,
                       ),
                     ),
                   ],
@@ -153,6 +155,7 @@ class AdhkarItemCard extends StatelessWidget {
                       color: theme.colorScheme.onSurface.withOpacity(0.9),
                       height: 1.5,
                       fontWeight: FontWeight.w400,
+                      fontFamily: 'Cairo',
                     ),
                     maxLines: null,
                     overflow: TextOverflow.visible,
@@ -190,7 +193,9 @@ class AdhkarItemCard extends StatelessWidget {
               child: Text(
                 isCompleted ? 'مكتمل' : 'إكمال',
                 style: TextStyle(
-                    fontSize: buttonFontSize, fontWeight: FontWeight.w500),
+                    fontSize: buttonFontSize,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: isHorizontal ? 'Cairo' : null),
               ),
             ),
           ),

@@ -808,12 +808,6 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
                 child: _buildAdhkarContent(),
               ),
 
-              // Navigation controls (if horizontal mode)
-              if (_viewMode == AdhkarViewMode.horizontal)
-                SliverToBoxAdapter(
-                  child: _buildNavigationControls(),
-                ),
-
               // Bottom padding
               const SliverToBoxAdapter(
                 child: SizedBox(height: 20),
@@ -829,18 +823,95 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
 
   Widget _buildPersistentProgressBar(BuildContext context) {
     final theme = Theme.of(context);
+    final isCompleted = _categoryProgress >= 1.0;
     return SafeArea(
       child: Container(
         width: double.infinity,
-        color: theme.scaffoldBackgroundColor,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        child: LinearProgressIndicator(
-          value: _categoryProgress,
-          minHeight: 6,
-          backgroundColor: theme.primaryColor.withOpacity(0.15),
-          valueColor: AlwaysStoppedAnimation<Color>(
-            _categoryProgress >= 1.0 ? Colors.green : theme.primaryColor,
-          ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          boxShadow: [
+            BoxShadow(
+              color: theme.primaryColor.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Progress bar with gradient
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0, end: _categoryProgress),
+                duration: const Duration(milliseconds: 700),
+                curve: Curves.easeInOut,
+                builder: (context, value, child) {
+                  return LinearProgressIndicator(
+                    value: value,
+                    minHeight: 16,
+                    backgroundColor: theme.primaryColor.withOpacity(0.10),
+                    valueColor: AlwaysStoppedAnimation(
+                      isCompleted ? Colors.green : theme.primaryColor,
+                    ),
+                  );
+                },
+              ),
+            ),
+            // Percentage and icon overlay
+            Positioned.fill(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 400),
+                            child: Text(
+                              '${(_categoryProgress * 100).toInt()}%',
+                              key: ValueKey(
+                                  _categoryProgress.toStringAsFixed(2)),
+                              style: TextStyle(
+                                color: isCompleted
+                                    ? Colors.green[800]
+                                    : theme.primaryColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                shadows: [
+                                  Shadow(
+                                    color: theme.primaryColor.withOpacity(0.08),
+                                    blurRadius: 2,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 400),
+                            child: isCompleted
+                                ? Icon(Icons.celebration,
+                                    color: Colors.green,
+                                    size: 22,
+                                    key: const ValueKey('done'))
+                                : Icon(Icons.auto_awesome,
+                                    color: theme.primaryColor,
+                                    size: 20,
+                                    key: const ValueKey('progress')),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -866,62 +937,13 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
           ),
         ),
 
-        // Dots indicator
+        // Dots indicator (no next/back buttons)
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Previous button
-              if (currentIndex > 0)
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _currentItemIndex = currentIndex - 1;
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Icon(
-                      Icons.chevron_left,
-                      size: 20,
-                      color: theme.primaryColor,
-                    ),
-                  ),
-                ),
-
-              const SizedBox(width: 12),
-
-              // Dots with smart pagination
               ..._buildSmartDots(currentIndex, totalItems, theme),
-
-              const SizedBox(width: 12),
-
-              // Next button
-              if (currentIndex < totalItems - 1)
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _currentItemIndex = currentIndex + 1;
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Icon(
-                      Icons.chevron_right,
-                      size: 20,
-                      color: theme.primaryColor,
-                    ),
-                  ),
-                ),
             ],
           ),
         ),
@@ -1097,60 +1119,68 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
   }
 
   Widget _buildHorizontalView() {
-    final baseHeight = 320.0;
-    final heightMultiplier = (_textScale - 28) * 3.0;
+    final baseHeight = 400.0; // Keep increased height
+    final heightMultiplier = (_textScale - 28) * 4.0;
     final responsiveHeight =
-        (baseHeight + heightMultiplier).clamp(320.0, 500.0);
-    return Container(
+        (baseHeight + heightMultiplier).clamp(400.0, 600.0);
+    return SizedBox(
       height: responsiveHeight,
-      child: ListView.builder(
-        controller: _horizontalScrollController,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        scrollDirection: Axis.horizontal,
-        itemCount: widget.category.array.length,
-        itemBuilder: (context, index) {
-          final cardKey = _cardKeys.putIfAbsent(index, () => GlobalKey());
-          final item = widget.category.array[index];
-          final currentProgress = _itemProgress[index] ?? 0;
-          final isCompleted = currentProgress >= item.count;
-          final isCurrentItem = index == _currentItemIndex;
-          return Container(
-            width: (280 + (_textScale - 28) * 4.0).clamp(280.0, 450.0),
-            margin: const EdgeInsets.only(right: 16),
-            child: RepaintBoundary(
-              key: cardKey,
-              child: AdhkarItemCard(
-                index: index,
-                item: item,
-                currentProgress: currentProgress,
-                isCompleted: isCompleted,
-                isCurrentItem: isCurrentItem,
-                textScale: _textScale,
-                isHorizontal: true,
-                forShare: false,
-                onTap: () {
-                  setState(() {
-                    _currentItemIndex = index;
-                  });
-                },
-                onCopy: () {
-                  Clipboard.setData(ClipboardData(text: item.text));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('تم نسخ الذكر إلى الحافظة')),
-                  );
-                },
-                onShare: () async {
-                  setState(() {
-                    _shareCardIndex = index;
-                  });
-                  await _shareAdhkarCardWithLogo(index);
-                },
-                onComplete:
-                    isCompleted ? null : () => _updateItemProgress(index),
+      child: Center(
+        child: ListView.builder(
+          controller: _horizontalScrollController,
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          scrollDirection: Axis.horizontal,
+          itemCount: widget.category.array.length,
+          itemBuilder: (context, index) {
+            final cardKey = _cardKeys.putIfAbsent(index, () => GlobalKey());
+            final item = widget.category.array[index];
+            final currentProgress = _itemProgress[index] ?? 0;
+            final isCompleted = currentProgress >= item.count;
+            final isCurrentItem = index == _currentItemIndex;
+            return Align(
+              alignment: Alignment.center,
+              child: Container(
+                width: (260 + (_textScale - 28) * 4.0)
+                    .clamp(220.0, 340.0), // Decreased width
+                margin: const EdgeInsets.symmetric(
+                    horizontal: 16), // Slightly reduced margin
+                child: RepaintBoundary(
+                  key: cardKey,
+                  child: AdhkarItemCard(
+                    index: index,
+                    item: item,
+                    currentProgress: currentProgress,
+                    isCompleted: isCompleted,
+                    isCurrentItem: isCurrentItem,
+                    textScale: _textScale,
+                    isHorizontal: true,
+                    forShare: false,
+                    onTap: () {
+                      setState(() {
+                        _currentItemIndex = index;
+                      });
+                    },
+                    onCopy: () {
+                      Clipboard.setData(ClipboardData(text: item.text));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('تم نسخ الذكر إلى الحافظة')),
+                      );
+                    },
+                    onShare: () async {
+                      setState(() {
+                        _shareCardIndex = index;
+                      });
+                      await _shareAdhkarCardWithLogo(index);
+                    },
+                    onComplete:
+                        isCompleted ? null : () => _updateItemProgress(index),
+                  ),
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -1204,92 +1234,6 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
           ),
         );
       },
-    );
-  }
-
-  Widget _buildNavigationControls() {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: EdgeInsets.symmetric(
-          horizontal: 16, vertical: 8 + (_textScale - 28) * 0.2),
-      child: Row(
-        children: [
-          // Previous button
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: _currentItemIndex > 0
-                  ? () {
-                      setState(() {
-                        _currentItemIndex--;
-                      });
-                    }
-                  : null,
-              icon: Icon(
-                Icons.chevron_left,
-                size: 16 + (_textScale - 28) * 0.2,
-              ),
-              label: Text(
-                'السابق',
-                style: TextStyle(
-                  fontSize: (_textScale - 28) * 0.2 + 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.primaryColor.withOpacity(0.1),
-                foregroundColor: theme.primaryColor,
-                padding: EdgeInsets.symmetric(
-                  vertical: 8 + (_textScale - 28) * 0.2,
-                  horizontal: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                elevation: 0,
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 12),
-
-          // Next button
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: _currentItemIndex < widget.category.array.length - 1
-                  ? () {
-                      setState(() {
-                        _currentItemIndex++;
-                      });
-                    }
-                  : null,
-              icon: Icon(
-                Icons.chevron_right,
-                size: 16 + (_textScale - 28) * 0.2,
-              ),
-              label: Text(
-                'التالي',
-                style: TextStyle(
-                  fontSize: (_textScale - 28) * 0.2 + 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.primaryColor.withOpacity(0.1),
-                foregroundColor: theme.primaryColor,
-                padding: EdgeInsets.symmetric(
-                  vertical: 8 + (_textScale - 28) * 0.2,
-                  horizontal: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                elevation: 0,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
