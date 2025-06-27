@@ -21,6 +21,7 @@ import 'package:serat/features/quran/routes/quran_routes.dart';
 import 'package:serat/Business_Logic/Cubit/theme_cubit.dart';
 import 'package:serat/shared/services/notification_service.dart';
 import 'package:serat/core/theme/app_theme.dart';
+import 'package:upgrader/upgrader.dart';
 
 TimeOfDay? stringToTimeOfDay(String timeString) {
   if (timeString.isNotEmpty) {
@@ -90,6 +91,32 @@ Future<void> initializeAppSettings() async {
   DioHelper.init();
 }
 
+class ArabicUpgraderMessages extends UpgraderMessages {
+  ArabicUpgraderMessages() : super(code: 'ar');
+
+  @override
+  String message(UpgraderMessage messageKey) {
+    switch (messageKey) {
+      case UpgraderMessage.body:
+        return 'يتوفر إصدار جديد من هذا التطبيق!';
+      case UpgraderMessage.buttonTitleIgnore:
+        return 'تجاهل';
+      case UpgraderMessage.buttonTitleLater:
+        return 'لاحقًا';
+      case UpgraderMessage.buttonTitleUpdate:
+        return 'تحديث الآن';
+      case UpgraderMessage.prompt:
+        return 'هل ترغب في التحديث؟';
+      case UpgraderMessage.releaseNotes:
+        return 'ملاحظات الإصدار';
+      case UpgraderMessage.title:
+        return 'تحديث التطبيق';
+      default:
+        return super.message(messageKey) ?? '';
+    }
+  }
+}
+
 class SeratApp extends StatelessWidget {
   final bool? isLight;
   static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -135,7 +162,13 @@ class SeratApp extends StatelessWidget {
                   ? ThemeMode.light
                   : ThemeMode.dark,
               debugShowCheckedModeBanner: false,
-              home: const SplashScreen(),
+              home: UpgradeAlert(
+                upgrader: Upgrader(
+                  languageCode: 'ar',
+                  messages: ArabicUpgraderMessages(),
+                ),
+                child: SplashScreen(),
+              ),
               routes: {
                 ...QuranRoutes.getRoutes(),
               },
