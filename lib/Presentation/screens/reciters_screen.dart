@@ -28,6 +28,11 @@ class _RecitersScreenState extends State<RecitersScreen>
   bool _isOfflineMode = false;
   String _currentReciterName = '';
   String _currentSurahName = '';
+  bool _autoPlayNextSura = false;
+  int? _currentSurahNumber;
+  Moshaf? _currentMoshaf;
+  Reciter? _currentReciter;
+  ValueNotifier<int>? _currentSurahNotifier;
 
   @override
   void initState() {
@@ -75,8 +80,35 @@ class _RecitersScreenState extends State<RecitersScreen>
       if (mounted) _showErrorSnackBar('حدث خطأ أثناء تشغيل التلاوة');
     });
 
-    _audioPlayer.onPlayerComplete.listen((_) {
+    _audioPlayer.onPlayerComplete.listen((_) async {
       if (mounted) setState(() => _isPlaying = false);
+      if (_autoPlayNextSura &&
+          _currentSurahNumber != null &&
+          _currentMoshaf != null &&
+          _currentReciter != null) {
+        final surahList = _currentMoshaf!.surahList
+            .split(',')
+            .map((e) => int.tryParse(e.trim()))
+            .whereType<int>()
+            .toList();
+        final idx = surahList.indexOf(_currentSurahNumber!);
+        if (idx != -1 && idx + 1 < surahList.length) {
+          final nextSurah = surahList[idx + 1];
+          final audioUrl = _buildAudioUrl(_currentMoshaf!.server, nextSurah);
+          final surahName = _getSurahName(nextSurah);
+          setState(() {
+            _currentSurahNumber = nextSurah;
+            _currentSurahName = surahName;
+          });
+          _currentSurahNotifier?.value = nextSurah;
+          try {
+            await _playAudio(audioUrl, _currentReciter!.name, surahName,
+                updateState: false);
+          } catch (e) {
+            // No need to print error here, as it's handled in _playAudio
+          }
+        }
+      }
     });
 
     _audioPlayer.onPlayerStateChanged.listen((state) {
@@ -89,8 +121,8 @@ class _RecitersScreenState extends State<RecitersScreen>
     _notificationService.onStop = _stopAudio;
   }
 
-  Future<void> _playAudio(
-      String url, String reciterName, String surahName) async {
+  Future<void> _playAudio(String url, String reciterName, String surahName,
+      {bool updateState = true}) async {
     try {
       if (_isPlaying) {
         await _stopAudio();
@@ -99,11 +131,13 @@ class _RecitersScreenState extends State<RecitersScreen>
       await _audioPlayer.setSourceUrl(url);
       await _audioPlayer.resume();
 
-      setState(() {
-        _isPlaying = true;
-        _currentReciterName = reciterName;
-        _currentSurahName = surahName;
-      });
+      if (updateState) {
+        setState(() {
+          _isPlaying = true;
+          _currentReciterName = reciterName;
+          _currentSurahName = surahName;
+        });
+      }
 
       await _notificationService.showReciterNotification(
         reciterName: reciterName,
@@ -418,6 +452,10 @@ class _RecitersScreenState extends State<RecitersScreen>
     _showLoadingDialog();
 
     try {
+      _currentReciter = reciter;
+      _currentMoshaf = moshaf;
+      _currentSurahNumber = selectedSurah;
+      _currentSurahNotifier = ValueNotifier<int>(selectedSurah);
       final audioUrl = _buildAudioUrl(moshaf.server, selectedSurah);
       final surahName = _getSurahName(selectedSurah);
 
@@ -669,33 +707,74 @@ class _RecitersScreenState extends State<RecitersScreen>
             // Don't stop audio when dragging down
             return true;
           },
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xff2F2F2F)
-                  : Colors.white,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
+          child: StatefulBuilder(
+            builder: (context, setSheetState) {
+              return Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xff2F2F2F)
+                      : Colors.white,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildPlayerHeader(reciter, moshaf, selectedSurah),
-                const SizedBox(height: 24),
-                _buildPlayerControls(),
-                const SizedBox(height: 24),
-                _buildProgressBar(),
-              ],
-            ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_currentSurahNotifier != null)
+                      ValueListenableBuilder<int>(
+                        valueListenable: _currentSurahNotifier!,
+                        builder: (context, surahNumber, _) {
+                          return _buildPlayerHeader(
+                              reciter, moshaf, surahNumber);
+                        },
+                      )
+                    else
+                      _buildPlayerHeader(reciter, moshaf, selectedSurah),
+                    const SizedBox(height: 24),
+                    _buildPlayerControls(),
+                    const SizedBox(height: 24),
+                    _buildProgressBar(),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.queue_music, color: Colors.teal),
+                              const SizedBox(width: 8),
+                              const Text('تشغيل السورة التالية تلقائياً',
+                                  style: TextStyle(fontSize: 16)),
+                            ],
+                          ),
+                          Switch(
+                            value: _autoPlayNextSura,
+                            onChanged: (val) {
+                              setSheetState(() {
+                                _autoPlayNextSura = val;
+                              });
+                              setState(() {
+                                _autoPlayNextSura = val;
+                              });
+                            },
+                            activeColor: AppColors.primaryColor,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),
