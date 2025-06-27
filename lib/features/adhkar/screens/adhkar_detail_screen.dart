@@ -137,6 +137,11 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
   // Cache key for text scale
   static const String _textScaleKey = 'adhkar_text_scale';
 
+  // --- Added for auto-scroll ---
+  final ScrollController _verticalScrollController = ScrollController();
+  final ScrollController _horizontalScrollController = ScrollController();
+  // --- End added ---
+
   @override
   void initState() {
     super.initState();
@@ -178,6 +183,8 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
   void dispose() {
     _animationController.dispose();
     _progressController.dispose();
+    _verticalScrollController.dispose(); // Dispose controllers
+    _horizontalScrollController.dispose();
     super.dispose();
   }
 
@@ -515,6 +522,24 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
           .forward()
           .then((_) => _animationController.reverse());
 
+      // --- Auto-scroll logic after completion ---
+      if (newProgress >= item.count) {
+        final nextIndex = itemIndex + 1;
+        if (nextIndex < widget.category.array.length) {
+          Future.delayed(const Duration(milliseconds: 350), () {
+            if (!mounted) return;
+            if (_viewMode == AdhkarViewMode.horizontal) {
+              // Horizontal scroll
+              _scrollToHorizontalIndex(nextIndex);
+            } else if (_viewMode == AdhkarViewMode.list) {
+              // Vertical scroll
+              _scrollToVerticalIndex(nextIndex);
+            }
+          });
+        }
+      }
+      // --- End auto-scroll logic ---
+
       // Perform async operations in the background
       () async {
         await _progressService.saveItemProgress(
@@ -553,6 +578,48 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
 
     return false;
   }
+
+  // --- Helper methods for auto-scroll ---
+  void _scrollToVerticalIndex(int index) {
+    final key = _cardKeys[index];
+    if (key != null && key.currentContext != null) {
+      Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+        alignment: 0.2,
+      );
+    } else {
+      // Fallback: scroll by offset
+      _verticalScrollController.animateTo(
+        (index * 120.0)
+            .clamp(0, _verticalScrollController.position.maxScrollExtent),
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _scrollToHorizontalIndex(int index) {
+    final key = _cardKeys[index];
+    if (key != null && key.currentContext != null) {
+      Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+        alignment: 0.2,
+      );
+    } else {
+      // Fallback: scroll by offset
+      _horizontalScrollController.animateTo(
+        (index * 300.0)
+            .clamp(0, _horizontalScrollController.position.maxScrollExtent),
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+  // --- End helper methods ---
 
   Future<void> _updateViewMode(AdhkarViewMode mode) async {
     setState(() {
@@ -975,51 +1042,56 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
   }
 
   Widget _buildListView() {
-    return Column(
-      children: List.generate(
-        widget.category.array.length,
-        (index) {
-          final cardKey = _cardKeys.putIfAbsent(index, () => GlobalKey());
-          final item = widget.category.array[index];
-          final currentProgress = _itemProgress[index] ?? 0;
-          final isCompleted = currentProgress >= item.count;
-          final isCurrentItem = index == _currentItemIndex;
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            child: RepaintBoundary(
-              key: cardKey,
-              child: AdhkarItemCard(
-                index: index,
-                item: item,
-                currentProgress: currentProgress,
-                isCompleted: isCompleted,
-                isCurrentItem: isCurrentItem,
-                textScale: _textScale,
-                isHorizontal: false,
-                forShare: false,
-                onTap: () {
-                  setState(() {
-                    _currentItemIndex = index;
-                  });
-                },
-                onCopy: () {
-                  Clipboard.setData(ClipboardData(text: item.text));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('تم نسخ الذكر إلى الحافظة')),
-                  );
-                },
-                onShare: () async {
-                  setState(() {
-                    _shareCardIndex = index;
-                  });
-                  await _shareAdhkarCardWithLogo(index);
-                },
-                onComplete:
-                    isCompleted ? null : () => _updateItemProgress(index),
+    return SizedBox(
+      height: MediaQuery.of(context).size.height * 0.7,
+      child: ListView(
+        controller: _verticalScrollController,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        children: List.generate(
+          widget.category.array.length,
+          (index) {
+            final cardKey = _cardKeys.putIfAbsent(index, () => GlobalKey());
+            final item = widget.category.array[index];
+            final currentProgress = _itemProgress[index] ?? 0;
+            final isCompleted = currentProgress >= item.count;
+            final isCurrentItem = index == _currentItemIndex;
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              child: RepaintBoundary(
+                key: cardKey,
+                child: AdhkarItemCard(
+                  index: index,
+                  item: item,
+                  currentProgress: currentProgress,
+                  isCompleted: isCompleted,
+                  isCurrentItem: isCurrentItem,
+                  textScale: _textScale,
+                  isHorizontal: false,
+                  forShare: false,
+                  onTap: () {
+                    setState(() {
+                      _currentItemIndex = index;
+                    });
+                  },
+                  onCopy: () {
+                    Clipboard.setData(ClipboardData(text: item.text));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('تم نسخ الذكر إلى الحافظة')),
+                    );
+                  },
+                  onShare: () async {
+                    setState(() {
+                      _shareCardIndex = index;
+                    });
+                    await _shareAdhkarCardWithLogo(index);
+                  },
+                  onComplete:
+                      isCompleted ? null : () => _updateItemProgress(index),
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -1032,6 +1104,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
     return Container(
       height: responsiveHeight,
       child: ListView.builder(
+        controller: _horizontalScrollController,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         scrollDirection: Axis.horizontal,
         itemCount: widget.category.array.length,
@@ -1098,7 +1171,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
         final currentProgress = _itemProgress[index] ?? 0;
         final isCompleted = currentProgress >= item.count;
         final isCurrentItem = index == _currentItemIndex;
-        
+
         return RepaintBoundary(
           key: cardKey,
           child: AdhkarItemCard(
@@ -1127,8 +1200,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
               });
               await _shareAdhkarCardWithLogo(index);
             },
-            onComplete:
-                isCompleted ? null : () => _updateItemProgress(index),
+            onComplete: isCompleted ? null : () => _updateItemProgress(index),
           ),
         );
       },
