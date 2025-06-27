@@ -26,6 +26,7 @@ import 'dart:developer' as developer;
 import 'package:serat/Features/NamesOfAllah/Presentation/Screens/names_of_allah_screen.dart';
 import 'package:serat/shared/constants/app_colors.dart' as shared_colors;
 import 'package:geolocator/geolocator.dart';
+import 'package:serat/Presentation/screens/about/constants/about_constants.dart';
 
 class TimingsScreen extends StatefulWidget {
   const TimingsScreen({super.key});
@@ -1571,23 +1572,7 @@ class _TimingsScreenState extends State<TimingsScreen>
 
   void _shareApp() {
     Share.share(
-      'تطبيق صراط هو تطبيق إسلامي شامل يحتوي على العديد من المميزات مثل:\n\n'
-      '• مواقيت الصلاة\n'
-      '• اتجاه القبلة\n'
-      '• الأذكار الصباحية والمسائية\n'
-      '• الأربعين النووية\n'
-      '• السبحة الإلكترونية\n'
-      '• القرآن الكريم مع التفسير\n'
-      '• القراء المشهورين\n'
-      '• الراديو الإسلامي\n'
-      '• التقويم الهجري\n'
-      '• حاسبة الزكاة\n'
-      '• الهدف اليومي\n'
-      '• التنبيهات والإشعارات\n'
-      '• الوضع الليلي\n'
-      '• دعم اللغة العربية\n\n'
-      'تحميل التطبيق من هنا:\n'
-      'https://play.google.com/store/apps/details?id=com.serat.app.serat',
+      AboutConstants.shareMessage,
     );
   }
 
