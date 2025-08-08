@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:serat/Business_Logic/Cubit/reciters_cubit.dart';
+import 'package:serat/Business_Logic/Cubit/download_cubit.dart';
 import 'package:serat/Business_Logic/Models/reciter_model.dart';
+import 'package:serat/Business_Logic/Models/download_model.dart';
+import 'package:serat/Data/services/audio_player_service.dart';
 import 'package:serat/imports.dart';
 import 'package:flutter/foundation.dart';
 import '../../services/reciter_notification_service.dart';
@@ -42,6 +45,14 @@ class _RecitersScreenState extends State<RecitersScreen>
     _loadReciters();
     _setupAnimation();
     _setupSearchListener();
+
+    // Initialize downloads after first frame to ensure context is ready
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await DownloadCubit.get(context).initialize();
+        await DownloadCubit.get(context).loadStorageInfo();
+      } catch (_) {}
+    });
   }
 
   void _setupAnimation() {
@@ -329,7 +340,11 @@ class _RecitersScreenState extends State<RecitersScreen>
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.refresh),
+          icon: const Icon(Icons.download, color: Colors.white),
+          onPressed: () => _showDownloadManager(),
+        ),
+        IconButton(
+          icon: const Icon(Icons.refresh, color: Colors.white),
           onPressed: () {
             setState(() => _isOfflineMode = false);
             RecitersCubit.get(context).getReciters(forceRefresh: true);
@@ -436,6 +451,198 @@ class _RecitersScreenState extends State<RecitersScreen>
           Navigator.pop(context);
           _playRecitation(reciter, moshaf);
         },
+        onDownload: (moshaf) {
+          Navigator.pop(context);
+          _showDownloadOptions(reciter, moshaf);
+        },
+      ),
+    );
+  }
+
+  void _showDownloadManager() {
+    // Load storage info before opening the manager to avoid endless loader
+    DownloadCubit.get(context).loadStorageInfo();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _DownloadManagerSheet(),
+    );
+  }
+
+  void _showDownloadOptions(Reciter reciter, Moshaf moshaf) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _DownloadOptionsSheet(
+        reciter: reciter,
+        moshaf: moshaf,
+        onDownloadSurah: (surahNumber) {
+          Navigator.pop(context);
+          _downloadSurah(reciter, moshaf, surahNumber);
+        },
+        onDownloadMultiple: (surahNumbers) {
+          Navigator.pop(context);
+          _downloadMultipleSurahs(reciter, moshaf, surahNumbers);
+        },
+      ),
+    );
+  }
+
+  void _downloadSurah(Reciter reciter, Moshaf moshaf, int surahNumber) {
+    // Show progress UI BEFORE starting download to capture all state changes
+    _showInlineDownloadProgress(reciter, moshaf, surahNumber);
+
+    DownloadCubit.get(context).downloadSurah(
+      reciter: reciter,
+      moshaf: moshaf,
+      surahNumber: surahNumber,
+    );
+  }
+
+  void _downloadMultipleSurahs(
+      Reciter reciter, Moshaf moshaf, List<int> surahNumbers) {
+    DownloadCubit.get(context).downloadMultipleSurahs(
+      reciter: reciter,
+      moshaf: moshaf,
+      surahNumbers: surahNumbers,
+    );
+
+    // Show an inline batch progress if desired (optional)
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content:
+            AppText('بدأ تحميل ${surahNumbers.length} سورة لِ ${reciter.name}'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _showInlineDownloadProgress(
+    Reciter reciter,
+    Moshaf moshaf,
+    int surahNumber,
+  ) {
+    final messenger = ScaffoldMessenger.of(context);
+
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(hours: 1), // will be closed on complete/error
+        content: BlocConsumer<DownloadCubit, DownloadState>(
+          listener: (context, state) async {
+            if (state is DownloadProgressUpdated &&
+                state.progress.reciterId == reciter.id.toString() &&
+                state.progress.moshafId == moshaf.id.toString() &&
+                state.progress.surahNumber == surahNumber &&
+                state.progress.status == DownloadStatus.completed) {
+              messenger.hideCurrentSnackBar();
+
+              // Offer to play now
+              messenger.showSnackBar(
+                SnackBar(
+                  behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 5),
+                  content: Row(
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.green),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: AppText(
+                          'تم تحميل سورة ${_getSurahName(surahNumber)} لِ ${reciter.name}',
+                          fontSize: 14,
+                        ),
+                      ),
+                      Builder(
+                        builder: (btnCtx) {
+                          final capturedCubit = DownloadCubit.get(btnCtx);
+                          return TextButton(
+                            onPressed: () async {
+                              // Avoid using outer (possibly deactivated) context
+                              final path =
+                                  await capturedCubit.getOfflineAudioPath(
+                                reciter.id.toString(),
+                                moshaf.id.toString(),
+                                surahNumber,
+                              );
+                              if (path != null) {
+                                final player = AudioPlayerService();
+                                await player.initialize();
+                                await player.playRecitation(
+                                  reciter: reciter,
+                                  moshaf: moshaf,
+                                  surahNumber: surahNumber,
+                                );
+                              }
+                            },
+                            child: const AppText('تشغيل الآن',
+                                color: Colors.white),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  backgroundColor: Colors.green.withValues(alpha: 0.9),
+                ),
+              );
+            }
+          },
+          builder: (context, state) {
+            // Capture cubit now so we don't access context after widget disposal
+            final downloadCubit = DownloadCubit.get(context);
+
+            DownloadProgress? p;
+            if (state is DownloadProgressUpdated &&
+                state.progress.reciterId == reciter.id.toString() &&
+                state.progress.moshafId == moshaf.id.toString() &&
+                state.progress.surahNumber == surahNumber) {
+              p = state.progress;
+            }
+
+            final value = (p?.progress ?? 0.0).clamp(0.0, 1.0);
+            final status = p?.status ?? DownloadStatus.downloading;
+
+            return Row(
+              children: [
+                const Icon(Icons.downloading, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppText(
+                        'تحميل ${_getSurahName(surahNumber)} لِ ${reciter.name}',
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value:
+                              status == DownloadStatus.completed ? 1.0 : value,
+                          backgroundColor: Colors.white.withValues(alpha: 0.25),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            status == DownloadStatus.failed
+                                ? Colors.red
+                                : Colors.white,
+                          ),
+                          minHeight: 6,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                AppText('${(value * 100).toStringAsFixed(0)}%',
+                    color: Colors.white),
+              ],
+            );
+          },
+        ),
+        backgroundColor: AppColors.primaryColor,
       ),
     );
   }
@@ -748,11 +955,11 @@ class _RecitersScreenState extends State<RecitersScreen>
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
+                          const Row(
                             children: [
-                              const Icon(Icons.queue_music, color: Colors.teal),
-                              const SizedBox(width: 8),
-                              const Text('تشغيل السورة التالية تلقائياً',
+                              Icon(Icons.queue_music, color: Colors.teal),
+                              SizedBox(width: 8),
+                              Text('تشغيل السورة التالية تلقائياً',
                                   style: TextStyle(fontSize: 16)),
                             ],
                           ),
@@ -821,6 +1028,19 @@ class _RecitersScreenState extends State<RecitersScreen>
               ),
             ],
           ),
+        ),
+        IconButton(
+          tooltip: 'حذف السورة المحمّلة',
+          icon: const Icon(Icons.delete, color: Colors.red),
+          onPressed: () async {
+            await DownloadCubit.get(context).deleteDownloadedSurah(
+              reciter.id.toString(),
+              moshaf.id.toString(),
+              selectedSurah,
+            );
+            // Refresh storage info silently
+            await DownloadCubit.get(context).loadStorageInfo();
+          },
         ),
         IconButton(
           icon: const Icon(Icons.close),
@@ -1265,7 +1485,7 @@ class _ReciterCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
-      shadowColor: Colors.black.withValues(alpha: 0.1),
+      shadowColor: Colors.black.withValues(alpha: 0.4),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       color: isDarkMode ? const Color(0xff2F2F2F) : Colors.white,
       child: InkWell(
@@ -1381,11 +1601,529 @@ class _ReciterCard extends StatelessWidget {
   }
 }
 
+class _DownloadManagerSheet extends StatelessWidget {
+  const _DownloadManagerSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.8,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.primaryColor,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.download, color: Colors.white, size: 24),
+                const SizedBox(width: 12),
+                const AppText(
+                  'مدير التحميلات',
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: BlocBuilder<DownloadCubit, DownloadState>(
+              builder: (context, state) {
+                if (state is DownloadStorageInfoLoaded) {
+                  return _buildContent(context, state);
+                }
+                // Trigger load when empty state arrives
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  // In stateless sheet; ensure safe call
+                  try {
+                    DownloadCubit.get(context).loadStorageInfo();
+                  } catch (_) {}
+                });
+                return const Center(child: CircularProgressIndicator());
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, DownloadStorageInfoLoaded state) {
+    return Column(
+      children: [
+        _buildStorageInfo(state.storageInfo),
+        const Divider(),
+        Expanded(
+          child: state.batches.isEmpty
+              ? _buildEmptyState()
+              : _buildBatchesList(context, state.batches),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStorageInfo(Map<String, dynamic> storageInfo) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Icon(Icons.storage, color: AppColors.primaryColor),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const AppText(
+                  'المساحة المستخدمة',
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                AppText(
+                  '${storageInfo['totalSizeMB']} ميجابايت',
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ],
+            ),
+          ),
+          AppText(
+            '${storageInfo['totalFiles']} ملف',
+            fontSize: 14,
+            color: Colors.grey[600],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.download_done,
+            size: 64,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          const AppText(
+            'لا توجد تحميلات',
+            fontSize: 18,
+            color: Colors.grey,
+          ),
+          const SizedBox(height: 8),
+          const AppText(
+            'قم بتحميل التلاوات للاستماع بدون إنترنت',
+            fontSize: 14,
+            color: Colors.grey,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBatchesList(BuildContext context, List<DownloadBatch> batches) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: batches.length,
+      itemBuilder: (context, index) {
+        final batch = batches[index];
+        return _buildBatchCard(context, batch);
+      },
+    );
+  }
+
+  Widget _buildBatchCard(BuildContext context, DownloadBatch batch) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppText(
+                        batch.reciterName,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      AppText(
+                        batch.moshafName,
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ],
+                  ),
+                ),
+                _buildStatusChip(batch.overallStatus),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: LinearProgressIndicator(
+                    value: batch.overallProgress,
+                    backgroundColor: Colors.grey[300],
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      batch.overallStatus == DownloadStatus.completed
+                          ? Colors.green
+                          : AppColors.primaryColor,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                AppText(
+                  '${batch.completedCount}/${batch.totalCount}',
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  tooltip: 'حذف جميع التحميلات لهذا المصحف',
+                  icon: const Icon(Icons.delete_forever, color: Colors.red),
+                  onPressed: () async {
+                    await DownloadCubit.get(context).deleteBatch(
+                      batch.reciterId,
+                      batch.moshafId,
+                    );
+                    await DownloadCubit.get(context).loadStorageInfo();
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // Per-surah rows
+            ...batch.progressList.map(
+              (p) => ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  p.status == DownloadStatus.completed
+                      ? Icons.check_circle
+                      : Icons.downloading,
+                  color: p.status == DownloadStatus.completed
+                      ? Colors.green
+                      : AppColors.primaryColor,
+                ),
+                title: AppText('سورة ${p.surahNumber}'),
+                subtitle: p.status == DownloadStatus.completed
+                    ? const AppText('مكتمل', color: Colors.grey)
+                    : LinearProgressIndicator(value: p.progress),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (p.status == DownloadStatus.completed)
+                      IconButton(
+                        tooltip: 'حذف السورة',
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () async {
+                          await DownloadCubit.get(context)
+                              .deleteDownloadedSurah(
+                            p.reciterId,
+                            p.moshafId,
+                            p.surahNumber,
+                          );
+                          await DownloadCubit.get(context).loadStorageInfo();
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(DownloadStatus status) {
+    Color color;
+    String text;
+    IconData icon;
+
+    switch (status) {
+      case DownloadStatus.completed:
+        color = Colors.green;
+        text = 'مكتمل';
+        icon = Icons.check_circle;
+        break;
+      case DownloadStatus.downloading:
+        color = AppColors.primaryColor;
+        text = 'جاري التحميل';
+        icon = Icons.downloading;
+        break;
+      case DownloadStatus.paused:
+        color = Colors.orange;
+        text = 'متوقف مؤقتاً';
+        icon = Icons.pause_circle;
+        break;
+      case DownloadStatus.failed:
+        color = Colors.red;
+        text = 'فشل';
+        icon = Icons.error;
+        break;
+      default:
+        color = Colors.grey;
+        text = 'غير محمل';
+        icon = Icons.download;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 16),
+          const SizedBox(width: 4),
+          AppText(
+            text,
+            fontSize: 12,
+            color: color,
+            fontWeight: FontWeight.bold,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DownloadOptionsSheet extends StatelessWidget {
+  final Reciter reciter;
+  final Moshaf moshaf;
+  final Function(int) onDownloadSurah;
+  final Function(List<int>) onDownloadMultiple;
+
+  const _DownloadOptionsSheet({
+    required this.reciter,
+    required this.moshaf,
+    required this.onDownloadSurah,
+    required this.onDownloadMultiple,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const AppText(
+            'خيارات التحميل',
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+          const SizedBox(height: 20),
+          ListTile(
+            leading: Icon(Icons.download, color: AppColors.primaryColor),
+            title: const AppText('تحميل سورة واحدة'),
+            onTap: () => _showSurahSelection(context),
+          ),
+          ListTile(
+            leading: Icon(Icons.download_done, color: AppColors.primaryColor),
+            title: const AppText('تحميل عدة سور'),
+            onTap: () => _showMultipleSurahSelection(context),
+          ),
+          ListTile(
+            leading:
+                Icon(Icons.download_for_offline, color: AppColors.primaryColor),
+            title: const AppText('تحميل جميع السور'),
+            onTap: () => _downloadAllSurahs(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSurahSelection(BuildContext context) async {
+    final allowed = moshaf.surahList
+        .split(',')
+        .map((e) => int.tryParse(e.trim()))
+        .whereType<int>()
+        .toSet();
+    final surahNumbers = allowed.isEmpty
+        ? List<int>.generate(114, (i) => i + 1)
+        : allowed.toList()
+      ..sort();
+
+    final selected = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const AppText('اختر السورة',
+            fontSize: 18, fontWeight: FontWeight.bold),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: MediaQuery.of(ctx).size.height * 0.6,
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 1.8,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: surahNumbers.length,
+            itemBuilder: (c, i) {
+              final n = surahNumbers[i];
+              return InkWell(
+                onTap: () => Navigator.pop(ctx, n),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryColor.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: AppText(n.toString(),
+                        fontSize: 14, color: AppColors.primaryColor),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    if (selected != null) {
+      onDownloadSurah(selected);
+    }
+  }
+
+  void _showMultipleSurahSelection(BuildContext context) async {
+    final allowed = moshaf.surahList
+        .split(',')
+        .map((e) => int.tryParse(e.trim()))
+        .whereType<int>()
+        .toSet();
+    final surahNumbers = allowed.isEmpty
+        ? List<int>.generate(114, (i) => i + 1)
+        : allowed.toList()
+      ..sort();
+
+    final chosen = <int>{};
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          title: const AppText('اختر عدة سور',
+              fontSize: 18, fontWeight: FontWeight.bold),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: MediaQuery.of(ctx).size.height * 0.6,
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                childAspectRatio: 1.8,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              itemCount: surahNumbers.length,
+              itemBuilder: (c, i) {
+                final n = surahNumbers[i];
+                final isSel = chosen.contains(n);
+                return InkWell(
+                  onTap: () {
+                    setState(() {
+                      if (isSel) {
+                        chosen.remove(n);
+                      } else {
+                        chosen.add(n);
+                      }
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isSel
+                          ? AppColors.primaryColor.withValues(alpha: 0.25)
+                          : AppColors.primaryColor.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: AppText(
+                        n.toString(),
+                        fontSize: 14,
+                        color: isSel ? Colors.white : AppColors.primaryColor,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const AppText('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: chosen.isEmpty ? null : () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryColor,
+                  foregroundColor: Colors.white),
+              child: const AppText('تحميل'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed == true && chosen.isNotEmpty) {
+      onDownloadMultiple(chosen.toList()..sort());
+    }
+  }
+
+  void _downloadAllSurahs(BuildContext context) {
+    final surahList = moshaf.surahList
+        .split(',')
+        .map((e) => int.tryParse(e.trim()))
+        .whereType<int>()
+        .toList();
+    onDownloadMultiple(surahList);
+    Navigator.pop(context);
+  }
+}
+
 class _ReciterDetailsSheet extends StatelessWidget {
   final Reciter reciter;
   final Function(Moshaf) onPlay;
+  final Function(Moshaf)? onDownload;
 
-  const _ReciterDetailsSheet({required this.reciter, required this.onPlay});
+  const _ReciterDetailsSheet({
+    required this.reciter,
+    required this.onPlay,
+    this.onDownload,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1409,6 +2147,8 @@ class _ReciterDetailsSheet extends StatelessWidget {
                 return _MoshafListItem(
                   moshaf: moshaf,
                   onPlay: () => onPlay(moshaf),
+                  onDownload:
+                      onDownload != null ? () => onDownload!(moshaf) : null,
                 );
               },
             ),
@@ -1477,8 +2217,13 @@ class _ReciterDetailsSheet extends StatelessWidget {
 class _MoshafListItem extends StatelessWidget {
   final Moshaf moshaf;
   final VoidCallback onPlay;
+  final VoidCallback? onDownload;
 
-  const _MoshafListItem({required this.moshaf, required this.onPlay});
+  const _MoshafListItem({
+    required this.moshaf,
+    required this.onPlay,
+    this.onDownload,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1502,9 +2247,19 @@ class _MoshafListItem extends StatelessWidget {
           fontSize: 14,
           color: Colors.grey[600],
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.play_circle_outline),
-          onPressed: onPlay,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (onDownload != null)
+              IconButton(
+                icon: const Icon(Icons.download),
+                onPressed: onDownload,
+              ),
+            IconButton(
+              icon: const Icon(Icons.play_circle_outline),
+              onPressed: onPlay,
+            ),
+          ],
         ),
       ),
     );
