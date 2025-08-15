@@ -357,6 +357,63 @@ class DownloadService {
     }
   }
 
+  Future<void> resumeBatch({
+    required Reciter reciter,
+    required Moshaf moshaf,
+    required Function(DownloadProgress) onProgress,
+    required Function(DownloadBatch) onComplete,
+    required Function(DownloadBatch) onError,
+  }) async {
+    if (!_isInitialized) await initialize();
+
+    final batchKey = '${reciter.id}_${moshaf.id}';
+    final batch = _downloadBatches[batchKey];
+    if (batch == null) {
+      return;
+    }
+
+    final pending = batch.surahNumbers.where((surahNumber) {
+      final p = batch.progressList.firstWhere(
+        (x) => x.surahNumber == surahNumber,
+        orElse: () => DownloadProgress(
+          reciterId: reciter.id.toString(),
+          moshafId: moshaf.id.toString(),
+          surahNumber: surahNumber,
+          status: DownloadStatus.notStarted,
+        ),
+      );
+      return p.status != DownloadStatus.completed &&
+          p.status != DownloadStatus.downloading;
+    }).toList();
+
+    for (final surah in pending) {
+      await downloadSurah(
+        reciter: reciter,
+        moshaf: moshaf,
+        surahNumber: surah,
+        onProgress: (progress) {
+          _updateBatchProgress(reciter, moshaf, progress);
+          onProgress(progress);
+        },
+        onComplete: (progress) {
+          _updateBatchProgress(reciter, moshaf, progress);
+          final updatedBatch = _downloadBatches[batchKey];
+          if (updatedBatch != null &&
+              updatedBatch.overallStatus == DownloadStatus.completed) {
+            onComplete(updatedBatch);
+          }
+        },
+        onError: (progress) {
+          _updateBatchProgress(reciter, moshaf, progress);
+          final updatedBatch = _downloadBatches[batchKey];
+          if (updatedBatch != null) {
+            onError(updatedBatch);
+          }
+        },
+      );
+    }
+  }
+
   void _updateBatchProgress(
       Reciter reciter, Moshaf moshaf, DownloadProgress progress) {
     final batchKey = '${reciter.id}_${moshaf.id}';

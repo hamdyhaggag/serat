@@ -5,11 +5,11 @@ import 'package:serat/Business_Logic/Models/reciter_model.dart';
 import 'package:serat/Business_Logic/Models/download_model.dart';
 import 'package:serat/Data/services/audio_player_service.dart';
 import 'package:serat/imports.dart';
-import 'package:serat/Presentation/widgets/reciters/download_manager_widget.dart';
-import 'package:serat/Presentation/widgets/reciters/audio_player_widget.dart';
-import 'package:serat/Presentation/widgets/reciters/reciter_card_widget.dart';
-import 'package:serat/Presentation/widgets/reciters/search_bar_widget.dart';
-import 'package:serat/Presentation/widgets/reciters/error_view_widget.dart';
+import 'package:serat/Presentation/Widgets/reciters/download_manager_widget.dart';
+import 'package:serat/Presentation/Widgets/reciters/audio_player_widget.dart';
+import 'package:serat/Presentation/Widgets/reciters/reciter_card_widget.dart';
+import 'package:serat/Presentation/Widgets/reciters/search_bar_widget.dart';
+import 'package:serat/Presentation/Widgets/reciters/error_view_widget.dart';
 
 class RecitersScreenRefactored extends StatefulWidget {
   const RecitersScreenRefactored({super.key});
@@ -235,10 +235,12 @@ class _RecitersScreenRefactoredState extends State<RecitersScreenRefactored>
           padding: const EdgeInsets.all(16),
           itemCount: _filteredReciters.length,
           itemBuilder: (context, index) {
+            final reciter = _filteredReciters[index];
             return ReciterCardWidget(
-              reciter: _filteredReciters[index],
+              reciter: reciter,
               isDarkMode: isDarkMode,
-              onTap: () => _showReciterDetails(_filteredReciters[index]),
+              onTap: () => _showReciterDetails(reciter),
+              onDownloadMoshaf: (moshaf) => _showDownloadOptions(reciter, moshaf),
             );
           },
         );

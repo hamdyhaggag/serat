@@ -164,6 +164,32 @@ class DownloadCubit extends Cubit<DownloadState> {
     }
   }
 
+  Future<void> resumeBatch({
+    required Reciter reciter,
+    required Moshaf moshaf,
+  }) async {
+    try {
+      await _downloadService.resumeBatch(
+        reciter: reciter,
+        moshaf: moshaf,
+        onProgress: (progress) {
+          final batch = _downloadService.getBatch(
+              reciter.id.toString(), moshaf.id.toString());
+        	  emit(DownloadProgressUpdated(progress, batch));
+        },
+        onComplete: (batch) {
+          emit(DownloadBatchCompleted(batch));
+          loadStorageInfo();
+        },
+        onError: (batch) {
+          emit(DownloadBatchFailed(batch, 'Some downloads failed'));
+        },
+      );
+    } catch (e) {
+      emit(DownloadError('Failed to resume batch: $e'));
+    }
+  }
+
   Future<void> deleteDownloadedSurah(
       String reciterId, String moshafId, int surahNumber) async {
     try {

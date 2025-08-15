@@ -9,12 +9,14 @@ class ReciterCardWidget extends StatelessWidget {
   final Reciter reciter;
   final bool isDarkMode;
   final VoidCallback onTap;
+  final void Function(Moshaf moshaf)? onDownloadMoshaf;
 
   const ReciterCardWidget({
     super.key,
     required this.reciter,
     required this.isDarkMode,
     required this.onTap,
+    this.onDownloadMoshaf,
   });
 
   @override
@@ -214,10 +216,22 @@ class ReciterCardWidget extends StatelessWidget {
                   ],
                 ),
               ),
-              if (batch != null) ...[
-                const SizedBox(width: 8),
-                _buildStatusIcon(batch.overallStatus),
-              ],
+              const SizedBox(width: 8),
+              if (onDownloadMoshaf != null)
+                IconButton(
+                  tooltip: 'تنزيل',
+                  icon: Icon(
+                    batch?.overallStatus == DownloadStatus.completed
+                        ? Icons.download_done
+                        : Icons.download_for_offline,
+                    color: batch?.overallStatus == DownloadStatus.completed
+                        ? Colors.green
+                        : (isDarkMode ? Colors.white : AppColors.primaryColor),
+                    size: 20,
+                  ),
+                  onPressed: () => onDownloadMoshaf!(moshaf),
+                ),
+              if (batch != null) _buildStatusIcon(batch.overallStatus),
             ],
           ),
         );
