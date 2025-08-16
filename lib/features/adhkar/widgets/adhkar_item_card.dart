@@ -203,7 +203,14 @@ class AdhkarItemCard extends StatelessWidget {
     );
 
     return GestureDetector(
-      onTap: forShare ? null : onTap,
+      onTap: forShare
+          ? null
+          : () {
+              onTap?.call();
+              if (!isCompleted) {
+                onComplete?.call();
+              }
+            },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         child: Card(

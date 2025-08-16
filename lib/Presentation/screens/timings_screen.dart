@@ -1000,28 +1000,28 @@ class _TimingsScreenState extends State<TimingsScreen>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: isDarkMode
-                    ? [
-                        shared_colors.AppColors.primaryColor.withOpacity(0.2),
-                        shared_colors.AppColors.primaryColor.withOpacity(0.1),
-                      ]
-                    : [
-                        shared_colors.AppColors.primaryColor.withOpacity(0.15),
-                        shared_colors.AppColors.primaryColor.withOpacity(0.05),
-                      ],
+    ? [
+        shared_colors.AppColors.primaryColor.withOpacity(0.3),
+        shared_colors.AppColors.primaryColor.withOpacity(0.1),
+      ]
+    : [
+        shared_colors.AppColors.primaryColor.withOpacity(0.2),
+        shared_colors.AppColors.primaryColor.withOpacity(0.05),
+      ],
               )
             : null,
         color: isNext ? null : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isDarkMode
-              ? shared_colors.AppColors.primaryColor.withOpacity(0.3)
+              ? shared_colors.AppColors.primaryColor.withValues(alpha: 0.3)
               : Colors.grey[200]!,
           width: 1,
         ),
         boxShadow: isNext
             ? [
                 BoxShadow(
-                  color: shared_colors.AppColors.primaryColor.withOpacity(0.1),
+                  color: shared_colors.AppColors.primaryColor.withValues(alpha: 0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -1039,12 +1039,12 @@ class _TimingsScreenState extends State<TimingsScreen>
                 end: Alignment.bottomRight,
                 colors: isDarkMode
                     ? [
-                        shared_colors.AppColors.primaryColor.withOpacity(0.3),
-                        shared_colors.AppColors.primaryColor.withOpacity(0.1),
+                        shared_colors.AppColors.primaryColor.withValues(alpha: 0.3),
+                        shared_colors.AppColors.primaryColor.withValues(alpha: 0.1),
                       ]
                     : [
-                        shared_colors.AppColors.primaryColor.withOpacity(0.2),
-                        shared_colors.AppColors.primaryColor.withOpacity(0.05),
+                        shared_colors.AppColors.primaryColor.withValues(alpha: 0.2),
+                        shared_colors.AppColors.primaryColor.withValues(alpha: 0.05),
                       ],
               ),
               shape: BoxShape.circle,
@@ -1394,7 +1394,7 @@ class _TimingsScreenState extends State<TimingsScreen>
                   items: [
                     _buildDrawerItem(
                       icon: Icons.timer,
-                      title: 'طريقة تحديد مواقيت الصلاة',
+                      title: ' تحديد مواقيت الصلاة',
                       onTap: () => showMethods(context),
                       isDarkMode: isDarkMode,
                     ),
@@ -1429,13 +1429,6 @@ class _TimingsScreenState extends State<TimingsScreen>
                       icon: Icons.share,
                       title: 'مشاركة التطبيق',
                       onTap: () => _shareApp(),
-                      isDarkMode: isDarkMode,
-                    ),
-                    _buildDrawerItem(
-                      icon: Icons.code,
-                      title: 'تطوير التطبيق',
-                      onTap: () => launchUrl(
-                          Uri.parse('https://github.com/hamdyhaggag/serat')),
                       isDarkMode: isDarkMode,
                     ),
                     _buildDrawerItem(
@@ -1832,8 +1825,8 @@ class EnhancedParticlePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = isDarkMode
-          ? Colors.white.withOpacity(0.15)
-          : shared_colors.AppColors.primaryColor.withOpacity(0.15)
+          ? Colors.white.withValues(alpha: 0.15)
+          : shared_colors.AppColors.primaryColor.withValues(alpha: 0.15)
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
 
@@ -1842,12 +1835,12 @@ class EnhancedParticlePainter extends CustomPainter {
       canvas.drawCircle(
         particle,
         1,
-        paint..color = paint.color.withOpacity(0.5),
+        paint..color = paint.color.withValues(alpha: 0.5),
       );
       canvas.drawCircle(
         particle,
         0.5,
-        paint..color = paint.color.withOpacity(0.25),
+        paint..color = paint.color.withValues(alpha: 0.25),
       );
     }
   }

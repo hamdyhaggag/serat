@@ -226,9 +226,6 @@ class QiblaScreenState extends State<QiblaScreen>
               if (direction < 0) {
                 direction = direction + 360;
               }
-              if (qibla == direction) {
-                Vibration.vibrate();
-              }
               double rotationSpeedFactor = 0.2;
               rotatedAngle =
                   (direction * (math.pi / 180) * -1) * rotationSpeedFactor;
