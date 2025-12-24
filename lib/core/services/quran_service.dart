@@ -7,7 +7,7 @@ import 'cache_service.dart';
 
 class QuranService {
   static const String _quranPath = 'assets/data/quran.json';
-  static const String _quranPagesPath = 'assets/quran_pages/';
+
   final CacheService _cacheService;
 
   QuranService(this._cacheService);
@@ -71,11 +71,6 @@ class QuranService {
       dev.log('Stack trace: $stackTrace');
       throw Exception('Error loading Quran verses: $e');
     }
-  }
-
-  // Get the path for a Quran page image
-  String getPageImagePath(int pageNumber) {
-    return '$_quranPagesPath$pageNumber.png';
   }
 
   // Get the starting page number for a chapter
