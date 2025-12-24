@@ -25,6 +25,7 @@ import 'package:serat/core/theme/app_theme.dart';
 import 'package:upgrader/upgrader.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:serat/services/firebase_messaging_service.dart';
+import 'package:quran_library/quran_library.dart';
 
 TimeOfDay? stringToTimeOfDay(String timeString) {
   if (timeString.isNotEmpty) {
@@ -77,6 +78,9 @@ void main() async {
 
   // Initialize Firebase Messaging
   await FirebaseMessagingService().initNotifications();
+
+  // Initialize Quran Library for KFGQPC fonts
+  await QuranLibrary.init();
 
   Bloc.observer = MyGlobalObserver();
 

@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serat/Business_Logic/Cubit/quran_cubit.dart';
 import 'package:serat/Core/models/quran_chapter.dart';
 import 'package:serat/Core/widgets/app_text.dart' as core;
-import 'package:serat/Presentation/screens/quran_chapter_screen.dart';
+import 'package:serat/features/quran_reader/screens/professional_quran_screen.dart';
 
 const String kQuranFont = 'KFGQPC Uthman Taha Naskh';
 const String kDefaultFont = 'Cairo';
@@ -164,7 +164,8 @@ class _QuranScreenState extends State<QuranScreen> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
-                                          QuranChapterScreen(chapter: chapter),
+                                          ProfessionalQuranScreen(
+                                              initialSurah: chapter.number),
                                     ),
                                   );
                                 },
