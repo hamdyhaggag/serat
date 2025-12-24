@@ -135,7 +135,7 @@ class SplashScreenState extends State<SplashScreen>
                             ],
                           ),
                           child: const Image(
-                            image: AssetImage('assets/logo.png'),
+                            image: AssetImage('assets/logo.webp'),
                             height: 180.0,
                             width: 180.0,
                           ),

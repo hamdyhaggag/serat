@@ -29,8 +29,8 @@ class AdhkarShareCard extends StatelessWidget {
     final textColor = isDark ? Colors.white : Colors.black87;
     final dividerColor = isDark ? Colors.grey[700] : Colors.grey[300];
     final logoAsset = isDark
-        ? 'assets/logo.png'
-        : 'assets/logo.png'; // Change to 'assets/logo_dark.png' if you have a dark logo
+        ? 'assets/logo.webp'
+        : 'assets/logo.webp'; // Change to 'assets/logo_dark.png' if you have a dark logo
 
     return Container(
       color: backgroundColor,
@@ -646,7 +646,7 @@ class _AdhkarDetailScreenState extends State<AdhkarDetailScreen>
 
   Future<void> _shareAdhkarCardWithLogo(int index) async {
     // Preload the logo asset before capturing
-    await precacheImage(const AssetImage('assets/logo.png'), context);
+    await precacheImage(const AssetImage('assets/logo.webp'), context);
     // Wait for the next frame to ensure the image is painted
     await Future.delayed(const Duration(milliseconds: 50));
     await WidgetsBinding.instance.endOfFrame;

@@ -1293,7 +1293,7 @@ class _TimingsScreenState extends State<TimingsScreen>
                                   ],
                                 ),
                                 child: Image.asset(
-                                  'assets/logo.png',
+                                  'assets/logo.webp',
                                   width: 50,
                                   height: 50,
                                   fit: BoxFit.contain,

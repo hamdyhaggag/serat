@@ -34,7 +34,7 @@ class AboutScreen extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Image.asset(
-                      'assets/logo.png',
+                      'assets/logo.webp',
                       fit: BoxFit.contain,
                       height: 64,
                       width: 64,

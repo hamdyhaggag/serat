@@ -74,7 +74,7 @@ class ShareButton extends StatelessWidget {
 
     textPainter.paint(canvas, Offset(horizontalPadding, verticalPadding));
 
-    final bottomImage = await loadImage('assets/nav2.png');
+    final bottomImage = await loadImage('assets/nav2.webp');
     if (bottomImage != null) {
       final aspectRatio = bottomImage.width / bottomImage.height;
       const bottomImageWidth = 300.0;

@@ -1,4 +1,4 @@
-﻿// App theme configuration
+// App theme configuration
 import 'package:flutter/material.dart';
 import 'package:serat/Presentation/Config/constants/colors.dart';
 
