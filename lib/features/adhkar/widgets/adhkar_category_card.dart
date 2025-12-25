@@ -18,163 +18,79 @@ class AdhkarCategoryCard extends StatelessWidget {
     this.progress = 0.0,
   });
 
-  // Responsive helper methods
-  bool _isSmallScreen(BuildContext context) {
-    return MediaQuery.of(context).size.width < 600;
-  }
-
-  bool _isMediumScreen(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    return width >= 600 && width < 900;
-  }
-
-  bool _isLargeScreen(BuildContext context) {
-    return MediaQuery.of(context).size.width >= 900;
-  }
-
-  double _getResponsiveFontSize(BuildContext context, double baseSize) {
-    final width = MediaQuery.of(context).size.width;
-    if (width < 360) return baseSize * 0.8;
-    if (width < 600) return baseSize;
-    if (width < 900) return baseSize * 1.1;
-    return baseSize * 1.2;
-  }
-
-  double _getResponsiveIconSize(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    if (width < 360) return 24.0;
-    if (width < 600) return 28.0;
-    if (width < 900) return 32.0;
-    return 36.0;
-  }
-
-  double _getResponsivePadding(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    if (width < 360) return 8.0;
-    if (width < 600) return 12.0;
-    if (width < 900) return 16.0;
-    return 20.0;
-  }
-
-  double _getResponsiveBorderRadius(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    if (width < 360) return 16.0;
-    if (width < 600) return 20.0;
-    if (width < 900) return 24.0;
-    return 28.0;
-  }
+  bool _isSmallScreen(BuildContext context) =>
+      MediaQuery.of(context).size.width < 600;
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final isCompleted = progress >= 1.0;
     final isSmallScreen = _isSmallScreen(context);
-    final isLargeScreen = _isLargeScreen(context);
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(_getResponsiveBorderRadius(context)),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDarkMode
-                ? [const Color(0xff2F2F2F), const Color(0xff252525)]
-                : [Colors.white, Colors.grey[50]!],
+    return Container(
+      decoration: BoxDecoration(
+        color: isDarkMode ? const Color(0xff2F2F2F) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: isDarkMode
+                ? Colors.black.withOpacity(0.3)
+                : Colors.black.withOpacity(0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
-          borderRadius: BorderRadius.circular(_getResponsiveBorderRadius(context)),
-          boxShadow: [
-            BoxShadow(
-              color: isDarkMode
-                  ? Colors.black.withOpacity(0.2)
-                  : Colors.black.withOpacity(0.05),
-              blurRadius: isSmallScreen ? 8 : 10,
-              offset: Offset(0, isSmallScreen ? 3 : 5),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: EdgeInsets.all(_getResponsivePadding(context)),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: isCompleted
-                      ? [
-                          Colors.green.withOpacity(0.3),
-                          Colors.green.withOpacity(0.1),
-                        ]
-                      : isDarkMode
-                          ? [
-                              AppColors.primaryColor.withOpacity(0.3),
-                              AppColors.primaryColor.withOpacity(0.1),
-                            ]
-                          : [
-                              AppColors.primaryColor.withOpacity(0.2),
-                              AppColors.primaryColor.withOpacity(0.05),
-                            ],
-                ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: isSmallScreen ? 50 : 60,
+                  height: isSmallScreen ? 50 : 60,
+                  decoration: BoxDecoration(
                     color: isCompleted
                         ? Colors.green.withOpacity(0.1)
                         : AppColors.primaryColor.withOpacity(0.1),
-                    blurRadius: isSmallScreen ? 6 : 8,
-                    offset: Offset(0, isSmallScreen ? 2 : 4),
+                    shape: BoxShape.circle,
                   ),
-                ],
-              ),
-              child: Icon(
-                isCompleted ? Icons.check_circle : icon,
-                color: isDarkMode ? Colors.white : AppColors.primaryColor,
-                size: _getResponsiveIconSize(context),
-              ),
-            ),
-            SizedBox(height: isSmallScreen ? 8 : 12),
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: isSmallScreen ? 6 : 8,
-                vertical: isSmallScreen ? 2 : 4,
-              ),
-              child: Text(
-                category.category,
-                style: TextStyle(
-                  fontSize: _getResponsiveFontSize(context, 16),
-                  fontWeight: FontWeight.w600,
-                  color: isDarkMode ? Colors.white : AppColors.primaryColor,
+                  child: Icon(
+                    isCompleted ? Icons.check_rounded : icon,
+                    color: isCompleted ? Colors.green : AppColors.primaryColor,
+                    size: isSmallScreen ? 24 : 28,
+                  ),
                 ),
-                textAlign: TextAlign.center,
-                maxLines: isLargeScreen ? 3 : 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            SizedBox(height: isSmallScreen ? 6 : 8),
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: isSmallScreen ? 8 : 12,
-                vertical: isSmallScreen ? 3 : 4,
-              ),
-              decoration: BoxDecoration(
-                color: isDarkMode
-                    ? Colors.grey[800]
-                    : AppColors.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(isSmallScreen ? 8 : 12),
-              ),
-              child: Text(
-                '${category.array.length} ذِكر',
-                style: TextStyle(
-                  fontSize: _getResponsiveFontSize(context, 12),
-                  color: isDarkMode ? Colors.grey[300] : AppColors.primaryColor,
-                  fontWeight: FontWeight.w500,
+                const SizedBox(height: 16),
+                Text(
+                  category.category,
+                  style: TextStyle(
+                    fontFamily: "Cairo",
+                    fontSize: isSmallScreen ? 14 : 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
+                const SizedBox(height: 4),
+                Text(
+                  '${category.array.length} ذِكر',
+                  style: TextStyle(
+                    fontFamily: "Cairo",
+                    fontSize: 11,
+                    color: isDarkMode ? Colors.white60 : Colors.black54,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
