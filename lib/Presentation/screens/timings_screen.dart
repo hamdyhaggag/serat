@@ -50,8 +50,15 @@ class _TimingsScreenState extends State<TimingsScreen> {
     super.initState();
     _initializeParticles();
     _startCountdownTimer();
+
+    // Check if data is already available
+    final cubit = location.LocationCubit.get(context);
+    if (cubit.timesModel != null) {
+      _isLoading = false;
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      location.LocationCubit.get(context).getMyCurrentLocation();
+      cubit.getMyCurrentLocation();
     });
   }
 

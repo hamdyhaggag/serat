@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geocoding/geocoding.dart';
@@ -6,9 +7,12 @@ import 'package:serat/Data/Model/times_model.dart';
 import 'package:serat/core/services/home_widget_service.dart';
 import 'package:serat/core/services/adhan_service.dart';
 import 'package:serat/imports.dart';
+import 'package:serat/Data/utils/cache_helper.dart';
 
 class LocationCubit extends Cubit<LocationState> {
-  LocationCubit() : super(LocationInitial());
+  LocationCubit() : super(LocationInitial()) {
+    loadCachedData();
+  }
 
   static LocationCubit get(context) => BlocProvider.of(context);
 
@@ -21,31 +25,70 @@ class LocationCubit extends Cubit<LocationState> {
   String? locality;
   int radioValue = 5;
   String? errorMessage;
+  bool isBackgroundUpdating = false;
+
+  void loadCachedData() async {
+    try {
+      // Load cached address data
+      final cachedAdminArea = CacheHelper.getString(key: 'administrativeArea');
+      final cachedCountry = CacheHelper.getString(key: 'country');
+      final cachedLocality = CacheHelper.getString(key: 'locality');
+
+      if (cachedAdminArea.isNotEmpty ||
+          cachedCountry.isNotEmpty ||
+          cachedLocality.isNotEmpty) {
+        administrativeArea = cachedAdminArea;
+        country = cachedCountry;
+        locality = cachedLocality;
+
+        // Create a temporary Placemark with cached data
+        address = Placemark(
+          administrativeArea: administrativeArea,
+          country: country,
+          locality: locality,
+        );
+
+        emit(GetCurrentAddressSuccess());
+      }
+
+      // Load cached timings
+      final cachedTimes = await getTimeModel();
+      if (cachedTimes != null) {
+        timesModel = cachedTimes;
+        emit(GetTimingsSuccess());
+      }
+    } catch (e) {
+      log('Error loading cached data: $e');
+    }
+  }
 
   Future<void> getMyCurrentLocation() async {
-    emit(GetCurrentAddressLoading());
+    // Only emit loading if we don't have data, otherwise mark as background update
+    if (timesModel == null || address == null) {
+      emit(GetCurrentAddressLoading());
+    } else {
+      isBackgroundUpdating = true;
+    }
+
     errorMessage = null;
     try {
-      // First check if location services are enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         errorStatus = true;
         errorMessage = 'خدمة الموقع غير مفعلة. يرجى تفعيل خدمة الموقع.';
-        emit(GetCurrentLocationError());
+        if (!isBackgroundUpdating) emit(GetCurrentLocationError());
         return;
       }
 
-      // Check current permission status
       LocationPermission permission = await Geolocator.checkPermission();
 
-      // Handle permission states
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
           errorStatus = true;
           errorMessage =
               'تم رفض إذن الوصول للموقع. يرجى السماح بالوصول للموقع.';
-          emit(GetCurrentLocationError());
+          if (!isBackgroundUpdating) emit(GetCurrentLocationError());
           return;
         }
       }
@@ -54,11 +97,10 @@ class LocationCubit extends Cubit<LocationState> {
         errorStatus = true;
         errorMessage =
             'تم رفض إذن الوصول للموقع بشكل دائم. يرجى تفعيله من إعدادات التطبيق.';
-        emit(GetCurrentLocationError());
+        if (!isBackgroundUpdating) emit(GetCurrentLocationError());
         return;
       }
 
-      // Only proceed if we have permission
       if (permission == LocationPermission.whileInUse ||
           permission == LocationPermission.always) {
         position = await Geolocator.getCurrentPosition(
@@ -77,17 +119,21 @@ class LocationCubit extends Cubit<LocationState> {
           await _getLocationData(position!.latitude, position!.longitude);
         }
         errorStatus = false;
+
+        // Emit success to refresh UI with new live data
         emit(GetCurrentLocationSuccess());
       }
     } catch (error) {
       errorStatus = true;
       log('Error when getting location: $error');
       if (error is TimeoutException) {
-        emit(GetCurrentLocationError());
+        if (!isBackgroundUpdating) emit(GetCurrentLocationError());
       } else {
         errorMessage = 'حدث خطأ في تحديد الموقع. يرجى المحاولة مرة أخرى.';
-        emit(GetCurrentLocationError());
+        if (!isBackgroundUpdating) emit(GetCurrentLocationError());
       }
+    } finally {
+      isBackgroundUpdating = false;
     }
   }
 
@@ -96,7 +142,7 @@ class LocationCubit extends Cubit<LocationState> {
     required double latitude,
     required double longitude,
   }) async {
-    emit(GetCurrentAddressLoading());
+    if (!isBackgroundUpdating) emit(GetCurrentAddressLoading());
     errorMessage = null;
     try {
       final now = DateTime.now();
@@ -110,9 +156,8 @@ class LocationCubit extends Cubit<LocationState> {
         method: radioValue,
       );
 
-      log('API Response: [32m${response.data}[0m');
+      log('API Response: ${response.data}');
 
-      // Check if response is HTML (indicating a redirection or error page)
       if (response.data is String &&
           (response.data as String).contains('<!DOCTYPE html>')) {
         errorStatus = true;
@@ -124,8 +169,8 @@ class LocationCubit extends Cubit<LocationState> {
         try {
           timesModel = TimesModel.fromJson(response.data);
           saveTimeModel(timeModel: timesModel!);
-          HomeWidgetService.updatePrayerWidget(); // Update home widget
-          AdhanService.scheduleAdhans(timesModel!); // Schedule Adhan alarms
+          HomeWidgetService.updatePrayerWidget();
+          AdhanService.scheduleAdhans(timesModel!);
           errorStatus = false;
           emit(GetTimingsSuccess());
         } catch (parseError) {
@@ -149,7 +194,7 @@ class LocationCubit extends Cubit<LocationState> {
     required double latitude,
     required double longitude,
   }) async {
-    emit(GetCurrentAddressLoading());
+    if (!isBackgroundUpdating) emit(GetCurrentAddressLoading());
     try {
       final placemarks = await placemarkFromCoordinates(latitude, longitude);
       if (placemarks.isNotEmpty) {
@@ -169,7 +214,7 @@ class LocationCubit extends Cubit<LocationState> {
       }
     } catch (error) {
       log('getCurrentLocationAddress error: $error');
-      emit(GetCurrentAddressError());
+      if (!isBackgroundUpdating) emit(GetCurrentAddressError());
     }
   }
 
@@ -190,11 +235,20 @@ class LocationCubit extends Cubit<LocationState> {
   }
 
   Future<void> _handleError() async {
-    timesModel = await getTimeModel();
+    // If we have cached data, we might not need to emit error if background update fails,
+    // but typically we want to let the UI know if sync failed.
+    // However, if we have timesModel (from cache), maybe we fallback to it properly.
+
+    // Attempt to reload from cache one last time or keep existing
+    if (timesModel == null) {
+      timesModel = await getTimeModel();
+    }
+
     if (timesModel == null) {
       errorStatus = true;
-      emit(GetTimingsError());
+      if (!isBackgroundUpdating) emit(GetTimingsError());
     } else {
+      // We have data (cached), so treated as success but maybe showing a snackbar/toast separately
       errorStatus = false;
       emit(GetTimingsSuccess());
     }
