@@ -28,6 +28,7 @@ import 'package:serat/services/firebase_messaging_service.dart';
 import 'package:quran_library/quran_library.dart';
 import 'package:serat/core/services/home_widget_service.dart';
 import 'package:workmanager/workmanager.dart';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -56,6 +57,7 @@ String? selectedEvening;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AndroidAlarmManager.initialize();
   await Firebase.initializeApp();
   await CacheHelper.init();
   await initializeAppSettings();

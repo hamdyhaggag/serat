@@ -4,6 +4,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io' show Platform;
 import 'dart:developer' as developer;
+import '../../core/services/adhan_service.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -105,7 +106,20 @@ class NotificationService {
     try {
       await _notifications.initialize(
         initSettings,
-        onDidReceiveNotificationResponse: _onNotificationTapped,
+        onDidReceiveNotificationResponse: (response) {
+          developer.log(
+              'Notification interaction: payload=${response.payload}, actionId=${response.actionId}',
+              name: 'NotificationService');
+          if (response.payload == 'adhan_stop' ||
+              response.actionId == 'stop_adhan') {
+            developer.log('Stopping adhan via notification interaction',
+                name: 'NotificationService');
+            AdhanService.sendStopSignal();
+          }
+          _onNotificationTapped(response);
+        },
+        onDidReceiveBackgroundNotificationResponse:
+            AdhanService.onNotificationAction,
       );
       developer.log('Notifications plugin initialized successfully',
           name: 'NotificationService');
@@ -137,6 +151,21 @@ class NotificationService {
                 'general_channel',
                 'General Notifications',
                 description: 'Notifications for general information',
+                importance: Importance.max,
+                playSound: true,
+                enableVibration: true,
+                showBadge: true,
+                enableLights: true,
+              ),
+            );
+        await _notifications
+            .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>()
+            ?.createNotificationChannel(
+              const AndroidNotificationChannel(
+                'adhan_notifications',
+                'الأذان',
+                description: 'تنبيهات صوت الأذان',
                 importance: Importance.max,
                 playSound: true,
                 enableVibration: true,

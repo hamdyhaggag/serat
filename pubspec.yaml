@@ -96,6 +96,7 @@ dependencies:
   flutter_animate: ^4.5.2
   home_widget: ^0.8.1
   workmanager: ^0.9.0+3
+  android_alarm_manager_plus: ^5.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -134,6 +135,7 @@ flutter:
     - assets/logo.webp
     - assets/hadiths/
     - assets/data/
+    - assets/adhan/
 
 
   fonts:
