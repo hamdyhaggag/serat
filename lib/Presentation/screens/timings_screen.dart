@@ -10,25 +10,20 @@ import 'package:serat/Presentation/screens/reciters_screen.dart';
 import 'package:serat/Presentation/screens/islamic_quiz_screen.dart';
 import 'package:serat/Presentation/screens/history_screen.dart';
 import 'package:serat/imports.dart';
-import 'package:intl/intl.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:serat/Business_Logic/Cubit/navigation_cubit.dart' as navigation;
 import 'package:serat/Presentation/screens/dailygoal_screens/daily_goal_navigation_screen.dart';
 import 'package:serat/Presentation/screens/zakah_calculator_screen.dart';
 import 'package:serat/features/quran/routes/quran_routes.dart';
 import 'dart:math';
-import 'dart:async';
-import 'package:serat/Data/Model/times_model.dart';
-import 'dart:developer' as developer;
+
 import 'package:serat/Features/NamesOfAllah/Presentation/Screens/names_of_allah_screen.dart';
 import 'package:serat/shared/constants/app_colors.dart' as shared_colors;
-import 'package:geolocator/geolocator.dart';
+
 import 'package:serat/Presentation/screens/about/constants/about_constants.dart';
 import 'dart:ui' show ImageFilter;
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:shimmer/shimmer.dart';
 
 class TimingsScreen extends StatefulWidget {
   const TimingsScreen({super.key});
@@ -97,269 +92,6 @@ class _TimingsScreenState extends State<TimingsScreen>
     super.dispose();
   }
 
-  Widget _buildSkeletonCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xff2F2F2F)
-            : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[800]
-                      : Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 100,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey[800]
-                            : Colors.grey[200],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      width: 200,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey[800]
-                            : Colors.grey[200],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSkeletonPrayerTimes() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xff2F2F2F)
-            : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 150,
-            height: 24,
-            decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.grey[800]
-                  : Colors.grey[200],
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-          const SizedBox(height: 20),
-          ...List.generate(6, (index) => _buildSkeletonPrayerTime()),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSkeletonPrayerTime() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[800]
-                      : Colors.grey[200],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                width: 80,
-                height: 16,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[800]
-                      : Colors.grey[200],
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ],
-          ),
-          Container(
-            width: 60,
-            height: 16,
-            decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.grey[800]
-                  : Colors.grey[200],
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLocationAlertCard() {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDarkMode
-            ? Colors.red[900]!.withOpacity(0.15)
-            : Colors.red[50]!.withOpacity(0.85),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.red.withOpacity(0.5),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.red.withOpacity(0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(10),
-                child: Icon(
-                  Icons.warning_amber_rounded,
-                  color: Colors.red[700],
-                  size: 32,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppText(
-                      'الموقع غير مفعل',
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red[700],
-                    ),
-                    const SizedBox(height: 6),
-                    AppText(
-                      'لا يمكن عرض مواقيت الصلاة بدقة. يرجى تفعيل الموقع أو السماح للتطبيق بالوصول إلى موقعك.',
-                      fontSize: 14,
-                      color: isDarkMode ? Colors.white : Colors.black87,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Divider(
-            color: Colors.red.withOpacity(0.15),
-            thickness: 1,
-            height: 1,
-          ),
-          const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red[700],
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: const Icon(Icons.refresh, size: 20),
-                label: const Text('إعادة المحاولة',
-                    style:
-                        TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                onPressed: () async {
-                  setState(() => _isLoading = true);
-                  LocationPermission permission =
-                      await Geolocator.requestPermission();
-                  if (permission == LocationPermission.deniedForever) {
-                    await Geolocator.openAppSettings();
-                    setState(() => _isLoading = false);
-                    return;
-                  }
-                  if (permission == LocationPermission.denied) {
-                    setState(() => _isLoading = false);
-                    return;
-                  }
-                  await location.LocationCubit.get(context)
-                      .getMyCurrentLocation();
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<location.LocationCubit, location.LocationState>(
@@ -418,576 +150,493 @@ class _TimingsScreenState extends State<TimingsScreen>
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          height: 220,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: isDarkMode
-                                  ? [
-                                      const Color(0xff1F1F1F),
-                                      const Color(0xff2F2F2F),
-                                    ]
-                                  : [
-                                      shared_colors.AppColors.primaryColor,
-                                      shared_colors.AppColors.primaryColor
-                                          .withOpacity(0.8),
-                                    ],
-                            ),
-                            borderRadius: const BorderRadius.only(
-                              bottomLeft: Radius.circular(30),
-                              bottomRight: Radius.circular(30),
-                            ),
-                          ),
-                          child: SafeArea(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 16,
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Row(
-                                          children: [
-                                            IconButton(
-                                              padding: EdgeInsets.zero,
-                                              constraints:
-                                                  const BoxConstraints(),
-                                              icon: Container(
-                                                padding:
-                                                    const EdgeInsets.all(8),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white
-                                                      .withOpacity(0.1),
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
-                                                child: const Icon(
-                                                  Icons.menu,
-                                                  color: Colors.white,
-                                                  size: 24,
-                                                ),
-                                              ),
-                                              onPressed: () {
-                                                _scaffoldKey.currentState
-                                                    ?.openDrawer();
-                                              },
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  if (_isLoading)
-                                                    Container(
-                                                      width: 120,
-                                                      height: 18,
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.white
-                                                            .withOpacity(0.2),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(4),
-                                                      ),
-                                                    )
-                                                  else
-                                                    AppText(
-                                                      'السلام عليكم',
-                                                      fontSize: 18,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: Colors.white,
-                                                    ).animate().fade().slideX(
-                                                        begin: 0.2, end: 0),
-                                                  const SizedBox(height: 2),
-                                                  if (_isLoading)
-                                                    Container(
-                                                      width: 200,
-                                                      height: 14,
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.white
-                                                            .withOpacity(0.2),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(4),
-                                                      ),
-                                                    )
-                                                  else if (locationCubit
-                                                          .timesModel !=
-                                                      null)
-                                                    AppText(
-                                                      '${locationCubit.timesModel!.data.date.hijri.weekday.ar} ${locationCubit.timesModel!.data.date.hijri.day} ${locationCubit.timesModel!.data.date.hijri.month.ar} ${locationCubit.timesModel!.data.date.hijri.year}',
-                                                      fontSize: 14,
-                                                      color: Colors.white
-                                                          .withOpacity(0.8),
-                                                    )
-                                                        .animate()
-                                                        .fade(delay: 200.ms)
-                                                        .slideX(
-                                                            begin: 0.2, end: 0)
-                                                  else
-                                                    AppText(
-                                                      DateFormat('EEEE, d MMMM',
-                                                              'ar')
-                                                          .format(
-                                                              DateTime.now()),
-                                                      fontSize: 14,
-                                                      color: Colors.white
-                                                          .withOpacity(0.8),
-                                                    )
-                                                        .animate()
-                                                        .fade(delay: 200.ms)
-                                                        .slideX(
-                                                            begin: 0.2, end: 0),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const Spacer(),
-                                  if (_isLoading)
-                                    Container(
-                                      height: 60,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    )
-                                  else
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 10,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  Colors.white.withOpacity(0.2),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                            child: const Icon(
-                                              Icons.location_on,
-                                              color: Colors.white,
-                                              size: 20,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                AppText(
-                                                  locationCubit.address
-                                                              ?.locality !=
-                                                          null
-                                                      ? _translateLocationToArabic(
-                                                          locationCubit.address!
-                                                              .locality)
-                                                      : 'جاري تحديد الموقع...',
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.white,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                                if (locationCubit.address
-                                                        ?.administrativeArea !=
-                                                    null)
-                                                  AppText(
-                                                    _translateLocationToArabic(
-                                                        locationCubit.address!
-                                                            .administrativeArea),
-                                                    fontSize: 12,
-                                                    color: Colors.white
-                                                        .withOpacity(0.7),
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                const SizedBox(height: 16),
-                                              ],
-                                            ),
-                                          ),
-                                          IconButton(
-                                            padding: EdgeInsets.zero,
-                                            constraints: const BoxConstraints(),
-                                            icon: const Icon(
-                                              Icons.refresh,
-                                              color: Colors.white,
-                                              size: 20,
-                                            ),
-                                            onPressed: () async {
-                                              setState(() => _isLoading = true);
-                                              await locationCubit
-                                                  .getMyCurrentLocation();
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                        .animate()
-                                        .fade(delay: 400.ms)
-                                        .slideY(begin: 0.5, end: 0),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Timings section
-                        if (locationCubit.errorStatus == true)
-                          Transform.translate(
-                            offset: const Offset(0, -30),
-                            child: _buildLocationAlertCard(),
-                          )
-                        else if (_isLoading)
-                          Transform.translate(
-                            offset: const Offset(0, -30),
-                            child: Container(
-                              margin:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              child: _buildSkeletonPrayerTimes(),
-                            ),
-                          )
-                        else if (locationCubit.timesModel != null)
-                          Transform.translate(
-                            offset: const Offset(0, -30),
-                            child: Container(
-                              margin:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              padding: const EdgeInsets.all(20),
+                        // Ultra Modern Header
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              height: 380,
                               decoration: BoxDecoration(
-                                color: isDarkMode
-                                    ? const Color(0xff2F2F2F)
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(20),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: isDarkMode
+                                      ? [
+                                          const Color(0xff1A1A1A),
+                                          const Color(0xff2D2D2D),
+                                        ]
+                                      : [
+                                          shared_colors.AppColors.primaryColor,
+                                          const Color(
+                                              0xff6C63FF), // Modern purple accent
+                                        ],
+                                ),
+                                borderRadius: const BorderRadius.vertical(
+                                  bottom: Radius.circular(40),
+                                ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 20,
+                                    color: (isDarkMode
+                                            ? Colors.black
+                                            : shared_colors
+                                                .AppColors.primaryColor)
+                                        .withOpacity(0.3),
+                                    blurRadius: 30,
                                     offset: const Offset(0, 10),
                                   ),
                                 ],
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              child: Stack(
                                 children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      AppText(
-                                        'مواقيت الصلاة',
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: isDarkMode
-                                            ? Colors.white
-                                            : shared_colors
-                                                .AppColors.primaryColor,
+                                  // Decorative Circles
+                                  Positioned(
+                                    top: -50,
+                                    right: -50,
+                                    child: Container(
+                                      width: 200,
+                                      height: 200,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white.withOpacity(0.05),
                                       ),
-                                      Row(
+                                    )
+                                        .animate()
+                                        .scale(
+                                            duration: 2000.ms,
+                                            curve: Curves.easeInOut)
+                                        .fade(),
+                                  ),
+                                  Positioned(
+                                    bottom: 50,
+                                    left: -30,
+                                    child: Container(
+                                      width: 150,
+                                      height: 150,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white.withOpacity(0.05),
+                                      ),
+                                    )
+                                        .animate()
+                                        .scale(
+                                            delay: 500.ms,
+                                            duration: 2000.ms,
+                                            curve: Curves.easeInOut)
+                                        .fade(),
+                                  ),
+
+                                  SafeArea(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
                                         children: [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                              vertical: 6,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: isDarkMode
-                                                  ? Colors.grey[800]
-                                                  : shared_colors
-                                                      .AppColors.primaryColor
-                                                      .withOpacity(0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                AppText(
-                                                  'متبقي حتى $_nextPrayerName',
-                                                  fontSize: 12,
-                                                  color: isDarkMode
-                                                      ? Colors.white
-                                                      : shared_colors.AppColors
-                                                          .primaryColor,
+                                          // Top Bar
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withOpacity(0.15),
+                                                  borderRadius:
+                                                      BorderRadius.circular(15),
+                                                  border: Border.all(
+                                                      color: Colors.white
+                                                          .withOpacity(0.1)),
                                                 ),
-                                                AppText(
+                                                child: IconButton(
+                                                  icon: const Icon(
+                                                      Icons.menu_rounded,
+                                                      color: Colors.white),
+                                                  onPressed: () => _scaffoldKey
+                                                      .currentState
+                                                      ?.openDrawer(),
+                                                ),
+                                              ),
+
+                                              // Location Badge
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 16,
+                                                        vertical: 8),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.black
+                                                      .withOpacity(0.2),
+                                                  borderRadius:
+                                                      BorderRadius.circular(30),
+                                                  border: Border.all(
+                                                      color: Colors.white
+                                                          .withOpacity(0.1)),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                        Icons
+                                                            .location_on_rounded,
+                                                        size: 16,
+                                                        color: Colors.white
+                                                            .withOpacity(0.8)),
+                                                    const SizedBox(width: 8),
+                                                    Flexible(
+                                                      child: Text(
+                                                        locationCubit.address
+                                                                ?.locality ??
+                                                            'جاري تحديد الموقع...',
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 12,
+                                                          fontFamily:
+                                                              'Cairo', // Ensure custom font
+                                                        ),
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              )
+                                                  .animate()
+                                                  .fadeIn()
+                                                  .slideY(begin: -0.5),
+
+                                              // Settings/Refresh
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withOpacity(0.15),
+                                                  borderRadius:
+                                                      BorderRadius.circular(15),
+                                                  border: Border.all(
+                                                      color: Colors.white
+                                                          .withOpacity(0.1)),
+                                                ),
+                                                child: IconButton(
+                                                  icon: const Icon(
+                                                      Icons.refresh_rounded,
+                                                      color: Colors.white),
+                                                  onPressed: () async {
+                                                    setState(() =>
+                                                        _isLoading = true);
+                                                    await locationCubit
+                                                        .getMyCurrentLocation();
+                                                  },
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+
+                                          const Spacer(),
+
+                                          // Main Countdown Centerpiece
+                                          Column(
+                                            children: [
+                                              Text(
+                                                'الصلاة القادمة',
+                                                style: TextStyle(
+                                                  color: Colors.white
+                                                      .withOpacity(0.7),
+                                                  fontSize: 16,
+                                                  fontFamily: 'Cairo',
+                                                  letterSpacing: 1.2,
+                                                ),
+                                              )
+                                                  .animate()
+                                                  .fadeIn()
+                                                  .slideY(begin: 0.2),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                _nextPrayerName,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 42,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontFamily: 'Cairo',
+                                                  height: 1,
+                                                ),
+                                              ).animate().fadeIn().scale(),
+                                              const SizedBox(height: 8),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 24,
+                                                        vertical: 8),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withOpacity(0.15),
+                                                  borderRadius:
+                                                      BorderRadius.circular(50),
+                                                  border: Border.all(
+                                                      color: Colors.white
+                                                          .withOpacity(0.2)),
+                                                ),
+                                                child: Text(
                                                   _formatCountdown(
                                                       _timeUntilNextPrayer),
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: isDarkMode
-                                                      ? Colors.white
-                                                      : shared_colors.AppColors
-                                                          .primaryColor,
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.w600,
+                                                    fontFamily:
+                                                        'DIN', // Use DIN for numbers
+                                                    letterSpacing: 2,
+                                                  ),
                                                 ),
-                                              ],
-                                            ),
+                                              )
+                                                  .animate()
+                                                  .fadeIn(delay: 300.ms)
+                                                  .shimmer(duration: 2000.ms),
+                                            ],
                                           ),
+                                          const Spacer(),
+
+                                          // Date Info
+                                          Text(
+                                            locationCubit.timesModel != null
+                                                ? '${locationCubit.timesModel!.data.date.hijri.day} ${locationCubit.timesModel!.data.date.hijri.month.ar} ${locationCubit.timesModel!.data.date.hijri.year}'
+                                                : DateFormat(
+                                                        'd MMMM yyyy', 'ar')
+                                                    .format(DateTime.now()),
+                                            style: TextStyle(
+                                              color:
+                                                  Colors.white.withOpacity(0.8),
+                                              fontSize: 14,
+                                              fontFamily: 'Cairo',
+                                            ),
+                                          ).animate().fadeIn(delay: 500.ms),
+                                          const SizedBox(
+                                              height:
+                                                  40), // Space for floating card
                                         ],
                                       ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 20),
-                                  SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: Row(
-                                      children: [
-                                        _buildPrayerTimeItem(
-                                          'الفجر',
-                                          locationCubit
-                                              .timesModel!.data.timings.fajr,
-                                          isDarkMode,
-                                          isNext: _isNextPrayer(
-                                              'الفجر', locationCubit),
-                                        ),
-                                        _buildPrayerTimeItem(
-                                          'الشروق',
-                                          locationCubit
-                                              .timesModel!.data.timings.sunrise,
-                                          isDarkMode,
-                                          isNext: _isNextPrayer(
-                                              'الشروق', locationCubit),
-                                        ),
-                                        _buildPrayerTimeItem(
-                                          'الظهر',
-                                          locationCubit
-                                              .timesModel!.data.timings.dhuhr,
-                                          isDarkMode,
-                                          isNext: _isNextPrayer(
-                                              'الظهر', locationCubit),
-                                        ),
-                                        _buildPrayerTimeItem(
-                                          'العصر',
-                                          locationCubit
-                                              .timesModel!.data.timings.asr,
-                                          isDarkMode,
-                                          isNext: _isNextPrayer(
-                                              'العصر', locationCubit),
-                                        ),
-                                        _buildPrayerTimeItem(
-                                          'المغرب',
-                                          locationCubit
-                                              .timesModel!.data.timings.maghrib,
-                                          isDarkMode,
-                                          isNext: _isNextPrayer(
-                                              'المغرب', locationCubit),
-                                        ),
-                                        _buildPrayerTimeItem(
-                                          'العشاء',
-                                          locationCubit
-                                              .timesModel!.data.timings.isha,
-                                          isDarkMode,
-                                          isNext: _isNextPrayer(
-                                              'العشاء', locationCubit),
-                                        ),
-                                      ],
                                     ),
                                   ),
                                 ],
                               ),
+                            ),
+
+                            // Floating Glass Prayer List
+                            Positioned(
+                              bottom: -60,
+                              left: 20,
+                              right: 20,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(24),
+                                child: BackdropFilter(
+                                  filter:
+                                      ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                                  child: Container(
+                                    height:
+                                        140, // Fixed height for horizontal list
+                                    decoration: BoxDecoration(
+                                      color: isDarkMode
+                                          ? const Color(0xff252525)
+                                              .withOpacity(0.85)
+                                          : Colors.white.withOpacity(0.85),
+                                      borderRadius: BorderRadius.circular(24),
+                                      border: Border.all(
+                                        color: isDarkMode
+                                            ? Colors.white.withOpacity(0.05)
+                                            : Colors.white.withOpacity(0.4),
+                                        width: 1,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 30,
+                                          offset: const Offset(0, 10),
+                                        ),
+                                      ],
+                                    ),
+                                    child: _isLoading
+                                        ? _buildSkeletonPrayerTimes()
+                                        : ListView(
+                                            scrollDirection: Axis.horizontal,
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16, vertical: 20),
+                                            children: [
+                                              if (locationCubit.timesModel !=
+                                                  null) ...[
+                                                _buildModernPrayerItem(
+                                                    'الفجر',
+                                                    locationCubit.timesModel!
+                                                        .data.timings.fajr,
+                                                    isDarkMode,
+                                                    _isNextPrayer('الفجر',
+                                                        locationCubit)),
+                                                _buildModernPrayerItem(
+                                                    'الشروق',
+                                                    locationCubit.timesModel!
+                                                        .data.timings.sunrise,
+                                                    isDarkMode,
+                                                    _isNextPrayer('الشروق',
+                                                        locationCubit)),
+                                                _buildModernPrayerItem(
+                                                    'الظهر',
+                                                    locationCubit.timesModel!
+                                                        .data.timings.dhuhr,
+                                                    isDarkMode,
+                                                    _isNextPrayer('الظهر',
+                                                        locationCubit)),
+                                                _buildModernPrayerItem(
+                                                    'العصر',
+                                                    locationCubit.timesModel!
+                                                        .data.timings.asr,
+                                                    isDarkMode,
+                                                    _isNextPrayer('العصر',
+                                                        locationCubit)),
+                                                _buildModernPrayerItem(
+                                                    'المغرب',
+                                                    locationCubit.timesModel!
+                                                        .data.timings.maghrib,
+                                                    isDarkMode,
+                                                    _isNextPrayer('المغرب',
+                                                        locationCubit)),
+                                                _buildModernPrayerItem(
+                                                    'العشاء',
+                                                    locationCubit.timesModel!
+                                                        .data.timings.isha,
+                                                    isDarkMode,
+                                                    _isNextPrayer('العشاء',
+                                                        locationCubit)),
+                                              ]
+                                            ],
+                                          ),
+                                  ),
+                                ),
+                              ),
                             )
                                 .animate()
-                                .fade(duration: 500.ms)
-                                .slideY(begin: 0.1, end: 0),
-                          ),
-                        // Always show the feature cards section
-                        Transform.translate(
-                          offset: const Offset(0, -60),
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (_isLoading &&
-                                    locationCubit.errorStatus != true)
-                                  GridView.count(
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    crossAxisCount: 2,
-                                    mainAxisSpacing: 15,
-                                    crossAxisSpacing: 15,
-                                    childAspectRatio: 1.2,
-                                    children: List.generate(
-                                      4,
-                                      (index) => _buildSkeletonCard(),
-                                    ),
-                                  )
-                                else
-                                  GridView.count(
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    crossAxisCount: 2,
-                                    mainAxisSpacing: 15,
-                                    crossAxisSpacing: 15,
-                                    childAspectRatio: 1.2,
-                                    children: [
-                                      _buildFeatureCard(
-                                        'الهدف اليومي',
-                                        Icons.flag,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const DailyGoalNavigationScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _buildFeatureCard(
-                                        'القرآن الكريم',
-                                        Icons.menu_book,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const QuranScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _buildFeatureCard(
-                                        'بطاقات القرآن',
-                                        Icons.book,
-                                        isDarkMode,
-                                        onTap: () => Navigator.pushNamed(
-                                            context, QuranRoutes.surahList),
-                                      ),
-                                      _buildFeatureCard(
-                                        'القراء',
-                                        Icons.record_voice_over,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const RecitersScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _buildFeatureCard(
-                                        'الراديو',
-                                        Icons.radio,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const RadioScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _buildFeatureCard(
-                                        'روائع القصص',
-                                        Icons.auto_stories,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const QasasScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _buildFeatureCard(
-                                        'حاسبة الزكاة',
-                                        Icons.calculate,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const ZakahCalculatorScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _buildFeatureCard(
-                                        'اختبار إسلامي',
-                                        Icons.quiz,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const IslamicQuizScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _buildFeatureCard(
-                                        'التاريخ الإسلامي',
-                                        Icons.history,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const HistoryScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _buildFeatureCard(
-                                        'أسماء الله الحسنى',
-                                        Icons.mosque,
-                                        isDarkMode,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const NamesOfAllahScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                              ],
-                            ),
-                          ),
+                                .fadeIn(delay: 600.ms)
+                                .slideY(begin: 0.2, end: 0),
+                          ],
                         ),
+
+                        const SizedBox(height: 20),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: GridView.count(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 16,
+                            crossAxisSpacing: 16,
+                            childAspectRatio: 1.1,
+                            children: [
+                              _buildFeatureCard(
+                                'الهدف اليومي',
+                                Icons.flag_rounded,
+                                isDarkMode,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          const DailyGoalNavigationScreen()),
+                                ),
+                              ),
+                              _buildFeatureCard(
+                                'القرآن الكريم',
+                                Icons.menu_book_rounded,
+                                isDarkMode,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const QuranScreen()),
+                                ),
+                              ),
+                              _buildFeatureCard(
+                                'بطاقات القرآن',
+                                Icons.style_rounded,
+                                isDarkMode,
+                                onTap: () => Navigator.pushNamed(
+                                    context, QuranRoutes.surahList),
+                              ),
+                              _buildFeatureCard(
+                                'أسماء الله الحسنى',
+                                Icons.verified_rounded,
+                                isDarkMode,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          const NamesOfAllahScreen()),
+                                ),
+                              ),
+                              _buildFeatureCard(
+                                'القراء',
+                                Icons.record_voice_over_rounded,
+                                isDarkMode,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const RecitersScreen()),
+                                ),
+                              ),
+                              _buildFeatureCard(
+                                'الراديو',
+                                Icons.radio_rounded,
+                                isDarkMode,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const RadioScreen()),
+                                ),
+                              ),
+                              _buildFeatureCard(
+                                'روائع القصص',
+                                Icons.auto_stories_rounded,
+                                isDarkMode,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const QasasScreen()),
+                                ),
+                              ),
+                              _buildFeatureCard(
+                                'حاسبة الزكاة',
+                                Icons.calculate_rounded,
+                                isDarkMode,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          const ZakahCalculatorScreen()),
+                                ),
+                              ),
+                              _buildFeatureCard(
+                                'اختبار إسلامي',
+                                Icons.quiz_rounded,
+                                isDarkMode,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          const IslamicQuizScreen()),
+                                ),
+                              ),
+                              _buildFeatureCard(
+                                'التاريخ الإسلامي',
+                                Icons.history_rounded,
+                                isDarkMode,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const HistoryScreen()),
+                                ),
+                              ),
+                            ],
+                          )
+                              .animate()
+                              .fadeIn(delay: 600.ms)
+                              .slideY(begin: 0.1, end: 0),
+                        ),
+                        const SizedBox(height: 100), // Bottom padding
                       ],
                     ),
                   ),
@@ -1000,101 +649,123 @@ class _TimingsScreenState extends State<TimingsScreen>
     );
   }
 
-  Widget _buildPrayerTimeItem(
-    String name,
-    String time,
-    bool isDarkMode, {
-    bool isNext = false,
-  }) {
-    final prayerTime = _parsePrayerTime(time);
-
-    // Premium Glassmorphic Card
-    return Animate(
-      effects: [
-        FadeEffect(duration: 600.ms),
-        SlideEffect(begin: const Offset(0, 0.1))
-      ],
-      child: Container(
-        width: 100,
-        margin: const EdgeInsets.only(left: 10),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-            child: Container(
-              padding: const EdgeInsets.all(12),
+  Widget _buildSkeletonPrayerTimes() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    return Shimmer.fromColors(
+      baseColor:
+          isDarkMode ? Colors.white.withOpacity(0.05) : Colors.grey[300]!,
+      highlightColor:
+          isDarkMode ? Colors.white.withOpacity(0.1) : Colors.grey[100]!,
+      child: SizedBox(
+        height: 100,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: 6,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemBuilder: (context, index) {
+            return Container(
+              width: 70,
+              margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
-                color: isNext
-                    ? (isDarkMode
-                        ? shared_colors.AppColors.primaryColor.withOpacity(0.3)
-                        : shared_colors.AppColors.primaryColor.withOpacity(0.1))
-                    : (isDarkMode
-                        ? Colors.white.withOpacity(0.05)
-                        : Colors.white.withOpacity(0.4)),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isNext
-                      ? shared_colors.AppColors.primaryColor.withOpacity(0.5)
-                      : Colors.white.withOpacity(0.1),
-                  width: 1.5,
-                ),
-                boxShadow: isNext
-                    ? [
-                        BoxShadow(
-                          color: shared_colors.AppColors.primaryColor
-                              .withOpacity(0.2),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        )
-                      ]
-                    : [],
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: isNext
-                          ? shared_colors.AppColors.primaryColor
-                              .withOpacity(0.2)
-                          : Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      _getPrayerIcon(name),
-                      color: isNext
-                          ? (isDarkMode
-                              ? Colors.white
-                              : shared_colors.AppColors.primaryColor)
-                          : (isDarkMode
-                              ? Colors.white70
-                              : shared_colors.AppColors.primaryColor
-                                  .withOpacity(0.8)),
-                      size: 26,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  AppText(
-                    name,
-                    fontSize: 14,
-                    fontWeight: isNext ? FontWeight.bold : FontWeight.w600,
-                    color: isDarkMode ? Colors.white : Colors.black87,
-                  ),
-                  const SizedBox(height: 4),
-                  AppText(
-                    _formatTime12Hour(prayerTime),
-                    fontSize: 12,
-                    color: isDarkMode ? Colors.white70 : Colors.black54,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ],
-              ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
+  }
+
+  Widget _buildModernPrayerItem(
+    String name,
+    String time,
+    bool isDarkMode,
+    bool isNext,
+  ) {
+    final prayerTime = _parsePrayerTime(time);
+
+    return Container(
+      width: 70, // Slightly narrower for better fit usually
+      margin: const EdgeInsets.only(right: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min, // Compact
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Icon Container
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isNext
+                  ? (isDarkMode
+                      ? Colors.white
+                      : shared_colors.AppColors.primaryColor)
+                  : (isDarkMode
+                      ? Colors.white.withOpacity(0.08)
+                      : Colors.black.withOpacity(0.05)),
+              shape: BoxShape.circle,
+              boxShadow: isNext
+                  ? [
+                      BoxShadow(
+                        color: (isDarkMode
+                                ? Colors.white
+                                : shared_colors.AppColors.primaryColor)
+                            .withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      )
+                    ]
+                  : null,
+            ),
+            child: Icon(
+              _getPrayerIcon(name),
+              color: isNext
+                  ? (isDarkMode ? Colors.black : Colors.white)
+                  : (isDarkMode ? Colors.white70 : Colors.black54),
+              size: 20,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // Name
+          Text(
+            name,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: isNext ? FontWeight.bold : FontWeight.w500,
+              color: isDarkMode ? Colors.white : Colors.black87,
+              fontFamily: 'Cairo',
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+          ),
+
+          const SizedBox(height: 2),
+
+          // Time
+          Text(
+            _formatTime12Hour(prayerTime),
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: isNext
+                  ? (isDarkMode
+                      ? Colors.white70
+                      : shared_colors.AppColors.primaryColor.withOpacity(0.8))
+                  : (isDarkMode ? Colors.white38 : Colors.black38),
+              fontFamily: 'DIN',
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+          ),
+        ],
+      ),
+    ).animate(target: isNext ? 1 : 0).scale(
+        begin: const Offset(1, 1),
+        end: const Offset(1.1, 1.1),
+        duration: 300.ms);
   }
 
   Widget _buildFeatureCard(
@@ -1103,73 +774,108 @@ class _TimingsScreenState extends State<TimingsScreen>
     bool isDarkMode, {
     required VoidCallback onTap,
   }) {
-    return Animate(
-      effects: [FadeEffect(duration: 500.ms), ScaleEffect()],
-      child: InkWell(
-        onTap: onTap,
+    return Container(
+      decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              decoration: BoxDecoration(
-                color: isDarkMode
-                    ? const Color(0xff2F2F2F).withOpacity(0.6)
-                    : Colors.white.withOpacity(0.7),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
-                  width: 1,
+        boxShadow: [
+          BoxShadow(
+            color: isDarkMode
+                ? Colors.black.withOpacity(0.3)
+                : Colors.grey.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(24),
+              splashColor:
+                  shared_colors.AppColors.primaryColor.withOpacity(0.1),
+              highlightColor:
+                  shared_colors.AppColors.primaryColor.withOpacity(0.05),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isDarkMode
+                      ? const Color(0xff2A2A2A).withOpacity(0.6)
+                      : Colors.white.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: isDarkMode
+                        ? Colors.white.withOpacity(0.08)
+                        : Colors.white.withOpacity(0.6),
+                    width: 1,
+                  ),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isDarkMode
+                        ? [
+                            Colors.white.withOpacity(0.05),
+                            Colors.white.withOpacity(0.02),
+                          ]
+                        : [
+                            Colors.white.withOpacity(0.9),
+                            Colors.white.withOpacity(0.5),
+                          ],
+                  ),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: isDarkMode
-                          ? shared_colors.AppColors.primaryColor
-                              .withOpacity(0.2)
-                          : shared_colors.AppColors.primaryColor
-                              .withOpacity(0.1),
-                      shape: BoxShape.circle,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDarkMode
+                            ? shared_colors.AppColors.primaryColor
+                                .withOpacity(0.15)
+                            : shared_colors.AppColors.primaryColor
+                                .withOpacity(0.08),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: shared_colors.AppColors.primaryColor
+                              .withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: shared_colors.AppColors.primaryColor,
+                        size: 28,
+                      ),
                     ),
-                    child: Icon(
-                      icon,
-                      color: shared_colors.AppColors.primaryColor,
-                      size: 32,
+                    const SizedBox(height: 12),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color:
+                            isDarkMode ? Colors.white : const Color(0xff2d3436),
+                        height: 1.2,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  )
-                      .animate(
-                          onPlay: (controller) =>
-                              controller.repeat(reverse: true))
-                      .scale(
-                          begin: const Offset(1, 1),
-                          end: const Offset(1.1, 1.1),
-                          duration: 2000.ms),
-                  const SizedBox(height: 16),
-                  AppText(
-                    title,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode ? Colors.white : Colors.black87,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
-    );
+    )
+        .animate()
+        .fadeIn(duration: 400.ms)
+        .scale(begin: const Offset(0.95, 0.95), curve: Curves.easeOut);
   }
 
   DateTime _parsePrayerTime(String time) {
@@ -1650,181 +1356,6 @@ class _TimingsScreenState extends State<TimingsScreen>
     String minutes = twoDigits(duration.inMinutes.remainder(60));
     String seconds = twoDigits(duration.inSeconds.remainder(60));
     return '$hours:$minutes:$seconds';
-  }
-
-  String _translateLocationToArabic(String? location) {
-    if (location == null) return '';
-
-    final Map<String, String> cities = {
-      'At Tamamah': 'التمامة',
-      'Cairo': 'القاهرة',
-      'Alexandria': 'الإسكندرية',
-      'Giza': 'الجيزة',
-      'Shubra El Kheima': 'شبرا الخيمة',
-      'Port Said': 'بورسعيد',
-      'Suez': 'السويس',
-      'Luxor': 'الأقصر',
-      'Mansoura': 'المنصورة',
-      'Tanta': 'طنطا',
-      'Asyut': 'أسيوط',
-      'Ismailia': 'الإسماعيلية',
-      'Fayyum': 'الفيوم',
-      'Zagazig': 'الزقازيق',
-      'Aswan': 'أسوان',
-      'Damietta': 'دمياط',
-      'Damanhur': 'دمنهور',
-      'Minya': 'المنيا',
-      'Beni Suef': 'بني سويف',
-      'Sohag': 'سوهاج',
-      'Hurghada': 'الغردقة',
-      '6th of October City': 'مدينة 6 أكتوبر',
-      'Sharm El Sheikh': 'شرم الشيخ',
-      'New Cairo': 'القاهرة الجديدة',
-      'Sheikh Zayed City': 'مدينة الشيخ زايد',
-      'Madinat Nasr': 'مدينة نصر',
-      'Heliopolis': 'مصر الجديدة',
-      'Maadi': 'المعادي',
-      'Garden City': 'جاردن سيتي',
-      'Dokki': 'الدقي',
-      'Mohandessin': 'المهندسين',
-      'Agouza': 'العجوزة',
-      'Zamalek': 'الزمالك',
-      'Helwan': 'حلوان',
-      'Shubra': 'شبرا',
-      'Rod El Farag': 'روض الفرج',
-      'Ain Shams': 'عين شمس',
-      'El Marg': 'المرج',
-      'El Matareya': 'المطرية',
-      'El Rehab': 'الرحاب',
-      'El Tagamo\'': 'التجمع',
-      'El Obour': 'العبور',
-      'El Shorouk': 'الشروق',
-      'Badr City': 'مدينة بدر',
-      'New Capital': 'العاصمة الإدارية',
-      'Sadat City': 'مدينة السادات',
-      '10th of Ramadan City': 'مدينة العاشر من رمضان',
-      'El Mahalla El Kubra': 'المحلة الكبرى',
-      'Kafr El Sheikh': 'كفر الشيخ',
-      'El Arish': 'العريش',
-      'Rafah': 'رفح',
-      'El Tor': 'الطور',
-      'Saint Catherine': 'سانت كاترين',
-      'Dahab': 'دهب',
-      'Nuweiba': 'نويبع',
-      'Taba': 'طابا',
-      'El Quseir': 'القصير',
-      'Marsa Alam': 'مرسى علم',
-      'Safaga': 'سفاجا',
-      'El Gouna': 'الجونة',
-      'Soma Bay': 'سوما باي',
-      'Makadi Bay': 'مكادي باي',
-      'Sahl Hasheesh': 'سهل حشيش',
-      'El Ain El Sokhna': 'العين السخنة',
-      'Ras Gharib': 'رأس غارب',
-      'Ras Shukheir': 'رأس شقير',
-      'El Hamam': 'الحمام',
-      'El Alamein': 'العلمين',
-      'Marina': 'مارينا',
-      'Sidi Abdel Rahman': 'سيدي عبد الرحمن',
-      'El Dabaa': 'الضبعة',
-      'Mersa Matruh': 'مرسى مطروح',
-      'Siwa': 'سيوة',
-      'Bahariya': 'البحرية',
-      'Farafra': 'الفرافرة',
-      'Dakhla': 'الداخلة',
-      'Kharga': 'الخارجة',
-    };
-
-    final Map<String, String> governorates = {
-      'Cairo Governorate': 'محافظة القاهرة',
-      'Alexandria Governorate': 'محافظة الإسكندرية',
-      'Giza Governorate': 'محافظة الجيزة',
-      'Beheira Governorate': 'محافظة البحيرة',
-      'Port Said Governorate': 'محافظة بورسعيد',
-      'Suez Governorate': 'محافظة السويس',
-      'Luxor Governorate': 'محافظة الأقصر',
-      'Dakahlia Governorate': 'محافظة الدقهلية',
-      'Gharbia Governorate': 'محافظة الغربية',
-      'Asyut Governorate': 'محافظة أسيوط',
-      'Ismailia Governorate': 'محافظة الإسماعيلية',
-      'Fayyum Governorate': 'محافظة الفيوم',
-      'Sharqia Governorate': 'محافظة الشرقية',
-      'Aswan Governorate': 'محافظة أسوان',
-      'Damietta Governorate': 'محافظة دمياط',
-      'Minya Governorate': 'محافظة المنيا',
-      'Beni Suef Governorate': 'محافظة بني سويف',
-      'Sohag Governorate': 'محافظة سوهاج',
-      'Red Sea Governorate': 'محافظة البحر الأحمر',
-      'New Valley Governorate': 'محافظة الوادي الجديد',
-      'Matrouh Governorate': 'محافظة مطروح',
-      'North Sinai Governorate': 'محافظة شمال سيناء',
-      'South Sinai Governorate': 'محافظة جنوب سيناء',
-      'Kafr El Sheikh Governorate': 'محافظة كفر الشيخ',
-      'Qalyubia Governorate': 'محافظة القليوبية',
-      'Monufia Governorate': 'محافظة المنوفية',
-      'Qena Governorate': 'محافظة قنا',
-      'Beheira': 'محافظة البحيرة',
-      'Cairo': 'محافظة القاهرة',
-      'Alexandria': 'محافظة الإسكندرية',
-      'Giza': 'محافظة الجيزة',
-      'Port Said': 'محافظة بورسعيد',
-      'Suez': 'محافظة السويس',
-      'Luxor': 'محافظة الأقصر',
-      'Dakahlia': 'محافظة الدقهلية',
-      'Gharbia': 'محافظة الغربية',
-      'Asyut': 'محافظة أسيوط',
-      'Ismailia': 'محافظة الإسماعيلية',
-      'Fayyum': 'محافظة الفيوم',
-      'Sharqia': 'محافظة الشرقية',
-      'Aswan': 'محافظة أسوان',
-      'Damietta': 'محافظة دمياط',
-      'Minya': 'محافظة المنيا',
-      'Beni Suef': 'محافظة بني سويف',
-      'Sohag': 'محافظة سوهاج',
-      'Red Sea': 'محافظة البحر الأحمر',
-      'New Valley': 'محافظة الوادي الجديد',
-      'Matrouh': 'محافظة مطروح',
-      'North Sinai': 'محافظة شمال سيناء',
-      'South Sinai': 'محافظة جنوب سيناء',
-      'Kafr El Sheikh': 'محافظة كفر الشيخ',
-      'Qalyubia': 'محافظة القليوبية',
-      'Monufia': 'محافظة المنوفية',
-      'Qena': 'محافظة قنا',
-    };
-
-    // First try to find an exact match
-    if (cities.containsKey(location)) {
-      String cityName = cities[location]!;
-      // Try to find the governorate
-      for (var entry in governorates.entries) {
-        if (location.toLowerCase().contains(entry.key.toLowerCase())) {
-          return '$cityName - ${entry.value}';
-        }
-      }
-      return cityName;
-    }
-
-    // If no exact match, try partial matches
-    for (var entry in cities.entries) {
-      if (location.toLowerCase().contains(entry.key.toLowerCase())) {
-        String cityName = entry.value;
-        // Try to find the governorate
-        for (var govEntry in governorates.entries) {
-          if (location.toLowerCase().contains(govEntry.key.toLowerCase())) {
-            return '$cityName - ${govEntry.value}';
-          }
-        }
-        return cityName;
-      }
-    }
-
-    // Check if the location is a governorate
-    if (governorates.containsKey(location)) {
-      return governorates[location]!;
-    }
-
-    // If no match found, return the original location
-    return location;
   }
 }
 
