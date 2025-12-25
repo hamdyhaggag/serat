@@ -4,6 +4,7 @@ import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 import '../../domain/models/playlist_model.dart';
 import '../../domain/models/video_model.dart';
@@ -47,6 +48,8 @@ class _PlaylistVideosScreenState extends State<PlaylistVideosScreen> {
         strictRelatedVideos: true,
         showVideoAnnotations: false,
         enableJavaScript: true,
+        // Use youtube-nocookie to avoid some embedding restrictions
+        origin: 'https://www.youtube-nocookie.com',
       ),
     );
   }
@@ -176,6 +179,41 @@ class _PlaylistVideosScreenState extends State<PlaylistVideosScreen> {
     });
   }
 
+  Future<void> _openInYouTube(String videoId) async {
+    final youtubeUrl = Uri.parse('https://www.youtube.com/watch?v=$videoId');
+    final youtubeAppUrl =
+        Uri.parse('youtube://www.youtube.com/watch?v=$videoId');
+
+    try {
+      // Try to open in YouTube app first
+      if (await canLaunchUrl(youtubeAppUrl)) {
+        await launchUrl(youtubeAppUrl);
+      } else if (await canLaunchUrl(youtubeUrl)) {
+        // Fall back to browser
+        await launchUrl(youtubeUrl, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('لا يمكن فتح الفيديو'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      LoggingService.error('Error opening YouTube URL', tag: _tag, error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('حدث خطأ أثناء فتح الفيديو'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
   Future<bool> _onWillPop() async {
     if (_isPlayerVisible) {
       _stopVideo();
@@ -231,29 +269,56 @@ class _PlaylistVideosScreenState extends State<PlaylistVideosScreen> {
         // Always keep the player in the tree using Offstage.
         // Offstage lays out the child (so the WebView knows its size) but paints nothing and takes 0 space in the parent.
         // This ensures the PlatformView persists and isn't destroyed/recreated, preventing "setSize" and frame errors.
-        Offstage(
-          offstage: !_isPlayerVisible,
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            height: 220,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+        if (_isPlayerVisible)
+          Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                height: 220,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            // ClipRRect removed to improve performance with PlatformView
-            child: YoutubePlayer(
-              controller: _controller,
-              aspectRatio: 16 / 9,
-            ),
+                // ClipRRect removed to improve performance with PlatformView
+                child: YoutubePlayer(
+                  controller: _controller,
+                  aspectRatio: 16 / 9,
+                ),
+              ),
+              // Open in YouTube button - fallback for embedding restrictions
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextButton.icon(
+                        onPressed: _currentVideoId != null
+                            ? () => _openInYouTube(_currentVideoId!)
+                            : null,
+                        icon: const Icon(Icons.open_in_new, size: 18),
+                        label: const Text('فتح في يوتيوب'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: _stopVideo,
+                      icon: const Icon(Icons.close),
+                      tooltip: 'إغلاق المشغل',
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ),
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.all(8),
