@@ -24,8 +24,22 @@ class HadithFilterChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          child: Text(
+            "اختر الكتاب",
+            style: TextStyle(
+              fontFamily: "Cairo",
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: isDarkMode ? Colors.white70 : Colors.black54,
+            ),
+          ),
+        ),
         _buildBookChips(),
+        const SizedBox(height: 16),
         _buildFilterSegments(),
       ],
     );
@@ -33,32 +47,44 @@ class HadithFilterChips extends StatelessWidget {
 
   Widget _buildBookChips() {
     return Container(
-      height: 50,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: 45,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: books.length,
         itemBuilder: (context, index) {
           final book = books.keys.elementAt(index);
           final isSelected = book == selectedBook;
           return Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: FilterChip(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: ChoiceChip(
               selected: isSelected,
               label: Text(
                 book,
                 style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
                   color: isSelected
                       ? Colors.white
-                      : isDarkMode
-                          ? Colors.white70
-                          : Colors.black87,
-                  fontFamily: 'DIN',
+                      : (isDarkMode ? Colors.white70 : Colors.black87),
                 ),
               ),
               backgroundColor:
-                  isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
+                  isDarkMode ? const Color(0xff2A2A2A) : Colors.white,
               selectedColor: AppColors.primaryColor,
+              elevation: 0,
+              pressElevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: isSelected
+                      ? AppColors.primaryColor
+                      : (isDarkMode
+                          ? Colors.white.withOpacity(0.05)
+                          : Colors.black.withOpacity(0.05)),
+                ),
+              ),
               onSelected: (_) => onBookSelected(book),
             ),
           );
@@ -69,23 +95,21 @@ class HadithFilterChips extends StatelessWidget {
 
   Widget _buildFilterSegments() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
+        color: isDarkMode ? const Color(0xff2A2A2A) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: isDarkMode
+                ? Colors.white.withOpacity(0.05)
+                : Colors.black.withOpacity(0.05)),
       ),
       child: Row(
         children: [
           _buildFilterSegment(
-            'الكل',
-            selectedFilter == 'الكل',
-            () => onFilterSelected('الكل'),
-          ),
-          _buildFilterSegment(
-            'المحفوظات',
-            selectedFilter == 'المحفوظات',
-            () => onFilterSelected('المحفوظات'),
-          ),
+              'الكل', selectedFilter == 'الكل', () => onFilterSelected('الكل')),
+          _buildFilterSegment('المحفوظات', selectedFilter == 'المحفوظات',
+              () => onFilterSelected('المحفوظات')),
           _buildFilterSegment(
             'عشوائي',
             selectedFilter == 'عشوائي',
@@ -97,22 +121,18 @@ class HadithFilterChips extends StatelessWidget {
     );
   }
 
-  Widget _buildFilterSegment(
-    String label,
-    bool isSelected,
-    VoidCallback onTap, {
-    bool isLoading = false,
-  }) {
+  Widget _buildFilterSegment(String label, bool isSelected, VoidCallback onTap,
+      {bool isLoading = false}) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           margin: const EdgeInsets.all(4),
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primaryColor : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Center(
             child: isLoading
@@ -127,15 +147,13 @@ class HadithFilterChips extends StatelessWidget {
                 : Text(
                     label,
                     style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 13,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.w600,
                       color: isSelected
                           ? Colors.white
-                          : isDarkMode
-                              ? Colors.white70
-                              : Colors.black87,
-                      fontFamily: 'DIN',
-                      fontSize: 14,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
+                          : (isDarkMode ? Colors.white60 : Colors.black54),
                     ),
                   ),
           ),

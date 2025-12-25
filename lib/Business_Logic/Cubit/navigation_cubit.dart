@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serat/imports.dart';
 import 'package:serat/features/adhkar/screens/adhkar_screen.dart';
-import 'package:serat/Presentation/screens/Ahadith_screen/ahadith_list_screen.dart';
+import 'package:serat/Presentation/screens/Ahadith_screen/hadith_books_screen.dart';
 
 class NavigationCubit extends Cubit<NavigationState> {
   NavigationCubit() : super(NavigationInitial());
@@ -16,7 +16,7 @@ class NavigationCubit extends Cubit<NavigationState> {
         const TimingsScreen(),
         const SebhaAzkarListScreen(),
         const AdhkarScreen(),
-        const AhadithListScreen(),
+        const HadithBooksScreen(),
         const QiblaScreen(),
       ];
 

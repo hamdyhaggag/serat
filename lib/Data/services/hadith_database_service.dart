@@ -23,9 +23,34 @@ class HadithDatabaseService {
     'سنن ابن ماجه': 'ibnmajah',
   };
 
-  Future<List<HadithModel>> getHadiths(String bookName) async {
+  static const Map<String, String> _idToBookName = {
+    'nawawi': 'الأربعين النووية',
+    'bukhari': 'صحيح البخاري',
+    'muslim': 'صحيح مسلم',
+    'abudawud': 'سنن أبي داود',
+    'tirmidhi': 'سنن الترمذي',
+    'nasai': 'سنن النسائي',
+    'ibnmajah': 'سنن ابن ماجه',
+  };
+
+  Future<List<HadithModel>> getHadiths(String bookNameOrId) async {
     try {
+      // Check if input is an ID, convert to name if needed
+      String bookName = bookNameOrId;
+      if (_idToBookName.containsKey(bookNameOrId)) {
+        bookName = _idToBookName[bookNameOrId]!;
+        print('📚 Converted ID "$bookNameOrId" to name "$bookName"');
+      }
+
+      if (!_bookFiles.containsKey(bookName)) {
+        print('❌ Book not found: $bookName');
+        print('📚 Available books: ${_bookFiles.keys.join(", ")}');
+        return [];
+      }
+
       final String filePath = _bookFiles[bookName]!;
+      print('📚 Loading from file: $filePath');
+
       final String jsonString = await rootBundle.loadString(filePath);
       final Map<String, dynamic> jsonData = json.decode(jsonString);
 
@@ -46,7 +71,7 @@ class HadithDatabaseService {
       return hadithsData.map((hadith) {
         final english = hadith['english'] as Map<String, dynamic>?;
         final chapterId = hadith['chapterId']?.toString();
-        
+
         // Get chapter data from chapters map
         String chapterName;
         if (chapterId != null && chaptersMap.containsKey(chapterId)) {
@@ -55,7 +80,7 @@ class HadithDatabaseService {
         } else {
           chapterName = 'كتاب ${chapterId ?? ''}';
         }
-        
+
         return HadithModel(
           id: hadith['id'] ?? 0,
           hadithNumber: 'حديث ${hadith['number'] ?? ''}',
@@ -67,7 +92,7 @@ class HadithDatabaseService {
         );
       }).toList();
     } catch (e) {
-      print('Error loading hadiths: $e');
+      print('❌ Error loading hadiths: $e');
       rethrow;
     }
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:serat/imports.dart';
+import 'package:serat/imports.dart' hide AppColors;
+import 'package:serat/shared/constants/app_colors.dart';
 
 class HadithCard extends StatelessWidget {
   final String hadithNumber;
@@ -24,88 +25,103 @@ class HadithCard extends StatelessWidget {
     return Hero(
       tag: heroTag,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: isDarkMode ? const Color(0xff1E1E1E) : Colors.white,
+          borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
+              color:
+                  AppColors.primaryColor.withOpacity(isDarkMode ? 0.15 : 0.08),
+              blurRadius: 30,
+              offset: const Offset(0, 15),
             ),
           ],
+          border: Border.all(
+            color: isDarkMode
+                ? Colors.white.withOpacity(0.05)
+                : Colors.black.withOpacity(0.03),
+            width: 1,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: isDarkMode
-                    ? AppColors.primaryColor.withOpacity(0.2)
-                    : AppColors.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                hadithNumber,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'DIN',
-                  fontSize: fontSize + 4,
-                  fontWeight: FontWeight.bold,
-                  color: isDarkMode ? Colors.white : AppColors.primaryColor,
+            Center(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  hadithNumber,
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: fontSize + 2,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.primaryColor,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 28),
             Text(
               hadithText,
-              textAlign: TextAlign.justify,
+              textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'DIN',
-                fontSize: fontSize + 2,
-                height: 1.6,
-                color: isDarkMode ? Colors.white : Colors.black87,
+                fontFamily: 'Cairo',
+                fontSize: fontSize + 1,
+                height: 1.8,
+                fontWeight: FontWeight.w600,
+                color: isDarkMode ? Colors.white : const Color(0xff1A1C2E),
               ),
             ),
             if (explanation.isNotEmpty) ...[
-              const SizedBox(height: 20),
+              const SizedBox(height: 32),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: isDarkMode
-                      ? Colors.white.withOpacity(0.05)
-                      : Colors.grey[50],
-                  borderRadius: BorderRadius.circular(12),
+                      ? Colors.white.withOpacity(0.03)
+                      : const Color(0xffF8FAFF),
+                  borderRadius: BorderRadius.circular(24),
                   border: Border.all(
                     color: isDarkMode
-                        ? Colors.white.withOpacity(0.1)
-                        : Colors.grey[300]!,
+                        ? Colors.white.withOpacity(0.05)
+                        : AppColors.primaryColor.withOpacity(0.1),
                   ),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'الشرح',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'DIN',
-                        fontSize: fontSize + 2,
-                        fontWeight: FontWeight.bold,
-                        color:
-                            isDarkMode ? Colors.white : AppColors.primaryColor,
-                      ),
+                    Row(
+                      children: [
+                        Icon(Icons.lightbulb_outline_rounded,
+                            size: 20, color: AppColors.primaryColor),
+                        const SizedBox(width: 10),
+                        Text(
+                          'الشرح والفوائد',
+                          style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: fontSize,
+                            fontWeight: FontWeight.w800,
+                            color: isDarkMode
+                                ? Colors.white
+                                : const Color(0xff2D3142),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     Text(
                       explanation,
-                      textAlign: TextAlign.justify,
                       style: TextStyle(
-                        fontFamily: 'DIN',
-                        fontSize: fontSize,
-                        height: 1.6,
+                        fontFamily: 'Cairo',
+                        fontSize: fontSize - 1,
+                        height: 1.7,
                         color: isDarkMode ? Colors.white70 : Colors.black87,
                       ),
                     ),

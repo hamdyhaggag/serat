@@ -2,34 +2,73 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shimmer/shimmer.dart';
-import 'dart:async';
 import 'package:serat/imports.dart' hide AppColors;
-import 'package:serat/domain/models/hadith_model.dart';
-import 'package:serat/data/services/hadith_service.dart';
-import 'base_ahadith_screen.dart';
+import 'package:serat/data/services/hadith_database_service.dart';
 import 'package:serat/shared/constants/app_colors.dart';
+import 'ahadith_list_screen.dart';
 
-class AhadithScreen extends StatefulWidget {
-  const AhadithScreen({super.key});
+class HadithBooksScreen extends StatefulWidget {
+  const HadithBooksScreen({super.key});
 
   @override
-  State<AhadithScreen> createState() => _AhadithScreenState();
+  State<HadithBooksScreen> createState() => _HadithBooksScreenState();
 }
 
-class _AhadithScreenState extends State<AhadithScreen>
+class _HadithBooksScreenState extends State<HadithBooksScreen>
     with SingleTickerProviderStateMixin {
-  final HadithService _hadithService = HadithService();
-  List<HadithModel> _ahadith = [];
-  List<HadithModel> _filteredAhadith = [];
+  final HadithDatabaseService _hadithDatabaseService = HadithDatabaseService();
+  Map<String, String> _hadithBooks = {};
   bool _isLoading = true;
   late AnimationController _animationController;
   final TextEditingController _searchController = TextEditingController();
   bool _showSearch = false;
+  List<MapEntry<String, String>> _filteredBooks = [];
 
-  // Search optimization
-  Timer? _debounce;
-  String _lastSearchQuery = '';
-  Map<String, List<HadithModel>> _searchCache = {};
+  // Book metadata with icons and descriptions
+  final Map<String, Map<String, dynamic>> _bookMetadata = {
+    'الأربعين النووية': {
+      'icon': Icons.auto_stories_rounded,
+      'color': const Color(0xff4CAF50),
+      'description': 'أربعون حديثاً جامعة لأصول الإسلام',
+      'count': '42'
+    },
+    'صحيح البخاري': {
+      'icon': Icons.menu_book_rounded,
+      'color': const Color(0xff2196F3),
+      'description': 'أصح كتاب بعد كتاب الله',
+      'count': '7563'
+    },
+    'صحيح مسلم': {
+      'icon': Icons.book_rounded,
+      'color': const Color(0xff9C27B0),
+      'description': 'ثاني أصح كتب الحديث',
+      'count': '7190'
+    },
+    'سنن أبي داود': {
+      'icon': Icons.library_books_rounded,
+      'color': const Color(0xffFF9800),
+      'description': 'من أمهات كتب السنة',
+      'count': '5274'
+    },
+    'سنن الترمذي': {
+      'icon': Icons.import_contacts_rounded,
+      'color': const Color(0xffF44336),
+      'description': 'الجامع الصحيح',
+      'count': '3956'
+    },
+    'سنن النسائي': {
+      'icon': Icons.chrome_reader_mode_rounded,
+      'color': const Color(0xff00BCD4),
+      'description': 'المجتبى من السنن',
+      'count': '5758'
+    },
+    'سنن ابن ماجه': {
+      'icon': Icons.collections_bookmark_rounded,
+      'color': const Color(0xff673AB7),
+      'description': 'أحد كتب السنن الستة',
+      'count': '4341'
+    },
+  };
 
   @override
   void initState() {
@@ -38,70 +77,60 @@ class _AhadithScreenState extends State<AhadithScreen>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _loadAhadith();
+    _loadBooks();
   }
 
   @override
   void dispose() {
     _animationController.dispose();
     _searchController.dispose();
-    _debounce?.cancel();
     super.dispose();
   }
 
-  Future<void> _loadAhadith() async {
+  Future<void> _loadBooks() async {
     try {
-      final ahadith = await _hadithService.getNawawiHadiths();
-      if (mounted) {
-        setState(() {
-          _ahadith = ahadith;
-          _filteredAhadith = ahadith;
-          _isLoading = false;
-        });
-        _animationController.forward();
-      }
+      final books = await _hadithDatabaseService.getBooks();
+      print('📚 Loaded ${books.length} books from service');
+      if (!mounted) return;
+
+      setState(() {
+        _hadithBooks = Map.fromEntries(
+            books.map((book) => MapEntry(book['name']!, book['id']!)));
+        _filteredBooks = _hadithBooks.entries.toList();
+        _isLoading = false;
+      });
+      print('📚 Books loaded successfully: ${_hadithBooks.keys.join(", ")}');
+      _animationController.forward();
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      print('❌ Error loading books from service: $e');
+      if (!mounted) return;
+      setState(() {
+        // Fallback books
+        _hadithBooks = {
+          'الأربعين النووية': 'nawawi',
+          'صحيح البخاري': 'bukhari',
+          'صحيح مسلم': 'muslim',
+          'سنن أبي داود': 'abudawud',
+          'سنن الترمذي': 'tirmidhi',
+          'سنن النسائي': 'nasai',
+          'سنن ابن ماجه': 'ibnmajah',
+        };
+        _filteredBooks = _hadithBooks.entries.toList();
+        _isLoading = false;
+      });
+      print('📚 Using fallback books list');
+      _animationController.forward();
     }
   }
 
-  void _filterAhadith(String query) {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-
-    _debounce = Timer(const Duration(milliseconds: 300), () {
-      if (query == _lastSearchQuery) return;
-      _lastSearchQuery = query;
-
-      setState(() {
-        if (query.isEmpty) {
-          _filteredAhadith = _ahadith;
-        } else {
-          if (_searchCache.containsKey(query)) {
-            _filteredAhadith = _searchCache[query]!;
-          } else {
-            final queryLower = query.toLowerCase();
-            _filteredAhadith = _ahadith.where((hadith) {
-              return hadith.hadithText.toLowerCase().contains(queryLower) ||
-                  hadith.hadithNumber.toLowerCase().contains(queryLower) ||
-                  hadith.explanation.toLowerCase().contains(queryLower);
-            }).toList();
-            _searchCache[query] = _filteredAhadith;
-          }
-        }
-      });
-    });
-  }
-
-  void _applyFilter(String filter) {
+  void _filterBooks(String query) {
     setState(() {
-      if (filter == 'الأحدث') {
-        _filteredAhadith = List.from(_ahadith.reversed);
+      if (query.isEmpty) {
+        _filteredBooks = _hadithBooks.entries.toList();
       } else {
-        _filteredAhadith = _ahadith;
+        _filteredBooks = _hadithBooks.entries
+            .where((entry) => entry.key.contains(query))
+            .toList();
       }
     });
   }
@@ -138,42 +167,41 @@ class _AhadithScreenState extends State<AhadithScreen>
                 const SizedBox(height: 16),
                 _buildPremiumHero(isDarkMode),
                 const SizedBox(height: 32),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "الأحاديث النبوية",
-                      style: TextStyle(
-                          fontFamily: "Cairo",
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: isDarkMode ? Colors.white : Colors.black87),
-                    ).animate().fade(delay: 300.ms).slideX(begin: -0.1, end: 0),
-                    _buildFilterMenu(isDarkMode),
-                  ],
-                ),
+                Text(
+                  "كتب الأحاديث",
+                  style: TextStyle(
+                    fontFamily: "Cairo",
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                ).animate().fade(delay: 300.ms).slideX(begin: -0.1, end: 0),
+                const SizedBox(height: 8),
+                Text(
+                  "اختر الكتاب الذي تريد تصفحه",
+                  style: TextStyle(
+                    fontFamily: "Cairo",
+                    fontSize: 14,
+                    color: isDarkMode ? Colors.white60 : Colors.black54,
+                  ),
+                ).animate().fade(delay: 400.ms),
                 const SizedBox(height: 16),
               ],
             ),
           ),
         ),
-        _filteredAhadith.isEmpty
+        _filteredBooks.isEmpty
             ? SliverFillRemaining(child: _buildEmptyState(isDarkMode))
             : SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: 0.85,
-                  ),
+                sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
-                      final hadith = _filteredAhadith[index];
-                      return _buildHadithGridItem(hadith, isDarkMode, index);
+                      final book = _filteredBooks[index];
+                      return _buildBookCard(
+                          book.key, book.value, isDarkMode, index);
                     },
-                    childCount: _filteredAhadith.length,
+                    childCount: _filteredBooks.length,
                   ),
                 ),
               ),
@@ -195,7 +223,7 @@ class _AhadithScreenState extends State<AhadithScreen>
         centerTitle: true,
         titlePadding: const EdgeInsets.only(bottom: 16),
         title: Text(
-          'الأربعين النووية',
+          'مكتبة الأحاديث',
           style: TextStyle(
             fontFamily: 'Cairo',
             fontWeight: FontWeight.w900,
@@ -233,7 +261,7 @@ class _AhadithScreenState extends State<AhadithScreen>
               top: -10,
               child: Opacity(
                 opacity: 0.1,
-                child: Icon(Icons.menu_book_rounded,
+                child: Icon(Icons.library_books_rounded,
                     size: 180, color: Colors.white),
               ),
             ),
@@ -323,7 +351,7 @@ class _AhadithScreenState extends State<AhadithScreen>
                     children: [
                       const SizedBox(height: 20),
                       Text(
-                        "حديث اليوم",
+                        "السنة النبوية",
                         style: TextStyle(
                             fontFamily: "Cairo",
                             fontSize: 14,
@@ -332,7 +360,7 @@ class _AhadithScreenState extends State<AhadithScreen>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "تعلم من هدي النبوة",
+                        "كنوز من هدي النبي ﷺ",
                         style: TextStyle(
                             fontFamily: "Cairo",
                             fontSize: 24,
@@ -344,13 +372,15 @@ class _AhadithScreenState extends State<AhadithScreen>
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        "« خياركم من تعلم القرآن وعلمه »",
+                        "« تركت فيكم ما إن تمسكتم به لن تضلوا بعدي أبداً »",
                         style: TextStyle(
                             fontFamily: "Cairo",
-                            fontSize: 15,
+                            fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color:
                                 isDarkMode ? Colors.white70 : Colors.black54),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -368,7 +398,7 @@ class _AhadithScreenState extends State<AhadithScreen>
                           offset: const Offset(0, 8)),
                     ],
                   ),
-                  child: const Icon(Icons.auto_stories_rounded,
+                  child: const Icon(Icons.library_books_rounded,
                       color: Colors.white, size: 32),
                 ).animate(onPlay: (c) => c.repeat(reverse: true)).moveY(
                     begin: -5,
@@ -383,71 +413,18 @@ class _AhadithScreenState extends State<AhadithScreen>
     ).animate().fade().slideY(begin: 0.2, end: 0);
   }
 
-  Widget _buildSearchBar(bool isDarkMode) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4)),
-        ],
-      ),
-      child: TextField(
-        controller: _searchController,
-        onChanged: _filterAhadith,
-        style: TextStyle(
-            fontFamily: "Cairo",
-            color: isDarkMode ? Colors.white : Colors.black),
-        decoration: InputDecoration(
-          hintText: "ابحث عن حديث...",
-          hintStyle: TextStyle(
-              fontFamily: "Cairo",
-              color: isDarkMode ? Colors.white54 : Colors.black45),
-          prefixIcon: Icon(Icons.search_rounded, color: AppColors.primaryColor),
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-        ),
-      ),
-    );
-  }
+  Widget _buildBookCard(
+      String bookName, String bookId, bool isDarkMode, int index) {
+    final metadata = _bookMetadata[bookName] ??
+        {
+          'icon': Icons.book_rounded,
+          'color': AppColors.primaryColor,
+          'description': 'كتاب من كتب السنة',
+          'count': '---'
+        };
 
-  Widget _buildFilterMenu(bool isDarkMode) {
-    return PopupMenuButton<String>(
-      onSelected: _applyFilter,
-      color: isDarkMode ? const Color(0xff2A2A2A) : Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      icon: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: AppColors.primaryColor.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child:
-            Icon(Icons.tune_rounded, color: AppColors.primaryColor, size: 20),
-      ),
-      itemBuilder: (context) => [
-        PopupMenuItem(
-            value: 'الكل',
-            child: Text('الكل',
-                style: TextStyle(
-                    fontFamily: "Cairo",
-                    color: isDarkMode ? Colors.white : Colors.black))),
-        PopupMenuItem(
-            value: 'الأحدث',
-            child: Text('الأحدث',
-                style: TextStyle(
-                    fontFamily: "Cairo",
-                    color: isDarkMode ? Colors.white : Colors.black))),
-      ],
-    );
-  }
-
-  Widget _buildHadithGridItem(HadithModel hadith, bool isDarkMode, int index) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: isDarkMode ? const Color(0xff262626) : Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -468,65 +445,118 @@ class _AhadithScreenState extends State<AhadithScreen>
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => BaseAhadithScreen(
-                  title: hadith.hadithNumber,
-                  hadith: hadith,
+                builder: (context) => AhadithListScreen(
+                  bookName: bookName,
+                  bookId: bookId,
                 ),
               ),
             );
           },
           borderRadius: BorderRadius.circular(24),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.all(20.0),
+            child: Row(
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  width: 70,
+                  height: 70,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    color: (metadata['color'] as Color).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Text(
-                    hadith.hadithNumber,
-                    style: TextStyle(
-                        fontFamily: "Cairo",
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryColor),
+                  child: Icon(
+                    metadata['icon'] as IconData,
+                    color: metadata['color'] as Color,
+                    size: 32,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(width: 16),
                 Expanded(
-                  child: Text(
-                    hadith.hadithText,
-                    style: TextStyle(
-                      fontFamily: "Cairo",
-                      fontSize: 14,
-                      height: 1.5,
-                      fontWeight: FontWeight.w600,
-                      color: isDarkMode ? Colors.white : Colors.black87,
-                    ),
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        bookName,
+                        style: TextStyle(
+                          fontFamily: "Cairo",
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: isDarkMode ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        metadata['description'] as String,
+                        style: TextStyle(
+                          fontFamily: "Cairo",
+                          fontSize: 13,
+                          color: isDarkMode ? Colors.white60 : Colors.black54,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: (metadata['color'] as Color).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '${metadata['count']} حديث',
+                          style: TextStyle(
+                            fontFamily: "Cairo",
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: metadata['color'] as Color,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.bottomLeft,
-                  child: Icon(Icons.arrow_forward_rounded,
-                      size: 16, color: AppColors.primaryColor.withOpacity(0.5)),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: isDarkMode ? Colors.white30 : Colors.black26,
+                  size: 18,
                 ),
               ],
             ),
           ),
         ),
       ),
-    )
-        .animate()
-        .fade(delay: (index * 50).ms)
-        .scale(begin: const Offset(0.9, 0.9));
+    ).animate().fade(delay: (index * 50).ms).slideX(begin: 0.1, end: 0);
+  }
+
+  Widget _buildSearchBar(bool isDarkMode) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4)),
+        ],
+      ),
+      child: TextField(
+        controller: _searchController,
+        onChanged: _filterBooks,
+        style: TextStyle(
+            fontFamily: "Cairo",
+            color: isDarkMode ? Colors.white : Colors.black),
+        decoration: InputDecoration(
+          hintText: "ابحث عن كتاب...",
+          hintStyle: TextStyle(
+              fontFamily: "Cairo",
+              color: isDarkMode ? Colors.white54 : Colors.black45),
+          prefixIcon: Icon(Icons.search_rounded, color: AppColors.primaryColor),
+          border: InputBorder.none,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        ),
+      ),
+    );
   }
 
   Widget _buildEmptyState(bool isDarkMode) {
@@ -568,30 +598,18 @@ class _AhadithScreenState extends State<AhadithScreen>
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(32))),
                   const SizedBox(height: 32),
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(height: 30, width: 150, color: Colors.white),
-                        Container(height: 30, width: 40, color: Colors.white),
-                      ]),
-                ],
-              ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 0.85),
-              delegate: SliverChildBuilderDelegate(
-                  (context, index) => Container(
+                  ...List.generate(
+                    5,
+                    (index) => Container(
+                      height: 100,
+                      margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24))),
-                  childCount: 6),
+                          borderRadius: BorderRadius.circular(24)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
