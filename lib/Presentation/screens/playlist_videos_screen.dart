@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:serat/core/utils/app_colors.dart' show AppColors;
+
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
@@ -27,19 +27,33 @@ class _PlaylistVideosScreenState extends State<PlaylistVideosScreen> {
   bool _isLoading = true;
   String? _error;
   List<VideoModel> _videos = [];
-  YoutubePlayerController? _currentController;
+  late final YoutubePlayerController _controller;
   bool _isPlayerVisible = false;
   String? _currentVideoId;
 
   @override
   void initState() {
     super.initState();
+    _initController();
     _loadPlaylistVideos();
+  }
+
+  void _initController() {
+    _controller = YoutubePlayerController(
+      params: const YoutubePlayerParams(
+        showControls: true,
+        showFullscreenButton: true,
+        playsInline: true,
+        strictRelatedVideos: true,
+        showVideoAnnotations: false,
+        enableJavaScript: true,
+      ),
+    );
   }
 
   @override
   void dispose() {
-    _currentController?.close();
+    _controller.close();
     super.dispose();
   }
 
@@ -132,18 +146,9 @@ class _PlaylistVideosScreenState extends State<PlaylistVideosScreen> {
   void _playVideo(VideoModel video) {
     LoggingService.info('Playing video: ${video.id}', tag: _tag);
     try {
+      if (_currentVideoId == video.id) return;
+      _controller.loadVideoById(videoId: video.id);
       setState(() {
-        _currentController?.close();
-        _currentController = YoutubePlayerController.fromVideoId(
-          videoId: video.id,
-          params: const YoutubePlayerParams(
-            showControls: true,
-            showFullscreenButton: true,
-            playsInline: true,
-            showVideoAnnotations: false,
-            enableJavaScript: true,
-          ),
-        );
         _currentVideoId = video.id;
         _isPlayerVisible = true;
       });
@@ -154,7 +159,6 @@ class _PlaylistVideosScreenState extends State<PlaylistVideosScreen> {
         error: e,
         stackTrace: stackTrace,
       );
-      // Show error to user
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Error playing video. Please try again.'),
@@ -165,10 +169,8 @@ class _PlaylistVideosScreenState extends State<PlaylistVideosScreen> {
   }
 
   void _stopVideo() {
+    _controller.pauseVideo();
     setState(() {
-      _currentController?.pauseVideo();
-      _currentController?.close();
-      _currentController = null;
       _currentVideoId = null;
       _isPlayerVisible = false;
     });
@@ -224,8 +226,14 @@ class _PlaylistVideosScreenState extends State<PlaylistVideosScreen> {
 
     return Column(
       children: [
-        if (_isPlayerVisible && _currentController != null)
-          Container(
+        // Always keep the player in the tree but hide it when not executing
+        // This prevents the WebView from being destroyed and recreated repeatedly
+        // Always keep the player in the tree using Offstage.
+        // Offstage lays out the child (so the WebView knows its size) but paints nothing and takes 0 space in the parent.
+        // This ensures the PlatformView persists and isn't destroyed/recreated, preventing "setSize" and frame errors.
+        Offstage(
+          offstage: !_isPlayerVisible,
+          child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 4),
             height: 220,
             width: double.infinity,
@@ -239,17 +247,13 @@ class _PlaylistVideosScreenState extends State<PlaylistVideosScreen> {
                 ),
               ],
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: YoutubePlayerScaffold(
-                controller: _currentController!,
-                aspectRatio: 16 / 9,
-                builder: (context, player) {
-                  return player;
-                },
-              ),
+            // ClipRRect removed to improve performance with PlatformView
+            child: YoutubePlayer(
+              controller: _controller,
+              aspectRatio: 16 / 9,
             ),
           ),
+        ),
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.all(8),

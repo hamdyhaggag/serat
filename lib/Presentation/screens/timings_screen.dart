@@ -27,6 +27,8 @@ import 'package:serat/Features/NamesOfAllah/Presentation/Screens/names_of_allah_
 import 'package:serat/shared/constants/app_colors.dart' as shared_colors;
 import 'package:geolocator/geolocator.dart';
 import 'package:serat/Presentation/screens/about/constants/about_constants.dart';
+import 'dart:ui' show ImageFilter;
+import 'package:flutter_animate/flutter_animate.dart';
 
 class TimingsScreen extends StatefulWidget {
   const TimingsScreen({super.key});
@@ -500,13 +502,14 @@ class _TimingsScreenState extends State<TimingsScreen>
                                                       ),
                                                     )
                                                   else
-                                                    const AppText(
+                                                    AppText(
                                                       'السلام عليكم',
                                                       fontSize: 18,
                                                       fontWeight:
                                                           FontWeight.bold,
                                                       color: Colors.white,
-                                                    ),
+                                                    ).animate().fade().slideX(
+                                                        begin: 0.2, end: 0),
                                                   const SizedBox(height: 2),
                                                   if (_isLoading)
                                                     Container(
@@ -529,6 +532,10 @@ class _TimingsScreenState extends State<TimingsScreen>
                                                       color: Colors.white
                                                           .withOpacity(0.8),
                                                     )
+                                                        .animate()
+                                                        .fade(delay: 200.ms)
+                                                        .slideX(
+                                                            begin: 0.2, end: 0)
                                                   else
                                                     AppText(
                                                       DateFormat('EEEE, d MMMM',
@@ -538,7 +545,11 @@ class _TimingsScreenState extends State<TimingsScreen>
                                                       fontSize: 14,
                                                       color: Colors.white
                                                           .withOpacity(0.8),
-                                                    ),
+                                                    )
+                                                        .animate()
+                                                        .fade(delay: 200.ms)
+                                                        .slideX(
+                                                            begin: 0.2, end: 0),
                                                 ],
                                               ),
                                             ),
@@ -638,7 +649,10 @@ class _TimingsScreenState extends State<TimingsScreen>
                                           ),
                                         ],
                                       ),
-                                    ),
+                                    )
+                                        .animate()
+                                        .fade(delay: 400.ms)
+                                        .slideY(begin: 0.5, end: 0),
                                 ],
                               ),
                             ),
@@ -796,7 +810,10 @@ class _TimingsScreenState extends State<TimingsScreen>
                                   ),
                                 ],
                               ),
-                            ),
+                            )
+                                .animate()
+                                .fade(duration: 500.ms)
+                                .slideY(begin: 0.1, end: 0),
                           ),
                         // Always show the feature cards section
                         Transform.translate(
@@ -990,89 +1007,92 @@ class _TimingsScreenState extends State<TimingsScreen>
     bool isNext = false,
   }) {
     final prayerTime = _parsePrayerTime(time);
-    return Container(
-      width: 100,
-      margin: const EdgeInsets.only(left: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        gradient: isNext
-            ? LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDarkMode
-    ? [
-        shared_colors.AppColors.primaryColor.withOpacity(0.3),
-        shared_colors.AppColors.primaryColor.withOpacity(0.1),
-      ]
-    : [
-        shared_colors.AppColors.primaryColor.withOpacity(0.2),
-        shared_colors.AppColors.primaryColor.withOpacity(0.05),
+
+    // Premium Glassmorphic Card
+    return Animate(
+      effects: [
+        FadeEffect(duration: 600.ms),
+        SlideEffect(begin: const Offset(0, 0.1))
       ],
-              )
-            : null,
-        color: isNext ? null : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDarkMode
-              ? shared_colors.AppColors.primaryColor.withValues(alpha: 0.3)
-              : Colors.grey[200]!,
-          width: 1,
-        ),
-        boxShadow: isNext
-            ? [
-                BoxShadow(
-                  color: shared_colors.AppColors.primaryColor.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
+      child: Container(
+        width: 100,
+        margin: const EdgeInsets.only(left: 10),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isNext
+                    ? (isDarkMode
+                        ? shared_colors.AppColors.primaryColor.withOpacity(0.3)
+                        : shared_colors.AppColors.primaryColor.withOpacity(0.1))
+                    : (isDarkMode
+                        ? Colors.white.withOpacity(0.05)
+                        : Colors.white.withOpacity(0.4)),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isNext
+                      ? shared_colors.AppColors.primaryColor.withOpacity(0.5)
+                      : Colors.white.withOpacity(0.1),
+                  width: 1.5,
                 ),
-              ]
-            : null,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDarkMode
+                boxShadow: isNext
                     ? [
-                        shared_colors.AppColors.primaryColor.withValues(alpha: 0.3),
-                        shared_colors.AppColors.primaryColor.withValues(alpha: 0.1),
+                        BoxShadow(
+                          color: shared_colors.AppColors.primaryColor
+                              .withOpacity(0.2),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        )
                       ]
-                    : [
-                        shared_colors.AppColors.primaryColor.withValues(alpha: 0.2),
-                        shared_colors.AppColors.primaryColor.withValues(alpha: 0.05),
-                      ],
+                    : [],
               ),
-              shape: BoxShape.circle,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: isNext
+                          ? shared_colors.AppColors.primaryColor
+                              .withOpacity(0.2)
+                          : Colors.transparent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      _getPrayerIcon(name),
+                      color: isNext
+                          ? (isDarkMode
+                              ? Colors.white
+                              : shared_colors.AppColors.primaryColor)
+                          : (isDarkMode
+                              ? Colors.white70
+                              : shared_colors.AppColors.primaryColor
+                                  .withOpacity(0.8)),
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  AppText(
+                    name,
+                    fontSize: 14,
+                    fontWeight: isNext ? FontWeight.bold : FontWeight.w600,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                  const SizedBox(height: 4),
+                  AppText(
+                    _formatTime12Hour(prayerTime),
+                    fontSize: 12,
+                    color: isDarkMode ? Colors.white70 : Colors.black54,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ],
+              ),
             ),
-            child: Icon(
-              _getPrayerIcon(name),
-              color: isDarkMode
-                  ? Colors.white
-                  : shared_colors.AppColors.primaryColor,
-              size: 24,
-            ),
           ),
-          const SizedBox(height: 8),
-          AppText(
-            name,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: isDarkMode
-                ? Colors.white
-                : shared_colors.AppColors.primaryColor,
-          ),
-          const SizedBox(height: 4),
-          AppText(
-            _formatTime12Hour(prayerTime),
-            fontSize: 12,
-            color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1083,77 +1103,70 @@ class _TimingsScreenState extends State<TimingsScreen>
     bool isDarkMode, {
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDarkMode
-                ? [const Color(0xff2F2F2F), const Color(0xff252525)]
-                : [Colors.white, Colors.grey[50]!],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: isDarkMode
-                  ? Colors.black.withOpacity(0.2)
-                  : Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
+    return Animate(
+      effects: [FadeEffect(duration: 500.ms), ScaleEffect()],
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: isDarkMode
-                      ? [
-                          shared_colors.AppColors.primaryColor.withOpacity(0.3),
-                          shared_colors.AppColors.primaryColor.withOpacity(0.1),
-                        ]
-                      : [
-                          shared_colors.AppColors.primaryColor.withOpacity(0.2),
-                          shared_colors.AppColors.primaryColor
-                              .withOpacity(0.05),
-                        ],
+                color: isDarkMode
+                    ? const Color(0xff2F2F2F).withOpacity(0.6)
+                    : Colors.white.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.2),
+                  width: 1,
                 ),
-                shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color:
-                        shared_colors.AppColors.primaryColor.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
-              child: Icon(
-                icon,
-                color: isDarkMode
-                    ? Colors.white
-                    : shared_colors.AppColors.primaryColor,
-                size: 28,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDarkMode
+                          ? shared_colors.AppColors.primaryColor
+                              .withOpacity(0.2)
+                          : shared_colors.AppColors.primaryColor
+                              .withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      icon,
+                      color: shared_colors.AppColors.primaryColor,
+                      size: 32,
+                    ),
+                  )
+                      .animate(
+                          onPlay: (controller) =>
+                              controller.repeat(reverse: true))
+                      .scale(
+                          begin: const Offset(1, 1),
+                          end: const Offset(1.1, 1.1),
+                          duration: 2000.ms),
+                  const SizedBox(height: 16),
+                  AppText(
+                    title,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
-            AppText(
-              title,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: isDarkMode
-                  ? Colors.white
-                  : shared_colors.AppColors.primaryColor,
-            ),
-          ],
+          ),
         ),
       ),
     );

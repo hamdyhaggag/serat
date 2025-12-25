@@ -20,7 +20,18 @@ class VideoModel {
     try {
       LoggingService.debug('Parsing video JSON: $json', tag: _tag);
 
-      // Handle both search results and playlist items formats
+      // Handle cached data (flat structure)
+      if (json['id'] is String && json['snippet'] == null) {
+        return VideoModel(
+          id: json['id'],
+          title: json['title'],
+          thumbnailUrl: json['thumbnailUrl'],
+          channelTitle: json['channelTitle'],
+          publishedAt: json['publishedAt'],
+        );
+      }
+
+      // Handle YouTube API response (nested structure)
       final String videoId = json['id'] is Map
           ? json['id']['videoId']
           : json['snippet']['resourceId']['videoId'];

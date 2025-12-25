@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:serat/Business_Logic/Services/islamic_quiz_service.dart';
 import 'package:serat/Presentation/screens/islamic_quiz_screen.dart';
 import 'package:serat/Presentation/theme/app_theme.dart';
+// import 'package:flutter_animate/flutter_animate.dart';
 
 class QuizCompletionScreen extends StatelessWidget {
   final List<Map<String, dynamic>> results;
@@ -16,21 +16,25 @@ class QuizCompletionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final isDarkMode = theme.brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
     final isSmallScreen = size.width < 360;
-    final isLargeScreen = size.width > 600;
 
     final correctAnswers = results.where((r) => r['isCorrect'] as bool).length;
-    final accuracy = (correctAnswers / totalQuestions * 100).round();
-    final averageTime = results.fold<int>(
-          0,
-          (sum, result) => sum + (result['timeSpent'] as int),
-        ) /
-        results.length;
+    final accuracy = totalQuestions > 0
+        ? (correctAnswers / totalQuestions * 100).round()
+        : 0;
+    final averageTime = results.isEmpty
+        ? 0
+        : results.fold<int>(
+              0,
+              (sum, result) => sum + (result['timeSpent'] as int),
+            ) /
+            results.length;
     final hintsUsed = results.where((r) => r['hintUsed'] as bool).length;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
           'نتيجة الاختبار',
@@ -41,160 +45,210 @@ class QuizCompletionScreen extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        backgroundColor: const Color(0xff137058),
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: isDarkMode ? Colors.white : Colors.white,
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              padding: EdgeInsets.all(isSmallScreen ? 20 : 24),
-              decoration: const BoxDecoration(
-                color: Color(0xff137058),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDarkMode
+                ? [const Color(0xff121212), const Color(0xff1E1E1E)]
+                : [const Color(0xffF8F9FA), const Color(0xffE8F5E9)],
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Header Section with Score
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.fromLTRB(
+                    24,
+                    MediaQuery.of(context).padding.top + kToolbarHeight + 20,
+                    24,
+                    40),
+                decoration: BoxDecoration(
+                    color: (isDarkMode ? Colors.black : const Color(0xff137058))
+                        .withOpacity(0.9),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(40),
+                      bottomRight: Radius.circular(40),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isDarkMode
+                                ? Colors.black
+                                : const Color(0xff137058))
+                            .withOpacity(0.3),
+                        blurRadius: 30,
+                        offset: const Offset(0, 10),
+                      )
+                    ]),
+                child: Column(
+                  children: [
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox(
+                          width: 150,
+                          height: 150,
+                          child: CircularProgressIndicator(
+                            value: accuracy / 100,
+                            strokeWidth: 10,
+                            backgroundColor: Colors.white.withOpacity(0.1),
+                            color: AppTheme.warningLight,
+                          ),
+                        ),
+                        Column(
+                          children: [
+                            Text(
+                              '$accuracy%',
+                              style: TextStyle(
+                                fontFamily: 'DIN',
+                                fontSize: isSmallScreen ? 36 : 48,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'النتيجة',
+                              style: TextStyle(
+                                fontFamily: 'DIN',
+                                fontSize: 14,
+                                color: Colors.white.withOpacity(0.7),
+                              ),
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      accuracy >= 80
+                          ? 'ممتاز!'
+                          : accuracy >= 50
+                              ? 'جيد جداً!'
+                              : 'حاول مرة أخرى',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: isSmallScreen ? 24 : 28,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'لقد أجبت على $correctAnswers من أصل $totalQuestions أسئلة بشكل صحيح',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'DIN',
+                        fontSize: isSmallScreen ? 14 : 16,
+                        color: Colors.white.withOpacity(0.8),
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Column(
-                children: [
-                  Container(
-                    width: isSmallScreen ? 100 : 120,
-                    height: isSmallScreen ? 100 : 120,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
+
+              Padding(
+                padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
+                child: Column(
+                  children: [
+                    // Stats Grid
+                    Row(
+                      children: [
+                        Expanded(
+                            child: _buildStatCard(
+                                context,
+                                'الوقت المستغرق',
+                                '${averageTime.round()} ث',
+                                Icons.timer_outlined,
+                                const Color(0xff137058),
+                                isDarkMode)),
+                        const SizedBox(width: 16),
+                        Expanded(
+                            child: _buildStatCard(
+                                context,
+                                'التلميحات',
+                                '$hintsUsed',
+                                Icons.lightbulb_outline,
+                                AppTheme.warningLight,
+                                isDarkMode)),
+                      ],
                     ),
-                    child: Center(
+
+                    SizedBox(height: isSmallScreen ? 24 : 32),
+
+                    Align(
+                      alignment: Alignment.centerRight,
                       child: Text(
-                        '$accuracy%',
+                        'مراجعة الأسئلة',
                         style: TextStyle(
-                          fontFamily: 'DIN',
-                          fontSize: isSmallScreen ? 32 : 40,
-                          color: Colors.white,
+                          fontFamily: 'Cairo',
+                          fontSize: isSmallScreen ? 18 : 20,
+                          color: isDarkMode ? Colors.white : Colors.black87,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: isSmallScreen ? 12 : 16),
-                  Text(
-                    'ممتاز!',
-                    style: TextStyle(
-                      fontFamily: 'DIN',
-                      fontSize: isSmallScreen ? 20 : 24,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: isSmallScreen ? 6 : 8),
-                  Text(
-                    'لقد أكملت الاختبار بنجاح',
-                    style: TextStyle(
-                      fontFamily: 'DIN',
-                      fontSize: isSmallScreen ? 14 : 16,
-                      color: Colors.white.withOpacity(0.9),
-                    ),
-                  ),
-                ],
+                    SizedBox(height: isSmallScreen ? 12 : 16),
+
+                    ...results.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final result = entry.value;
+                      return _buildQuestionResultCard(
+                          context, index + 1, result, isDarkMode);
+                    }).toList(),
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
-              child: Column(
-                children: [
-                  _buildStatsCard(
-                    context,
-                    [
-                      _buildStatItem(
-                        context,
-                        'الإجابات الصحيحة',
-                        '$correctAnswers من $totalQuestions',
-                        Icons.check_circle_outline,
-                        AppTheme.successLight,
-                      ),
-                      _buildStatItem(
-                        context,
-                        'متوسط الوقت',
-                        '${averageTime.round()} ثانية',
-                        Icons.timer_outlined,
-                        const Color(0xff137058),
-                      ),
-                      _buildStatItem(
-                        context,
-                        'التلميحات المستخدمة',
-                        '$hintsUsed تلميحات',
-                        Icons.lightbulb_outline,
-                        AppTheme.warningLight,
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: isSmallScreen ? 20 : 24),
-                  Text(
-                    'تفاصيل الأسئلة',
-                    style: TextStyle(
-                      fontFamily: 'DIN',
-                      fontSize: isSmallScreen ? 18 : 20,
-                      color: colorScheme.onBackground,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: isSmallScreen ? 12 : 16),
-                  ...results.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final result = entry.value;
-                    return _buildQuestionResultCard(context, index + 1, result);
-                  }).toList(),
-                ],
-              ),
-            ),
-          ],
+              const SizedBox(height: 80), // Specs for floating button
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: Container(
-        padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+        padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
         decoration: BoxDecoration(
-          color: colorScheme.surface,
+          color: isDarkMode ? const Color(0xff1E1E1E) : Colors.white,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
             ),
           ],
         ),
         child: Row(
           children: [
             Expanded(
-              child: ElevatedButton(
+              child: OutlinedButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'العودة للرئيسية',
-                  style: TextStyle(
-                    fontFamily: 'DIN',
-                    fontSize: isSmallScreen ? 14 : 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xff137058),
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(
-                    vertical: isSmallScreen ? 12 : 16,
-                  ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor:
+                      isDarkMode ? Colors.white : const Color(0xff137058),
+                  side: BorderSide(
+                      color: isDarkMode
+                          ? Colors.white54
+                          : const Color(0xff137058)),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                      borderRadius: BorderRadius.circular(16)),
                 ),
+                child: const Text('الخروج',
+                    style: TextStyle(
+                        fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
               ),
             ),
-            SizedBox(width: isSmallScreen ? 8 : 12),
+            const SizedBox(width: 16),
             Expanded(
               child: ElevatedButton(
                 onPressed: () {
-                  // Pop all screens until we reach the quiz screen
                   Navigator.popUntil(context, (route) => route.isFirst);
-                  // Push a new quiz screen
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
@@ -202,25 +256,17 @@ class QuizCompletionScreen extends StatelessWidget {
                     ),
                   );
                 },
-                child: Text(
-                  'اختبار جديد',
-                  style: TextStyle(
-                    fontFamily: 'DIN',
-                    fontSize: isSmallScreen ? 14 : 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xff137058),
-                  padding: EdgeInsets.symmetric(
-                    vertical: isSmallScreen ? 12 : 16,
-                  ),
+                  backgroundColor: AppTheme.primaryLight,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(color: Color(0xff137058)),
-                  ),
+                      borderRadius: BorderRadius.circular(16)),
                 ),
+                child: const Text('اختبار جديد',
+                    style: TextStyle(
+                        fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -229,92 +275,51 @@ class QuizCompletionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsCard(BuildContext context, List<Widget> items) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final size = MediaQuery.of(context).size;
-    final isSmallScreen = size.width < 360;
-
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+  Widget _buildStatCard(BuildContext context, String label, String value,
+      IconData icon, Color color, bool isDarkMode) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+          color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+              color:
+                  isDarkMode ? Colors.white.withOpacity(0.1) : Colors.black12),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4))
+          ]),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: TextStyle(
+                fontFamily: 'DIN',
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.white : Colors.black87),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+                fontFamily: 'DIN',
+                fontSize: 14,
+                color: isDarkMode ? Colors.white70 : Colors.black54),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
-        child: Column(
-          children: items.map((item) {
-            final isLast = items.last == item;
-            return Column(
-              children: [
-                item,
-                if (!isLast)
-                  Padding(
-                    padding:
-                        EdgeInsets.symmetric(vertical: isSmallScreen ? 8 : 12),
-                    child: Divider(
-                      color: colorScheme.onSurface.withOpacity(0.1),
-                    ),
-                  ),
-              ],
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatItem(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    final size = MediaQuery.of(context).size;
-    final isSmallScreen = size.width < 360;
-
-    return Row(
-      children: [
-        Container(
-          padding: EdgeInsets.all(isSmallScreen ? 10 : 12),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            icon,
-            color: color,
-            size: isSmallScreen ? 20 : 24,
-          ),
-        ),
-        SizedBox(width: isSmallScreen ? 12 : 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'DIN',
-                  fontSize: isSmallScreen ? 12 : 14,
-                  color: color.withOpacity(0.7),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: TextStyle(
-                  fontFamily: 'DIN',
-                  fontSize: isSmallScreen ? 16 : 18,
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 
@@ -322,176 +327,161 @@ class QuizCompletionScreen extends StatelessWidget {
     BuildContext context,
     int questionNumber,
     Map<String, dynamic> result,
+    bool isDarkMode,
   ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final size = MediaQuery.of(context).size;
     final isSmallScreen = size.width < 360;
     final isCorrect = result['isCorrect'] as bool;
 
-    return Card(
-      margin: EdgeInsets.only(bottom: isSmallScreen ? 8 : 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isCorrect
-              ? AppTheme.successLight.withOpacity(0.3)
-              : AppTheme.errorLight.withOpacity(0.3),
-        ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: isSmallScreen ? 28 : 32,
-                  height: isSmallScreen ? 28 : 32,
-                  decoration: BoxDecoration(
-                    color: isCorrect
-                        ? AppTheme.successLight.withOpacity(0.1)
-                        : AppTheme.errorLight.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Icon(
-                      isCorrect ? Icons.check : Icons.close,
-                      size: isSmallScreen ? 16 : 20,
-                      color: isCorrect
-                          ? AppTheme.successLight
-                          : AppTheme.errorLight,
-                    ),
-                  ),
+    return Container(
+      margin: EdgeInsets.only(bottom: isSmallScreen ? 12 : 16),
+      decoration: BoxDecoration(
+          color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+              color: isCorrect
+                  ? AppTheme.successLight.withOpacity(0.5)
+                  : AppTheme.errorLight.withOpacity(0.5),
+              width: 1),
+          boxShadow: [
+            BoxShadow(
+                color: (isCorrect ? AppTheme.successLight : AppTheme.errorLight)
+                    .withOpacity(0.05),
+                blurRadius: 15,
+                offset: const Offset(0, 4))
+          ]),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+            leading: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isCorrect
+                    ? AppTheme.successLight.withOpacity(0.1)
+                    : AppTheme.errorLight.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Icon(
+                  isCorrect ? Icons.check : Icons.close,
+                  size: 20,
+                  color:
+                      isCorrect ? AppTheme.successLight : AppTheme.errorLight,
                 ),
-                SizedBox(width: isSmallScreen ? 8 : 12),
-                Expanded(
-                  child: Text(
-                    'السؤال $questionNumber',
-                    style: TextStyle(
-                      fontFamily: 'DIN',
-                      fontSize: isSmallScreen ? 16 : 18,
-                      color: colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isSmallScreen ? 8 : 12,
-                    vertical: isSmallScreen ? 4 : 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isCorrect
-                        ? AppTheme.successLight.withOpacity(0.1)
-                        : AppTheme.errorLight.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${result['timeSpent']} ثانية',
-                    style: TextStyle(
-                      fontFamily: 'DIN',
-                      fontSize: isSmallScreen ? 12 : 14,
-                      color: isCorrect
-                          ? AppTheme.successLight
-                          : AppTheme.errorLight,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: isSmallScreen ? 8 : 12),
-            Text(
-              result['question'] as String,
-              style: TextStyle(
-                fontFamily: 'DIN',
-                fontSize: isSmallScreen ? 14 : 16,
-                color: colorScheme.onSurface,
               ),
             ),
-            SizedBox(height: isSmallScreen ? 8 : 12),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'إجابتك:',
-                        style: TextStyle(
-                          fontFamily: 'DIN',
-                          fontSize: isSmallScreen ? 12 : 14,
-                          color: colorScheme.onSurface.withOpacity(0.7),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        result['selectedAnswer'] as String,
-                        style: TextStyle(
-                          fontFamily: 'DIN',
-                          fontSize: isSmallScreen ? 14 : 16,
-                          color: isCorrect
-                              ? AppTheme.successLight
-                              : AppTheme.errorLight,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+            title: Text(
+              'السؤال $questionNumber',
+              style: TextStyle(
+                fontFamily: 'Cairo', // Premium font
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.white : Colors.black87,
+              ),
+            ),
+            subtitle: Text(
+              isCorrect ? 'إجابة صحيحة' : 'إجابة خاطئة',
+              style: TextStyle(
+                fontFamily: 'DIN',
+                fontSize: 14,
+                color: isCorrect ? AppTheme.successLight : AppTheme.errorLight,
+              ),
+            ),
+            childrenPadding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+            children: [
+              Divider(color: isDarkMode ? Colors.white10 : Colors.black12),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  result['question'] as String,
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 16,
+                    height: 1.4,
+                    fontWeight: FontWeight.w600,
+                    color: isDarkMode ? Colors.white : Colors.black87,
                   ),
                 ),
-                if (!isCorrect)
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'الإجابة الصحيحة:',
-                          style: TextStyle(
-                            fontFamily: 'DIN',
-                            fontSize: isSmallScreen ? 12 : 14,
-                            color: colorScheme.onSurface.withOpacity(0.7),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          result['correctAnswer'] as String,
-                          style: TextStyle(
-                            fontFamily: 'DIN',
-                            fontSize: isSmallScreen ? 14 : 16,
-                            color: AppTheme.successLight,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            if (result['hintUsed'] as bool)
-              Padding(
-                padding: EdgeInsets.only(top: isSmallScreen ? 8 : 12),
-                child: Row(
+              ),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                    color: (isCorrect
+                            ? AppTheme.successLight
+                            : AppTheme.errorLight)
+                        .withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: (isCorrect
+                                ? AppTheme.successLight
+                                : AppTheme.errorLight)
+                            .withOpacity(0.3))),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.lightbulb_outline,
-                      size: isSmallScreen ? 14 : 16,
-                      color: AppTheme.warningLight,
-                    ),
-                    const SizedBox(width: 4),
                     Text(
-                      'تم استخدام تلميح',
+                      'إجابتك',
                       style: TextStyle(
-                        fontFamily: 'DIN',
-                        fontSize: isSmallScreen ? 12 : 14,
-                        color: AppTheme.warningLight,
-                      ),
+                          fontSize: 12,
+                          fontFamily: 'DIN',
+                          color: isCorrect
+                              ? AppTheme.successLight
+                              : AppTheme.errorLight),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      result['selectedAnswer'] as String,
+                      style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: isDarkMode ? Colors.white : Colors.black87),
                     ),
                   ],
                 ),
               ),
-          ],
+              if (!isCorrect) ...[
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                      color: AppTheme.successLight.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: AppTheme.successLight.withOpacity(0.3))),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'الإجابة الصحيحة',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontFamily: 'DIN',
+                            color: AppTheme.successLight),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        result['correctAnswer'] as String,
+                        style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode ? Colors.white : Colors.black87),
+                      ),
+                    ],
+                  ),
+                ),
+              ]
+            ],
+          ),
         ),
       ),
     );

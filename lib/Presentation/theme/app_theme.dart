@@ -1,215 +1,241 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AppTheme {
   // Primary colors
-  static const Color primaryLight = Color(0xff137058); // Your primary green
-  static const Color primaryDark =
-      Color(0xff0d4d3d); // Darker shade for dark mode
+  static const Color primaryLight = Color(0xff137058);
+  static const Color primaryDark = Color(0xff0d4d3d);
 
-  // Secondary colors
-  static const Color secondaryLight = Color(0xFF4CAF50);
-  static const Color secondaryDark = Color(0xFF388E3C);
-
-  // Error colors
-  static const Color errorLight = Color(0xFFE53935);
-  static const Color errorDark = Color(0xFFD32F2F);
-
-  // Success colors
-  static const Color successLight = Color(0xFF43A047);
-  static const Color successDark = Color(0xFF2E7D32);
-
-  // Warning colors
-  static const Color warningLight = Color(0xFFFFA000);
-  static const Color warningDark = Color(0xFFF57C00);
+  // Accent & Secondary
+  static const Color secondaryLight =
+      Color(0xFFD4AF37); // Gold-ish for premium feel
+  static const Color secondaryDark = Color(0xFFC5A028);
 
   // Background colors
-  static const Color backgroundLight = Color(0xFFF5F5F5);
+  static const Color backgroundLight = Color(0xFFF8F9FA); // Softer white
   static const Color backgroundDark = Color(0xFF121212);
 
-  // Surface colors
+  // Surface colors (Cards, Sheets)
   static const Color surfaceLight = Colors.white;
   static const Color surfaceDark = Color(0xFF1E1E1E);
 
-  // Text colors
-  static const Color textPrimaryLight = Color(0xFF212121);
-  static const Color textPrimaryDark = Color(0xFFE0E0E0);
+  // Status Colors
+  static const Color error = Color(0xFFE53935);
+  static const Color success = Color(0xFF43A047);
+  static const Color warning = Color(0xFFFFA000);
 
+  // Compatibility
+  static const Color warningLight = warning;
+  static const Color warningDark = Color(0xFFF57C00);
+  static const Color errorLight = error;
+  static const Color errorDark = Color(0xFFD32F2F);
+  static const Color successLight = success;
+  static const Color successDark = Color(0xFF2E7D32);
+
+  // Text Colors
+  static const Color textPrimaryLight = Color(0xFF2D2D2D);
   static const Color textSecondaryLight = Color(0xFF757575);
+  static const Color textPrimaryDark = Color(0xFFE0E0E0);
   static const Color textSecondaryDark = Color(0xFFB0B0B0);
 
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
+    fontFamily: 'Cairo', // Global Font
     primaryColor: primaryLight,
     scaffoldBackgroundColor: backgroundLight,
+
     colorScheme: const ColorScheme.light(
       primary: primaryLight,
       secondary: secondaryLight,
-      error: errorLight,
-      background: backgroundLight,
       surface: surfaceLight,
+      error: error,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
-      onError: Colors.white,
-      onBackground: textPrimaryLight,
       onSurface: textPrimaryLight,
+      onError: Colors.white,
+      brightness: Brightness.light,
     ),
-    progressIndicatorTheme: const ProgressIndicatorThemeData(
-      color: primaryLight,
-      circularTrackColor: Color(0xFFE0E0E0),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      focusedBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: primaryLight, width: 2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: primaryLight.withOpacity(0.5), width: 1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: errorLight, width: 2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: errorLight, width: 2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      labelStyle: const TextStyle(color: primaryLight),
-      hintStyle: TextStyle(color: primaryLight.withOpacity(0.7)),
-      prefixIconColor: primaryLight,
-      suffixIconColor: primaryLight,
-    ),
-    textSelectionTheme: const TextSelectionThemeData(
-      cursorColor: primaryLight,
-      selectionColor: primaryLight,
-      selectionHandleColor: primaryLight,
-    ),
-    cardTheme: CardThemeData(
-      color: surfaceLight,
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: primaryLight,
-        foregroundColor: Colors.white,
-        elevation: 2,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    ),
-    textTheme: const TextTheme(
-      titleLarge: TextStyle(
+
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      centerTitle: true,
+      scrolledUnderElevation: 0,
+      iconTheme: IconThemeData(color: textPrimaryLight),
+      titleTextStyle: TextStyle(
+        fontFamily: 'Cairo',
         color: textPrimaryLight,
         fontSize: 20,
         fontWeight: FontWeight.bold,
       ),
-      titleMedium: TextStyle(
-        color: textPrimaryLight,
-        fontSize: 16,
-        fontWeight: FontWeight.w500,
+      systemOverlayStyle: SystemUiOverlayStyle.dark,
+    ),
+
+    cardTheme: CardThemeData(
+      color: surfaceLight,
+      elevation: 0,
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+            color: Color(0x0D000000)), // Colors.black.withValues(alpha: 0.05)
       ),
-      bodyLarge: TextStyle(
-        color: textPrimaryLight,
-        fontSize: 16,
+    ),
+
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
       ),
-      bodyMedium: TextStyle(
-        color: textSecondaryLight,
-        fontSize: 14,
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+            color: Color(0x339E9E9E)), // Colors.grey.withValues(alpha: 0.2)
       ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: primaryLight, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: error),
+      ),
+      hintStyle: TextStyle(color: textSecondaryLight.withValues(alpha: 0.7)),
+    ),
+
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primaryLight,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shadowColor: primaryLight.withValues(alpha: 0.4),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(
+          fontFamily: 'Cairo',
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: primaryLight,
+        textStyle: const TextStyle(
+          fontFamily: 'Cairo',
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
+
+    iconTheme: const IconThemeData(color: primaryLight),
+
+    dividerTheme: DividerThemeData(
+      color: Colors.grey.withValues(alpha: 0.1),
+      thickness: 1,
     ),
   );
 
   static ThemeData darkTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
+    fontFamily: 'Cairo', // Global Font
     primaryColor: primaryDark,
     scaffoldBackgroundColor: backgroundDark,
+
     colorScheme: const ColorScheme.dark(
       primary: primaryDark,
-      secondary: secondaryDark,
-      error: errorDark,
-      background: backgroundDark,
+      secondary: secondaryLight,
       surface: surfaceDark,
+      error: error,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
-      onError: Colors.white,
-      onBackground: textPrimaryDark,
       onSurface: textPrimaryDark,
+      onError: Colors.white,
+      brightness: Brightness.dark,
     ),
-    progressIndicatorTheme: const ProgressIndicatorThemeData(
-      color: primaryDark,
-      circularTrackColor: Color(0xFF424242),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      focusedBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: primaryDark, width: 2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: primaryDark.withOpacity(0.5), width: 1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: errorDark, width: 2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: errorDark, width: 2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      labelStyle: const TextStyle(color: primaryDark),
-      hintStyle: TextStyle(color: primaryDark.withOpacity(0.7)),
-      prefixIconColor: primaryDark,
-      suffixIconColor: primaryDark,
-    ),
-    textSelectionTheme: const TextSelectionThemeData(
-      cursorColor: primaryDark,
-      selectionColor: primaryDark,
-      selectionHandleColor: primaryDark,
-    ),
-    cardTheme: CardThemeData(
-      color: surfaceDark,
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: primaryDark,
-        foregroundColor: Colors.white,
-        elevation: 2,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    ),
-    textTheme: const TextTheme(
-      titleLarge: TextStyle(
+
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      centerTitle: true,
+      scrolledUnderElevation: 0,
+      iconTheme: IconThemeData(color: textPrimaryDark),
+      titleTextStyle: TextStyle(
+        fontFamily: 'Cairo',
         color: textPrimaryDark,
         fontSize: 20,
         fontWeight: FontWeight.bold,
       ),
-      titleMedium: TextStyle(
-        color: textPrimaryDark,
-        fontSize: 16,
-        fontWeight: FontWeight.w500,
+      systemOverlayStyle: SystemUiOverlayStyle.light,
+    ),
+
+    cardTheme: CardThemeData(
+      color: surfaceDark,
+      elevation: 0,
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
       ),
-      bodyLarge: TextStyle(
-        color: textPrimaryDark,
-        fontSize: 16,
+    ),
+
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: const Color(0xFF2C2C2C),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
       ),
-      bodyMedium: TextStyle(
-        color: textSecondaryDark,
-        fontSize: 14,
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
       ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: primaryDark, width: 2),
+      ),
+      hintStyle: TextStyle(color: textSecondaryDark.withValues(alpha: 0.5)),
+    ),
+
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primaryDark,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shadowColor: Colors.black.withValues(alpha: 0.4),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(
+          fontFamily: 'Cairo',
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor:
+            primaryLight, // Keep light/bright for visibility or adjust
+        textStyle: const TextStyle(
+          fontFamily: 'Cairo',
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
+
+    iconTheme: const IconThemeData(color: primaryDark),
+
+    dividerTheme: DividerThemeData(
+      color: Colors.white.withValues(alpha: 0.1),
+      thickness: 1,
     ),
   );
 }

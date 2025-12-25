@@ -1,8 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serat/Business_Logic/Cubit/navigation_cubit.dart';
 import 'package:serat/imports.dart';
-import 'package:serat/Presentation/Widgets/Shared/app_dialog.dart';
-import 'dart:ui' show TextDirection;
 
 class ScreenLayout extends StatelessWidget {
   const ScreenLayout({super.key});
@@ -13,195 +15,250 @@ class ScreenLayout extends StatelessWidget {
       builder: (context, state) {
         final cubit = NavigationCubit.get(context);
         final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        final theme = Theme.of(context);
+
+        final navItems = [
+          {'icon': 'assets/icon/home.svg', 'label': 'الرئيسية'},
+          {'icon': 'assets/icon/Tasbih.svg', 'label': 'السبحة'},
+          {'icon': 'assets/icon/Azkar.svg', 'label': 'الأذكار'},
+          {'icon': 'assets/icon/Ahadith.svg', 'label': 'الأحاديث'},
+          {'icon': 'assets/icon/qibla.svg', 'label': 'القبلة'},
+        ];
 
         return Scaffold(
-          endDrawer: Drawer(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                DrawerHeader(
-                  decoration: BoxDecoration(color: AppColors.primaryColor),
-                  child: const Text(
-                    'Menu',
-                    style: TextStyle(color: Colors.white, fontSize: 24),
-                  ),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.home),
-                  title: const Text('Home'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    cubit.changeIndex(0);
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.settings),
-                  title: const Text('Settings'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    cubit.changeIndex(4);
-                  },
-                ),
-              ],
-            ),
-          ),
-          bottomNavigationBar: BottomNavigationBar(
-            selectedFontSize: 16,
-            unselectedFontSize: 16,
-            iconSize: 28,
-            elevation: 8,
-            enableFeedback: false,
-            unselectedItemColor: isDarkMode
-                ? Colors.grey.withOpacity(0.5)
-                : Colors.grey.shade600,
-            selectedItemColor: AppColors.primaryColor,
-            backgroundColor:
-                isDarkMode ? const Color(0xb01f1f1f) : Colors.white,
-            type: BottomNavigationBarType.fixed,
-            items: cubit.bottomItems,
-            currentIndex: cubit.index,
-            showUnselectedLabels: true,
-            selectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.w500,
-              fontSize: 14,
-            ),
-            onTap: (index) {
-              cubit.changeIndex(index);
-            },
-          ),
+          extendBody: true, // Needed for transparency/glass effect
+          endDrawer: const _CustomDrawer(),
           body: WillPopScope(
             onWillPop: () async {
               if (cubit.index != 0) {
                 cubit.changeIndex(0);
                 return false;
               }
-              // Show exit confirmation dialog
-              final shouldPop = await showDialog<bool>(
-                context: context,
-                builder: (context) => Dialog(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  elevation: 0,
-                  backgroundColor: Colors.transparent,
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color:
-                          isDarkMode ? const Color(0xff2F2F2F) : Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(15),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryColor.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.exit_to_app_rounded,
-                            size: 30,
-                            color: AppColors.primaryColor,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'تأكيد الخروج',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+              return await _showExitDialog(context, isDarkMode);
+            },
+            child: Stack(
+              children: [
+                IndexedStack(
+                  index: cubit.index,
+                  children: cubit.buildScreens,
+                ),
+
+                // Pro "Docked" Navigation Bar
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(24)),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        height:
+                            90, // Slightly improved height for safearea and design
+                        decoration: BoxDecoration(
                             color: isDarkMode
-                                ? Colors.white
-                                : AppColors.primaryColor,
-                            fontFamily: 'DIN',
+                                ? const Color(0xff1E1E1E).withOpacity(0.9)
+                                : Colors.white.withOpacity(0.9),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 20,
+                                offset: const Offset(0, -5),
+                              ),
+                            ],
+                            border: Border(
+                                top: BorderSide(
+                                    color: isDarkMode
+                                        ? Colors.white.withOpacity(0.05)
+                                        : Colors.black.withOpacity(0.05),
+                                    width: 1))),
+                        child: SafeArea(
+                          top: false,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: List.generate(navItems.length, (index) {
+                              final isSelected = cubit.index == index;
+                              return InkWell(
+                                onTap: () => cubit.changeIndex(index),
+                                borderRadius: BorderRadius.circular(16),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 8),
+                                  decoration: isSelected
+                                      ? BoxDecoration(
+                                          color: theme.primaryColor
+                                              .withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                        )
+                                      : null,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SvgPicture.asset(
+                                        navItems[index]['icon'] as String,
+                                        height: 24,
+                                        colorFilter: ColorFilter.mode(
+                                          isSelected
+                                              ? theme.primaryColor
+                                              : (isDarkMode
+                                                  ? Colors.grey
+                                                  : Colors.grey.shade600),
+                                          BlendMode.srcIn,
+                                        ),
+                                      )
+                                          .animate(target: isSelected ? 1 : 0)
+                                          .scale(
+                                              begin: const Offset(1, 1),
+                                              end: const Offset(1.15, 1.15))
+                                          .shake(
+                                              hz: 4,
+                                              curve: Curves.easeInOut,
+                                              duration: 200.ms),
+                                      if (isSelected) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          navItems[index]['label'] as String,
+                                          style: TextStyle(
+                                            fontFamily: 'Cairo',
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: theme.primaryColor,
+                                          ),
+                                        )
+                                            .animate()
+                                            .fade()
+                                            .slideY(begin: 0.5, end: 0),
+                                      ]
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }),
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        Text(
-                          'هل أنت متأكد من رغبتك في الخروج من التطبيق؟',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: isDarkMode
-                                ? Colors.grey[300]
-                                : Colors.grey[700],
-                            fontFamily: 'DIN',
-                          ),
-                        ),
-                        const SizedBox(height: 25),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: Text(
-                                'إلغاء',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: isDarkMode
-                                      ? Colors.grey[300]
-                                      : Colors.grey[700],
-                                  fontFamily: 'DIN',
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 15),
-                            ElevatedButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primaryColor,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                elevation: 0,
-                              ),
-                              child: const Text(
-                                'خروج',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                  fontFamily: 'DIN',
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              );
-              return shouldPop ?? false;
-            },
-            child: IndexedStack(
-              index: cubit.index,
-              children: cubit.buildScreens,
+              ],
             ),
           ),
         );
       },
+    );
+  }
+
+  Future<bool> _showExitDialog(BuildContext context, bool isDarkMode) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => Dialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            backgroundColor: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: isDarkMode ? const Color(0xff2F2F2F) : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.exit_to_app_rounded,
+                      size: 40, color: Theme.of(context).primaryColor),
+                  const SizedBox(height: 16),
+                  Text(
+                    'تأكيد الخروج',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: isDarkMode ? Colors.white : Colors.black87,
+                      fontFamily: 'Cairo', // Consistent font
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'هل أنت متأكد من رغبتك في الخروج؟',
+                    style: TextStyle(
+                        fontFamily: 'Cairo',
+                        color: isDarkMode ? Colors.white70 : Colors.black54),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          style: TextButton.styleFrom(
+                            foregroundColor:
+                                isDarkMode ? Colors.white70 : Colors.grey[700],
+                          ),
+                          child: const Text('إلغاء',
+                              style: TextStyle(fontFamily: 'Cairo')),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).primaryColor),
+                          child: const Text('خروج',
+                              style: TextStyle(
+                                  fontFamily: 'Cairo', color: Colors.white)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ) ??
+        false;
+  }
+}
+
+class _CustomDrawer extends StatelessWidget {
+  const _CustomDrawer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: BoxDecoration(color: Theme.of(context).primaryColor),
+            child: const Text(
+              'Menu',
+              style: TextStyle(
+                  color: Colors.white, fontSize: 24, fontFamily: 'Cairo'),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.home),
+            title: const Text('Home', style: TextStyle(fontFamily: 'Cairo')),
+            onTap: () {
+              Navigator.pop(context);
+              NavigationCubit.get(context).changeIndex(0);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title:
+                const Text('Settings', style: TextStyle(fontFamily: 'Cairo')),
+            onTap: () {
+              Navigator.pop(context);
+              NavigationCubit.get(context).changeIndex(4);
+            },
+          ),
+        ],
+      ),
     );
   }
 }

@@ -7,7 +7,10 @@ import 'package:serat/imports.dart';
 import 'package:serat/Business_Logic/Cubit/counter_cubit.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
+import 'dart:ui';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:serat/Presentation/theme/app_theme.dart';
 
 class Sebha extends StatefulWidget {
   final String title;
@@ -107,7 +110,8 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
   void _handleCounterIncrement(CounterCubit cubit) async {
     if (!_isInitialized) return;
 
-    HapticFeedback.mediumImpact();
+    // Use lighter impact for better feel
+    HapticFeedback.lightImpact();
     _counterController?.forward(from: 0.0);
     cubit.incrementCounter();
     await saveSebhaCounter(
@@ -176,212 +180,254 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
 
     return SafeArea(
       child: Scaffold(
-        backgroundColor: isDarkMode ? const Color(0xff1F1F1F) : Colors.white,
-        body: BlocBuilder<CounterCubit, CounterState>(
-          builder: (context, state) {
-            final cubit = CounterCubit.get(context);
-            final progress = widget.maxCounter != null
-                ? cubit.counter / widget.maxCounter!
-                : 0.0;
+        extendBodyBehindAppBar: true,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: isDarkMode
+                  ? [const Color(0xff121212), const Color(0xff1E1E1E)]
+                  : [const Color(0xffF8F9FA), const Color(0xffE8F5E9)],
+            ),
+          ),
+          child: BlocBuilder<CounterCubit, CounterState>(
+            builder: (context, state) {
+              final cubit = CounterCubit.get(context);
+              final progress = widget.maxCounter != null
+                  ? cubit.counter / widget.maxCounter!
+                  : 0.0;
 
-            return ScrollConfiguration(
-              behavior: const ScrollBehavior().copyWith(overscroll: false),
-              child: ListView(
-                children: [
-                  SebhaCounterSection(
-                    total: cubit.totalCounter,
-                    currentCount: cubit.counter,
-                    cycleCount: cubit.cycleCounter,
-                    beadCount: widget.beadCount,
-                    title: widget.title,
-                    subtitle: widget.subtitle,
-                  ),
-                  SizedBox(height: 20.h),
-                  GestureDetector(
-                    onTapDown: (_) {
-                      _controller?.forward();
-                      _startLongPress(cubit);
-                    },
-                    onTapUp: (_) {
-                      _controller?.reverse();
-                      _stopLongPress();
-                      if (!_isLongPress) {
-                        _handleCounterIncrement(cubit);
-                      }
-                    },
-                    onTapCancel: () {
-                      _controller?.reverse();
-                      _stopLongPress();
-                    },
-                    child: ScaleTransition(
-                      scale: _scaleAnimation!,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Container(
-                            width: size.width * 0.8,
-                            height: size.width * 0.8,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: isDarkMode
-                                    ? [
-                                        const Color(0xFF2C2C2C),
-                                        const Color(0xFF1A1A1A),
-                                      ]
-                                    : [
-                                        AppColors.primaryColor.withOpacity(
-                                          0.1,
-                                        ),
-                                        AppColors.primaryColor.withOpacity(
-                                          0.05,
-                                        ),
-                                      ],
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: isDarkMode
-                                      ? Colors.black.withOpacity(0.3)
-                                      : AppColors.primaryColor.withOpacity(
-                                          0.1,
-                                        ),
-                                  blurRadius: 20,
-                                  spreadRadius: 5,
-                                ),
-                              ],
-                            ),
-                            child: Container(
-                              margin: const EdgeInsets.all(2),
+              return ScrollConfiguration(
+                behavior: const ScrollBehavior().copyWith(overscroll: false),
+                child: ListView(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  children: [
+                    SebhaCounterSection(
+                      total: cubit.totalCounter,
+                      currentCount: cubit.counter,
+                      cycleCount: cubit.cycleCounter,
+                      beadCount: widget.beadCount,
+                      title: widget.title,
+                      subtitle: widget.subtitle,
+                    )
+                        .animate()
+                        .fade(duration: 500.ms)
+                        .slideY(begin: -0.2, end: 0, curve: Curves.easeOut),
+                    SizedBox(height: 20.h),
+                    GestureDetector(
+                      onTapDown: (_) {
+                        _controller?.forward();
+                        _startLongPress(cubit);
+                      },
+                      onTapUp: (_) {
+                        _controller?.reverse();
+                        _stopLongPress();
+                        if (!_isLongPress) {
+                          _handleCounterIncrement(cubit);
+                        }
+                      },
+                      onTapCancel: () {
+                        _controller?.reverse();
+                        _stopLongPress();
+                      },
+                      child: ScaleTransition(
+                        scale: _scaleAnimation!,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Outer Glow / Shadow
+                            Container(
+                              width: size.width * 0.75,
+                              height: size.width * 0.75,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: isDarkMode
-                                      ? Colors.grey.withOpacity(0.2)
-                                      : AppColors.primaryColor.withOpacity(
-                                          0.2,
-                                        ),
-                                  width: 2,
-                                ),
-                              ),
-                              child: Stack(
-                                children: [
-                                  if (widget.maxCounter != null)
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: isDarkMode
-                                              ? Colors.grey.withOpacity(0.2)
-                                              : AppColors.primaryColor
-                                                  .withOpacity(0.2),
-                                          width: 3,
-                                        ),
-                                      ),
-                                      child: CustomPaint(
-                                        painter: ProgressPainter(
-                                          progress: progress,
-                                          color: isDarkMode
-                                              ? Colors.grey
-                                              : AppColors.primaryColor,
-                                          strokeWidth: 3,
-                                        ),
-                                      ),
-                                    ),
-                                  Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        AnimatedBuilder(
-                                          animation: _counterAnimation!,
-                                          builder: (context, child) {
-                                            return Transform.scale(
-                                              scale: 1.0 +
-                                                  (_counterAnimation!.value *
-                                                      0.1),
-                                              child: Text(
-                                                '${cubit.counter}',
-                                                style: TextStyle(
-                                                  fontSize: cubit.counter < 1000
-                                                      ? 55
-                                                      : 35,
-                                                  color: isDarkMode
-                                                      ? Colors.grey
-                                                      : AppColors.primaryColor,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                        SizedBox(height: 8.h),
-                                        Text(
-                                          'اضغط للعد',
-                                          style: TextStyle(
-                                            fontSize: 16.sp,
-                                            color: isDarkMode
-                                                ? Colors.grey.withOpacity(
-                                                    0.7,
-                                                  )
-                                                : AppColors.primaryColor
-                                                    .withOpacity(0.7),
-                                          ),
-                                        ),
-                                        if (widget.maxCounter != null) ...[
-                                          SizedBox(height: 4.h),
-                                          Text(
-                                            '${cubit.counter}/${widget.maxCounter}',
-                                            style: TextStyle(
-                                              fontSize: 14.sp,
-                                              color: isDarkMode
-                                                  ? Colors.grey.withOpacity(
-                                                      0.5,
-                                                    )
-                                                  : AppColors.primaryColor
-                                                      .withOpacity(0.5),
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: isDarkMode
+                                        ? AppColors.primaryColor
+                                            .withOpacity(0.2)
+                                        : AppColors.primaryColor
+                                            .withOpacity(0.15),
+                                    blurRadius: 30,
+                                    spreadRadius: 2,
+                                    offset: const Offset(0, 10),
                                   ),
                                 ],
                               ),
+                              child: ClipRRect(
+                                borderRadius:
+                                    BorderRadius.circular(1000), // Circle
+                                child: BackdropFilter(
+                                  filter:
+                                      ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isDarkMode
+                                          ? Colors.black.withOpacity(0.3)
+                                          : Colors.white.withOpacity(0.2),
+                                      border: Border.all(
+                                        color: isDarkMode
+                                            ? Colors.white.withOpacity(0.1)
+                                            : Colors.white.withOpacity(0.5),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: Stack(
+                                      children: [
+                                        if (widget.maxCounter != null)
+                                          Container(
+                                            margin: const EdgeInsets.all(4),
+                                            child: CustomPaint(
+                                              painter: ProgressPainter(
+                                                progress: progress,
+                                                color: isDarkMode
+                                                    ? AppTheme.secondaryLight
+                                                    : AppColors.primaryColor,
+                                                strokeWidth: 4,
+                                              ),
+                                              size: Size.infinite,
+                                            ),
+                                          ),
+                                        Center(
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              AnimatedBuilder(
+                                                animation: _counterAnimation!,
+                                                builder: (context, child) {
+                                                  return Transform.scale(
+                                                    scale: 1.0 +
+                                                        (_counterAnimation!
+                                                                .value *
+                                                            0.1),
+                                                    child: Text(
+                                                      '${cubit.counter}',
+                                                      style: TextStyle(
+                                                          fontSize:
+                                                              cubit.counter <
+                                                                      1000
+                                                                  ? 64
+                                                                  : 48,
+                                                          color: isDarkMode
+                                                              ? Colors.white
+                                                              : AppColors
+                                                                  .primaryColor,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontFamily:
+                                                              'Cairo', // Consistent font
+                                                          shadows: [
+                                                            Shadow(
+                                                              color: Colors
+                                                                  .black
+                                                                  .withOpacity(
+                                                                      0.1),
+                                                              blurRadius: 10,
+                                                              offset:
+                                                                  const Offset(
+                                                                      0, 4),
+                                                            )
+                                                          ]),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                              SizedBox(height: 8.h),
+                                              Text(
+                                                'اضغط للعد',
+                                                style: TextStyle(
+                                                  fontSize: 16.sp,
+                                                  fontFamily: 'Cairo',
+                                                  color: isDarkMode
+                                                      ? Colors.white
+                                                          .withOpacity(0.6)
+                                                      : AppColors.primaryColor
+                                                          .withOpacity(0.6),
+                                                ),
+                                              ),
+                                              if (widget.maxCounter !=
+                                                  null) ...[
+                                                SizedBox(height: 4.h),
+                                                Text(
+                                                  '${cubit.counter}/${widget.maxCounter}',
+                                                  style: TextStyle(
+                                                    fontSize: 14.sp,
+                                                    fontFamily: 'DIN',
+                                                    color: isDarkMode
+                                                        ? Colors.white
+                                                            .withOpacity(0.4)
+                                                        : AppColors.primaryColor
+                                                            .withOpacity(0.4),
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                        .animate(delay: 200.ms)
+                        .scale(duration: 500.ms, curve: Curves.easeOutBack),
+                    SizedBox(height: 30.h),
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 40),
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          HapticFeedback.lightImpact(); // Consistent feedback
+                          cubit.resetCounter();
+                          await saveSebhaCounter(
+                            widget.title,
+                            cubit.counter,
+                            cubit.totalCounter,
+                            cubit.cycleCounter,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isDarkMode
+                              ? Colors.white.withOpacity(0.05)
+                              : Colors.white,
+                          foregroundColor: isDarkMode
+                              ? Colors.white
+                              : AppColors.primaryColor,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(
+                              color: isDarkMode
+                                  ? Colors.white.withOpacity(0.1)
+                                  : Colors.grey.withOpacity(0.2),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 30.h),
-                  Container(
-                    color: isDarkMode ? Colors.transparent : Colors.white,
-                    child: Column(
-                      children: [
-                        AppButton(
-                          horizontalPadding: 30.w,
-                          onPressed: () async {
-                            HapticFeedback.heavyImpact();
-                            cubit.resetCounter();
-                            await saveSebhaCounter(
-                              widget.title,
-                              cubit.counter,
-                              cubit.totalCounter,
-                              cubit.cycleCounter,
-                            );
-                          },
-                          title: 'البدء من جديد',
                         ),
-                        SizedBox(height: 20.h),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
+                        child: Text(
+                          'البدء من جديد',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontFamily: 'Cairo',
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ).animate(delay: 400.ms).fade().slideY(begin: 0.2, end: 0),
+                    SizedBox(height: 40.h),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

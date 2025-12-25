@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:serat/Presentation/Widgets/Shared/custom_reset_button.dart'
     show AppButton;
-
 import 'package:serat/imports.dart';
 
 final ValueNotifier<List<AzkarItem>> azkarNotifier = ValueNotifier([]);
@@ -34,13 +34,17 @@ class _SebhaAzkarListScreenState extends State<SebhaAzkarListScreen> {
       final items = await _service.loadAzkarItems();
       azkarNotifier.value = items;
     } catch (e) {
-      setState(() {
-        _error = 'حدث خطأ أثناء تحميل الأذكار';
-      });
+      if (mounted) {
+        setState(() {
+          _error = 'حدث خطأ أثناء تحميل الأذكار';
+        });
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -49,20 +53,37 @@ class _SebhaAzkarListScreenState extends State<SebhaAzkarListScreen> {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDarkMode ? const Color(0xff1F1F1F) : Colors.white,
+      extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(title: 'السبحة الإلكترونية', isHome: true),
-      body: _buildBody(),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDarkMode
+                ? [const Color(0xff121212), const Color(0xff1E1E1E)]
+                : [const Color(0xffF8F9FA), const Color(0xffE8F5E9)],
+          ),
+        ),
+        child: SafeArea(
+          child: _buildBody(),
+        ),
+      ),
       persistentFooterButtons: [
-        AppButton(
-          horizontalPadding: 20.w,
-          onPressed: () async {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const AddAzkarScreen()),
-            );
-            _loadAzkarItems();
-          },
-          title: 'إضافة ذكر',
+        Container(
+          color: Colors.transparent,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: AppButton(
+            horizontalPadding: 20.w,
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AddAzkarScreen()),
+              );
+              _loadAzkarItems();
+            },
+            title: 'إضافة ذكر',
+          ),
         ),
       ],
     );
@@ -117,7 +138,7 @@ class _SebhaAzkarListScreenState extends State<SebhaAzkarListScreen> {
                   );
                 }
               },
-            );
+            ).animate(delay: (index * 50).ms).fade().slideX();
           },
         );
       },

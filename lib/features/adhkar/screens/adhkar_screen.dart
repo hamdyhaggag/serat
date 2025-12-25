@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:serat/features/adhkar/models/adhkar_category.dart';
 import 'package:serat/features/adhkar/services/adhkar_progress_service.dart';
 import 'package:serat/features/adhkar/services/adhkar_service.dart';
@@ -548,7 +549,7 @@ class _AdhkarScreenState extends State<AdhkarScreen>
               color: Colors.white,
             ),
             textAlign: TextAlign.center,
-          ),
+          ).animate().fade(delay: 200.ms).slideX(),
           SizedBox(height: isSmallScreen ? 6 : 8),
           Text(
             'اختر قسم الأذكار المفضل لديك',
@@ -560,7 +561,7 @@ class _AdhkarScreenState extends State<AdhkarScreen>
           ),
         ],
       ),
-    );
+    ).animate().fade().slideY(begin: 0.1, end: 0);
   }
 
   Widget _buildCategoriesView(
@@ -641,7 +642,7 @@ class _AdhkarScreenState extends State<AdhkarScreen>
           onTap: () => _onCategoryTap(category),
           isSelected: isSelected,
           progress: progress,
-        );
+        ).animate().fade(duration: 400.ms).scale(curve: Curves.easeOutBack);
       }).toList(),
     );
   }
