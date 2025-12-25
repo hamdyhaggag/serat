@@ -26,6 +26,7 @@ import 'package:upgrader/upgrader.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:serat/services/firebase_messaging_service.dart';
 import 'package:quran_library/quran_library.dart';
+import 'package:serat/core/services/home_widget_service.dart';
 
 TimeOfDay? stringToTimeOfDay(String timeString) {
   if (timeString.isNotEmpty) {
@@ -83,8 +84,14 @@ void main() async {
   await QuranLibrary.init();
 
   Bloc.observer = MyGlobalObserver();
+  HomeWidgetService.updatePrayerWidget(); // Initial update
 
   runApp(SeratApp(isLight: isLight));
+
+  // Update home widget every minute when the app is open
+  Timer.periodic(const Duration(minutes: 1), (timer) {
+    HomeWidgetService.updatePrayerWidget();
+  });
 }
 
 Future<void> initializeAppSettings() async {

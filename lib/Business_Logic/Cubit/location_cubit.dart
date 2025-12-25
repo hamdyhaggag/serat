@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:serat/Data/Model/times_model.dart';
+import 'package:serat/core/services/home_widget_service.dart';
 import 'package:serat/imports.dart';
 
 class LocationCubit extends Cubit<LocationState> {
@@ -122,6 +123,7 @@ class LocationCubit extends Cubit<LocationState> {
         try {
           timesModel = TimesModel.fromJson(response.data);
           saveTimeModel(timeModel: timesModel!);
+          HomeWidgetService.updatePrayerWidget(); // Update home widget
           errorStatus = false;
           emit(GetTimingsSuccess());
         } catch (parseError) {
