@@ -32,10 +32,8 @@ class TimingsScreen extends StatefulWidget {
   State<TimingsScreen> createState() => _TimingsScreenState();
 }
 
-class _TimingsScreenState extends State<TimingsScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
+class _TimingsScreenState extends State<TimingsScreen> {
+  StreamSubscription? _navigationSubscription;
   final List<Offset> _particles = [];
   final int _particleCount = 100;
   final Random _random = Random();
@@ -49,14 +47,6 @@ class _TimingsScreenState extends State<TimingsScreen>
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-    );
-    _animationController.forward();
     _initializeParticles();
     _startCountdownTimer();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -68,7 +58,8 @@ class _TimingsScreenState extends State<TimingsScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Add listener to NavigationCubit
-    context.read<navigation.NavigationCubit>().stream.listen((state) {
+    _navigationSubscription =
+        context.read<navigation.NavigationCubit>().stream.listen((state) {
       if (state is navigation.ChangeBottomNavState) {
         if (_scaffoldKey.currentState?.isDrawerOpen ?? false) {
           _scaffoldKey.currentState?.closeDrawer();
@@ -88,7 +79,7 @@ class _TimingsScreenState extends State<TimingsScreen>
   @override
   void dispose() {
     _countdownTimer?.cancel();
-    _animationController.dispose();
+    _navigationSubscription?.cancel();
     super.dispose();
   }
 
@@ -168,8 +159,8 @@ class _TimingsScreenState extends State<TimingsScreen>
                                         ]
                                       : [
                                           shared_colors.AppColors.primaryColor,
-                                          const Color(
-                                              0xff6C63FF), // Modern purple accent
+                                          shared_colors.AppColors.primaryColor
+                                              .withOpacity(0.8),
                                         ],
                                 ),
                                 borderRadius: const BorderRadius.vertical(
@@ -1369,8 +1360,8 @@ class EnhancedParticlePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = isDarkMode
-          ? Colors.white.withValues(alpha: 0.15)
-          : shared_colors.AppColors.primaryColor.withValues(alpha: 0.15)
+          ? Colors.white.withOpacity(0.15)
+          : shared_colors.AppColors.primaryColor.withOpacity(0.15)
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
 
@@ -1379,12 +1370,12 @@ class EnhancedParticlePainter extends CustomPainter {
       canvas.drawCircle(
         particle,
         1,
-        paint..color = paint.color.withValues(alpha: 0.5),
+        paint..color = paint.color.withOpacity(0.5),
       );
       canvas.drawCircle(
         particle,
         0.5,
-        paint..color = paint.color.withValues(alpha: 0.25),
+        paint..color = paint.color.withOpacity(0.25),
       );
     }
   }
