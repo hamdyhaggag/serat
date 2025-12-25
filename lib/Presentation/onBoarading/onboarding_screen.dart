@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:serat/imports.dart';
-import '../screens/screen_layout.dart';
 import 'onboarding_contents.dart';
 import 'size_config.dart';
+import '../screens/onboarding/permissions_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -202,7 +202,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           if (_currentPage < contents.length - 1)
                             TextButton(
                               onPressed: () {
-                                navigateTo(context, const ScreenLayout());
+                                navigateTo(context, const PermissionsScreen());
                                 CacheHelper.saveData(
                                   key: 'isEnterBefore',
                                   value: true,
@@ -230,7 +230,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           ElevatedButton(
                             onPressed: _currentPage == contents.length - 1
                                 ? () {
-                                    navigateTo(context, const ScreenLayout());
+                                    navigateTo(
+                                        context, const PermissionsScreen());
                                     CacheHelper.saveData(
                                       key: 'isEnterBefore',
                                       value: true,

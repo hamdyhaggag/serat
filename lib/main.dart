@@ -16,8 +16,6 @@ import 'package:serat/imports.dart';
 import 'package:serat/Business_Logic/Cubit/reciters_cubit.dart';
 import 'package:serat/Business_Logic/Cubit/quran_cubit.dart';
 import 'package:serat/Business_Logic/Cubit/download_cubit.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'dart:io' show Platform;
 import 'package:serat/features/quran/routes/quran_routes.dart';
 import 'package:serat/Business_Logic/Cubit/theme_cubit.dart';
 import 'package:serat/shared/services/notification_service.dart';
@@ -77,28 +75,7 @@ void main() async {
   await CacheHelper.init();
   await initializeAppSettings();
 
-  // Initialize permission handler with error handling
-  try {
-    final notificationStatus = await Permission.notification.status;
-    if (notificationStatus.isDenied) {
-      final result = await Permission.notification.request();
-      if (result.isDenied) {
-        debugPrint('Notification permission denied');
-      }
-    }
-
-    if (Platform.isAndroid) {
-      final exactAlarmStatus = await Permission.scheduleExactAlarm.status;
-      if (exactAlarmStatus.isDenied) {
-        final result = await Permission.scheduleExactAlarm.request();
-        if (result.isDenied) {
-          debugPrint('Exact alarm permission denied');
-        }
-      }
-    }
-  } catch (e) {
-    debugPrint('Error requesting permissions: $e');
-  }
+  // Permissions are now handled in the dedicated PermissionsScreen during onboarding or startup
 
   // Initialize notification service
   final notificationService = NotificationService();

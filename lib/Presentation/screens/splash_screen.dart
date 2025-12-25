@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:serat/Presentation/Widgets/Shared/islamic_loading_indicator.dart';
+import 'package:serat/Presentation/screens/onboarding/permissions_screen.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../imports.dart';
 import '../onBoarading/onboarding_screen.dart';
 import 'screen_layout.dart';
@@ -47,9 +49,16 @@ class SplashScreenState extends State<SplashScreen>
 
     _animationController.forward();
 
-    Timer(const Duration(seconds: 3), () {
+    Timer(const Duration(seconds: 3), () async {
       if (isEnterBefore) {
-        navigateAndFinish(context, const ScreenLayout());
+        final notificationStatus = await Permission.notification.status;
+        final locationStatus = await Permission.locationWhenInUse.status;
+
+        if (notificationStatus.isGranted && locationStatus.isGranted) {
+          navigateAndFinish(context, const ScreenLayout());
+        } else {
+          navigateAndFinish(context, const PermissionsScreen());
+        }
       } else {
         navigateAndFinish(context, const OnboardingScreen());
       }
