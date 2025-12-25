@@ -39,9 +39,7 @@ class AdhanSettingsScreen extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  // Muezzin Profile Card
-                  _buildMuezzinCard(cubit, isDarkMode),
-                  const SizedBox(height: 24),
+                  // Main Adhan Toggle
 
                   // Main Adhan Toggle
                   _buildGlassCard(
@@ -165,98 +163,6 @@ class AdhanSettingsScreen extends StatelessWidget {
         ),
       ],
     ).animate().fade().slideY(begin: 0.1, end: 0);
-  }
-
-  Widget _buildMuezzinCard(AdhanCubit cubit, bool isDarkMode) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            shared_colors.AppColors.primaryColor,
-            shared_colors.AppColors.primaryColor.withOpacity(0.7),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: shared_colors.AppColors.primaryColor.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              shape: BoxShape.circle,
-              border:
-                  Border.all(color: Colors.white.withOpacity(0.5), width: 2),
-            ),
-            child: const Icon(Icons.person, size: 50, color: Colors.white),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'المؤذن الحالي',
-                  style: TextStyle(
-                      color: Colors.white70, fontFamily: 'Cairo', fontSize: 14),
-                ),
-                const Text(
-                  'مشاري راشد العفاسي',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontFamily: 'Cairo',
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        'جودة عالية HD',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontFamily: 'Cairo'),
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () => cubit.playPreview(),
-                      icon: Icon(
-                        cubit.isPlayingPreview
-                            ? Icons.stop_circle_rounded
-                            : Icons.play_circle_filled_rounded,
-                        color: Colors.white,
-                        size: 32,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ).animate().fade().slideY(begin: 0.2, end: 0);
   }
 
   Widget _buildGlassCard(bool isDarkMode, {required Widget child}) {

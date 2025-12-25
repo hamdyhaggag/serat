@@ -4,8 +4,10 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Color
+import android.net.Uri
 import android.view.View
 import android.widget.RemoteViews
+import es.antonborri.home_widget.HomeWidgetBackgroundIntent
 import es.antonborri.home_widget.HomeWidgetProvider
 
 class PrayerWidgetProvider : HomeWidgetProvider() {
@@ -16,9 +18,30 @@ class PrayerWidgetProvider : HomeWidgetProvider() {
         widgetData: SharedPreferences
     ) {
         for (appWidgetId in appWidgetIds) {
+            val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
+            val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
+            // Increased threshold to 100dp to catch all single-row height widgets
+            val isCompact = minHeight < 100
+
             val views = RemoteViews(context.packageName, R.layout.prayer_widget).apply {
+                // Responsive visibility
+                if (isCompact) {
+                    // In compact mode, hide Clock/Date to show ONLY Prayer Strip
+                    setViewVisibility(R.id.widget_header_section, View.GONE)
+                    setViewPadding(R.id.widget_root, 10, 4, 10, 4)
+                } else {
+                    // In full mode, show everything
+                    setViewVisibility(R.id.widget_header_section, View.VISIBLE)
+                    setViewPadding(R.id.widget_root, 16, 16, 16, 16)
+                }
+
+                // Background Click to Refresh
+                val backgroundIntent = HomeWidgetBackgroundIntent.getBroadcast(
+                    context,
+                    Uri.parse("serat://refresh")
+                )
+                setOnClickPendingIntent(R.id.widget_root, backgroundIntent)
                 // Header Details
-                setTextViewText(R.id.widget_current_time, widgetData.getString("current_time", "00:00"))
                 setTextViewText(R.id.widget_hijri_date, widgetData.getString("hijri_date", "--"))
 
                 // Progress Logic

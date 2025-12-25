@@ -7,6 +7,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Data/Model/times_model.dart';
+import 'home_widget_service.dart';
 
 class AdhanService {
   static const int adhanAlarmId = 1000;
@@ -91,6 +92,9 @@ class AdhanService {
 
     await _showAdhanNotification(prayerName);
 
+    // Update Widget to sync state (Next prayer, etc.)
+    await HomeWidgetService.updatePrayerWidget();
+
     try {
       await _player.play(AssetSource("adhan/$fileName"));
     } catch (e) {
@@ -144,6 +148,9 @@ class AdhanService {
     if (prayerName.isEmpty || fileName.isEmpty) return;
 
     await _showPreAdhanNotification(prayerName, leadMinutes);
+
+    // Update Widget to sync state
+    await HomeWidgetService.updatePrayerWidget();
 
     try {
       await _player.play(AssetSource("adhan/$fileName"));

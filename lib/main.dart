@@ -29,6 +29,7 @@ import 'package:quran_library/quran_library.dart';
 import 'package:serat/core/services/home_widget_service.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:home_widget/home_widget.dart';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -37,6 +38,20 @@ void callbackDispatcher() {
     await HomeWidgetService.updatePrayerWidget();
     return Future.value(true);
   });
+}
+
+@pragma('vm:entry-point')
+void widgetPeriodicCallback() async {
+  await CacheHelper.init();
+  await HomeWidgetService.updatePrayerWidget();
+}
+
+@pragma('vm:entry-point')
+Future<void> homeWidgetBackgroundCallback(Uri? uri) async {
+  if (uri?.host == 'refresh') {
+    await CacheHelper.init();
+    await HomeWidgetService.updatePrayerWidget();
+  }
 }
 
 TimeOfDay? stringToTimeOfDay(String timeString) {
@@ -104,9 +119,22 @@ void main() async {
     "prayer_widget_sync",
     "prayer_widget_update_task",
     frequency: const Duration(minutes: 15),
-    existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
-    initialDelay: const Duration(minutes: 5),
+    existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
+    initialDelay: const Duration(minutes: 1),
   );
+
+  // Fallback: Periodic Alarm (more reliable on some devices)
+  await AndroidAlarmManager.periodic(
+    const Duration(minutes: 15),
+    999, // Unique ID for periodic widget update
+    widgetPeriodicCallback,
+    exact: false, // Low priority to save battery
+    wakeup: true,
+    rescheduleOnReboot: true,
+  );
+
+  // HomeWidget Background click
+  HomeWidget.registerBackgroundCallback(homeWidgetBackgroundCallback);
 
   runApp(SeratApp(isLight: isLight));
 

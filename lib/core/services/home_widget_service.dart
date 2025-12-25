@@ -97,8 +97,6 @@ class HomeWidgetService {
     }
 
     // Save Data to Widget Shared Preferences
-    await HomeWidget.saveWidgetData(
-        'current_time', DateFormat('hh:mm').format(now));
     await HomeWidget.saveWidgetData('hijri_date',
         '${hijri.weekday.ar} ${hijri.day} ${hijri.month.ar} ${hijri.year}');
     await HomeWidget.saveWidgetData('progress', progress.clamp(0, 100).toInt());
