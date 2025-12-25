@@ -38,8 +38,7 @@ class HomeWidgetService {
     }
 
     Map<String, dynamic> prev, next;
-    bool isIqamahState = false;
-    int iqamahMinutesLeft = 0;
+    double progress = 0;
 
     if (nextIndex == -1) {
       prev = prayers.last;
@@ -59,49 +58,52 @@ class HomeWidgetService {
       next = prayers[nextIndex];
     }
 
-    // Check if we are in the 15-minute Iqamah window after PREVIOUS prayer
-    final diffFromPrev = now.difference(prev['time'] as DateTime);
-    if (diffFromPrev.inMinutes >= 0 && diffFromPrev.inMinutes < 15) {
-      isIqamahState = true;
-      iqamahMinutesLeft = 15 - diffFromPrev.inMinutes;
-    }
-
     final DateTime pTime = prev['time'];
     final DateTime nTime = next['time'];
-    final totalDuration = nTime.difference(pTime).inSeconds;
-    final elapsed = now.difference(pTime).inSeconds;
-    final progress = (elapsed / totalDuration * 100).clamp(0, 100).toInt();
-
     final remaining = nTime.difference(now);
 
+    // Dynamic Color and Progress Logic
     String progressColor;
     String remH, remM;
+    String label = "للصلاة";
 
-    if (isIqamahState) {
-      progressColor = "#FFD700"; // Gold/Yellow for Iqamah
+    // 1. Check for Iqamah (First 15 mins after prayer)
+    final diffFromPrev = now.difference(pTime);
+    if (diffFromPrev.inMinutes >= 0 && diffFromPrev.inMinutes < 15) {
+      progressColor = "#FFD700"; // Gold
+      progress =
+          (diffFromPrev.inSeconds / (15 * 60)) * 100; // Progress of the 15 mins
       remH = "0";
-      remM = iqamahMinutesLeft.toString().padLeft(2, '0');
-      await HomeWidget.saveWidgetData(
-          'iqamah_label', "للإقامة"); // Optional label
-    } else if (remaining.inMinutes < 15) {
-      progressColor = "#FF4444"; // Red for Urgent
+      remM = (15 - diffFromPrev.inMinutes).toString().padLeft(2, '0');
+      label = "للإقامة";
+    }
+    // 2. Check for Standby (Last 15 mins before next prayer)
+    else if (remaining.inMinutes < 15) {
+      progressColor = "#FF4444"; // Red
+      final totalInterval = nTime.difference(pTime).inSeconds;
+      final elapsed = now.difference(pTime).inSeconds;
+      progress = (elapsed / totalInterval) * 100;
       remH = remaining.inHours.toString();
       remM = remaining.inMinutes.remainder(60).toString().padLeft(2, '0');
-      await HomeWidget.saveWidgetData('iqamah_label', "للصلاة");
-    } else {
-      progressColor = "#00FFCC"; // Turquoise for Normal
+    }
+    // 3. Normal State
+    else {
+      progressColor = "#00FFCC"; // Turquoise
+      final totalInterval = nTime.difference(pTime).inSeconds;
+      final elapsed = now.difference(pTime).inSeconds;
+      progress = (elapsed / totalInterval) * 100;
       remH = remaining.inHours.toString();
       remM = remaining.inMinutes.remainder(60).toString().padLeft(2, '0');
-      await HomeWidget.saveWidgetData('iqamah_label', "للصلاة");
     }
 
-    // Save Data
+    // Save Data to Widget Shared Preferences
     await HomeWidget.saveWidgetData(
         'current_time', DateFormat('hh:mm').format(now));
     await HomeWidget.saveWidgetData('hijri_date',
         '${hijri.weekday.ar} ${hijri.day} ${hijri.month.ar} ${hijri.year}');
-    await HomeWidget.saveWidgetData('progress', progress);
+    await HomeWidget.saveWidgetData('progress', progress.clamp(0, 100).toInt());
     await HomeWidget.saveWidgetData('progress_color', progressColor);
+    await HomeWidget.saveWidgetData('iqamah_label', label);
 
     await HomeWidget.saveWidgetData('prev_name', prev['name']);
     await HomeWidget.saveWidgetData(
@@ -113,6 +115,7 @@ class HomeWidgetService {
     await HomeWidget.saveWidgetData('rem_h', remH);
     await HomeWidget.saveWidgetData('rem_m', remM);
 
+    // Update the Widget
     await HomeWidget.updateWidget(
       name: _androidWidgetName,
       androidName: _androidWidgetName,

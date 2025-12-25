@@ -27,6 +27,16 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:serat/services/firebase_messaging_service.dart';
 import 'package:quran_library/quran_library.dart';
 import 'package:serat/core/services/home_widget_service.dart';
+import 'package:workmanager/workmanager.dart';
+
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    await CacheHelper.init();
+    await HomeWidgetService.updatePrayerWidget();
+    return Future.value(true);
+  });
+}
 
 TimeOfDay? stringToTimeOfDay(String timeString) {
   if (timeString.isNotEmpty) {
@@ -85,6 +95,16 @@ void main() async {
 
   Bloc.observer = MyGlobalObserver();
   HomeWidgetService.updatePrayerWidget(); // Initial update
+
+  // Initialize Workmanager for background updates
+  await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+  await Workmanager().registerPeriodicTask(
+    "prayer_widget_sync",
+    "prayer_widget_update_task",
+    frequency: const Duration(minutes: 15),
+    existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
+    initialDelay: const Duration(minutes: 5),
+  );
 
   runApp(SeratApp(isLight: isLight));
 
