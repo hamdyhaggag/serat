@@ -165,11 +165,17 @@ class AdhanService {
 
   static bool _isTimeNear(DateTime now, String timeStr) {
     if (timeStr.isEmpty) return false;
-    final parts = timeStr.split(':');
-    if (parts.length < 2) return false;
-    final pTime = DateTime(
-        now.year, now.month, now.day, int.parse(parts[0]), int.parse(parts[1]));
-    return now.difference(pTime).inMinutes.abs() <= 2;
+    try {
+      final cleanTime = timeStr.split(' ')[0];
+      final parts = cleanTime.split(':');
+      if (parts.length < 2) return false;
+      final pTime = DateTime(now.year, now.month, now.day,
+          int.parse(parts[0].trim()), int.parse(parts[1].trim()));
+      return now.difference(pTime).inMinutes.abs() <= 2;
+    } catch (e) {
+      log("Error in _isTimeNear for $timeStr: $e");
+      return false;
+    }
   }
 
   static Future<void> _showAdhanNotification(String prayerName) async {
@@ -284,9 +290,10 @@ class AdhanService {
     DateTime parseTime(String t, DateTime date) {
       if (t.isEmpty || !t.contains(':')) return date;
       try {
-        final p = t.split(':');
+        final cleanTime = t.split(' ')[0];
+        final p = cleanTime.split(':');
         return DateTime(
-            date.year, date.month, date.day, int.parse(p[0]), int.parse(p[1]));
+            date.year, date.month, date.day, int.parse(p[0].trim()), int.parse(p[1].trim()));
       } catch (e) {
         log("Error parsing time $t: $e");
         return date;

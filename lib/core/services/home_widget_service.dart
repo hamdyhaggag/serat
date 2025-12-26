@@ -14,6 +14,7 @@ void widgetUpdateCallback() async {
 
 class HomeWidgetService {
   static const String _androidWidgetName = 'PrayerWidgetProvider';
+  static const String _androidListWidgetName = 'ListPrayerWidgetProvider';
   static const int _widgetAlarmId = 888;
 
   static Future<void> updatePrayerWidget() async {
@@ -25,20 +26,27 @@ class HomeWidgetService {
     final hijri = timesModel.data.date.hijri;
 
     DateTime _parse(String time) {
+      final now = DateTime.now();
       if (time.isEmpty) return now;
-      final parts = time.split(':');
-      if (parts.length < 2) return now;
-      return DateTime(now.year, now.month, now.day, int.parse(parts[0]),
-          int.parse(parts[1]));
+      try {
+        // Remove suffix like (EET)
+        final cleanTime = time.split(' ')[0];
+        final parts = cleanTime.split(':');
+        if (parts.length < 2) return now;
+        return DateTime(now.year, now.month, now.day,
+            int.parse(parts[0].trim()), int.parse(parts[1].trim()));
+      } catch (e) {
+        return now;
+      }
     }
 
     final prayers = [
-      {'name': 'الفجر', 'time': _parse(timings.fajr)},
-      {'name': 'الشروق', 'time': _parse(timings.sunrise)},
-      {'name': 'الظهر', 'time': _parse(timings.dhuhr)},
-      {'name': 'العصر', 'time': _parse(timings.asr)},
-      {'name': 'المغرب', 'time': _parse(timings.maghrib)},
-      {'name': 'العشاء', 'time': _parse(timings.isha)},
+      {'key': 'fajr', 'name': 'الفجر', 'time': _parse(timings.fajr)},
+      {'key': 'sunrise', 'name': 'الشروق', 'time': _parse(timings.sunrise)},
+      {'key': 'dhuhr', 'name': 'الظهر', 'time': _parse(timings.dhuhr)},
+      {'key': 'asr', 'name': 'العصر', 'time': _parse(timings.asr)},
+      {'key': 'maghrib', 'name': 'المغرب', 'time': _parse(timings.maghrib)},
+      {'key': 'isha', 'name': 'العشاء', 'time': _parse(timings.isha)},
     ];
 
     int nextIndex = -1;
@@ -48,6 +56,10 @@ class HomeWidgetService {
         break;
       }
     }
+
+    // For the list widget highlighting (if all prayers today passed, next is Fajr tomorrow)
+    int highlightedIndex = nextIndex;
+    if (highlightedIndex == -1) highlightedIndex = 0;
 
     Map<String, dynamic> prev, next;
     double progress = 0;
@@ -108,27 +120,39 @@ class HomeWidgetService {
       remM = remaining.inMinutes.remainder(60).toString().padLeft(2, '0');
     }
 
-    // Save Data to Widget Shared Preferences
+    // --- Save Data for Classic Widget ---
     await HomeWidget.saveWidgetData('hijri_date',
         '${hijri.weekday.ar} ${hijri.day} ${hijri.month.ar} ${hijri.year}');
     await HomeWidget.saveWidgetData('progress', progress.clamp(0, 100).toInt());
     await HomeWidget.saveWidgetData('progress_color', progressColor);
     await HomeWidget.saveWidgetData('iqamah_label', label);
-
     await HomeWidget.saveWidgetData('prev_name', prev['name']);
     await HomeWidget.saveWidgetData(
         'prev_time', DateFormat('hh:mm').format(pTime));
     await HomeWidget.saveWidgetData('next_name', next['name']);
     await HomeWidget.saveWidgetData(
         'next_time', DateFormat('hh:mm').format(nTime));
-
     await HomeWidget.saveWidgetData('rem_h', remH);
     await HomeWidget.saveWidgetData('rem_m', remM);
 
-    // Update the Widget
+    // --- Save Data for List Widget ---
+    await HomeWidget.saveWidgetData('next_index', highlightedIndex);
+    for (final p in prayers) {
+      final pDate = p['time'] as DateTime;
+      await HomeWidget.saveWidgetData(
+          '${p['key']}_time', DateFormat('hh:mm').format(pDate));
+      await HomeWidget.saveWidgetData(
+          '${p['key']}_ampm', DateFormat('a').format(pDate));
+    }
+
+    // Update both widgets
     await HomeWidget.updateWidget(
       name: _androidWidgetName,
       androidName: _androidWidgetName,
+    );
+    await HomeWidget.updateWidget(
+      name: _androidListWidgetName,
+      androidName: _androidListWidgetName,
     );
 
     // Schedule next update at the beginning of the next minute to keep countdown "alive"

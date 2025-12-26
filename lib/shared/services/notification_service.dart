@@ -354,21 +354,26 @@ class NotificationService {
     // Schedule new notifications
     int id = 1;
     for (var entry in prayerTimes.entries) {
-      final timeParts = entry.value.split(':');
       final now = DateTime.now();
-      final prayerTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        int.parse(timeParts[0]),
-        int.parse(timeParts[1]),
-      );
+      try {
+        final cleanTime = entry.value.split(' ')[0];
+        final timeParts = cleanTime.split(':');
+        final prayerTime = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          int.parse(timeParts[0].trim()),
+          int.parse(timeParts[1].trim()),
+        );
 
-      await schedulePrayerNotification(
-        prayerName: entry.key,
-        prayerTime: prayerTime,
-        id: id++,
-      );
+        await schedulePrayerNotification(
+          prayerName: entry.key,
+          prayerTime: prayerTime,
+          id: id++,
+        );
+      } catch (e) {
+        developer.log('Error parsing time in scheduleAllPrayerTimes: ${entry.value} - $e');
+      }
     }
   }
 

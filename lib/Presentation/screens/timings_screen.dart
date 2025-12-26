@@ -878,15 +878,24 @@ class _TimingsScreenState extends State<TimingsScreen> {
   }
 
   DateTime _parsePrayerTime(String time) {
-    final now = DateTime.now();
-    final timeParts = time.split(':');
-    return DateTime(
-      now.year,
-      now.month,
-      now.day,
-      int.parse(timeParts[0]),
-      int.parse(timeParts[1]),
-    );
+    try {
+      final now = DateTime.now();
+      // Remove any suffix like " (EET)"
+      final cleanTime = time.split(' ')[0];
+      final timeParts = cleanTime.split(':');
+      if (timeParts.length < 2) return now;
+
+      return DateTime(
+        now.year,
+        now.month,
+        now.day,
+        int.parse(timeParts[0].trim()),
+        int.parse(timeParts[1].trim()),
+      );
+    } catch (e) {
+      debugPrint('Error parsing prayer time: $time - $e');
+      return DateTime.now();
+    }
   }
 
   String _formatTime12Hour(DateTime time) {
