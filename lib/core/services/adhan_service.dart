@@ -282,10 +282,27 @@ class AdhanService {
     final preMinutes = prefs.getInt('preAdhanMinutes') ?? 15;
 
     DateTime parseTime(String t, DateTime date) {
-      final p = t.split(':');
-      return DateTime(
-          date.year, date.month, date.day, int.parse(p[0]), int.parse(p[1]));
+      if (t.isEmpty || !t.contains(':')) return date;
+      try {
+        final p = t.split(':');
+        return DateTime(
+            date.year, date.month, date.day, int.parse(p[0]), int.parse(p[1]));
+      } catch (e) {
+        log("Error parsing time $t: $e");
+        return date;
+      }
     }
+
+    // --- Safety Cleanup for older versions ---
+    // Cancel old potential IDs from previous logic (1001-1005, 1011-1015, etc.)
+    // to avoid double adhans for the first day after update.
+    for (int oldId = 1000; oldId <= 1020; oldId++) {
+      await AndroidAlarmManager.cancel(oldId);
+    }
+    for (int oldId = 2000; oldId <= 2020; oldId++) {
+      await AndroidAlarmManager.cancel(oldId);
+    }
+    // ----------------------------------------
 
     // Schedule for the next 7 days to support offline usage
     for (int dayOffset = 0; dayOffset < 7; dayOffset++) {

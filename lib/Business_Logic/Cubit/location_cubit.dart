@@ -53,27 +53,9 @@ class LocationCubit extends Cubit<LocationState> {
         emit(GetCurrentAddressSuccess());
       }
 
-      // Load cached timings
-      final cachedTimes = await getTimeModel();
-      final cachedCalendar = await getCalendarModel();
-
-      if (cachedTimes != null) {
-        timesModel = cachedTimes;
-
-        // Check if calendar has more up-to-date timings for today
-        if (cachedCalendar != null) {
-          final now = DateTime.now();
-
-          try {
-            final todayData = cachedCalendar.data.firstWhere((element) =>
-                element.date.gregorian.date ==
-                "${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year}");
-            timesModel = TimesModel(code: 200, status: "OK", data: todayData);
-          } catch (_) {
-            // If not found in calendar, stick with cachedTimes
-          }
-        }
-
+      // Load cached timings using the smart getter that handles calendar fallback
+      timesModel = await getTimeModel();
+      if (timesModel != null) {
         emit(GetTimingsSuccess());
       }
     } catch (e) {
