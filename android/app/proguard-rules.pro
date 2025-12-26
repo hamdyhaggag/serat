@@ -19,3 +19,8 @@
 # Handle obfuscation for Dart entry points
 -keepattributes Signature,Exceptions,*Annotation*
 -keep class * extends firebase_messaging.FirebaseMessagingService { *; }
+
+# Fix Play Core missing classes for R8
+-dontwarn com.google.android.play.core.**
+-keep class com.google.android.play.core.** { *; }
+-keep class com.google.android.gms.internal.play_billing.** { *; }

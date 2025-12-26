@@ -44,8 +44,7 @@ class ProfessionalQuranScreen extends StatelessWidget {
       backgroundColor:
           isDarkMode ? const Color(0xFF1A1A2E) : const Color(0xFFFFFDF5),
       textColor: isDarkMode ? Colors.white : Colors.black87,
-      ayahSelectedBackgroundColor:
-          AppColors.primaryColor.withValues(alpha: 0.2),
+      ayahSelectedBackgroundColor: AppColors.primaryColor.withOpacity(0.2),
       ayahIconColor: AppColors.primaryColor,
       surahInfoStyle: SurahInfoStyle.defaults(
         isDark: isDarkMode,

@@ -200,7 +200,7 @@ class QuranVerseWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
           color: isHighlighted
-              ? theme.surahHeaderBg.withValues(alpha: 0.1)
+              ? theme.surahHeaderBg.withOpacity(0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
