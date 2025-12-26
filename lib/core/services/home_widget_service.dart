@@ -1,10 +1,20 @@
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:flutter/widgets.dart';
 import '../../Data/Model/times_model.dart';
 import '../../Data/utils/cache_helper.dart';
 
+@pragma('vm:entry-point')
+void widgetUpdateCallback() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await CacheHelper.init();
+  await HomeWidgetService.updatePrayerWidget();
+}
+
 class HomeWidgetService {
   static const String _androidWidgetName = 'PrayerWidgetProvider';
+  static const int _widgetAlarmId = 888;
 
   static Future<void> updatePrayerWidget() async {
     final timesModel = await getTimeModel();
@@ -15,7 +25,9 @@ class HomeWidgetService {
     final hijri = timesModel.data.date.hijri;
 
     DateTime _parse(String time) {
+      if (time.isEmpty) return now;
       final parts = time.split(':');
+      if (parts.length < 2) return now;
       return DateTime(now.year, now.month, now.day, int.parse(parts[0]),
           int.parse(parts[1]));
     }
@@ -117,6 +129,18 @@ class HomeWidgetService {
     await HomeWidget.updateWidget(
       name: _androidWidgetName,
       androidName: _androidWidgetName,
+    );
+
+    // Schedule next update at the beginning of the next minute to keep countdown "alive"
+    final nextMinute =
+        DateTime(now.year, now.month, now.day, now.hour, now.minute + 1);
+    await AndroidAlarmManager.oneShotAt(
+      nextMinute,
+      _widgetAlarmId,
+      widgetUpdateCallback,
+      exact: true,
+      wakeup: true,
+      rescheduleOnReboot: true,
     );
   }
 }

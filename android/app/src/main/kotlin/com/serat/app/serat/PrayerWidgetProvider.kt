@@ -7,7 +7,8 @@ import android.graphics.Color
 import android.net.Uri
 import android.view.View
 import android.widget.RemoteViews
-import es.antonborri.home_widget.HomeWidgetBackgroundIntent
+import android.content.Intent
+import es.antonborri.home_widget.HomeWidgetLaunchIntent
 import es.antonborri.home_widget.HomeWidgetProvider
 
 class PrayerWidgetProvider : HomeWidgetProvider() {
@@ -35,12 +36,12 @@ class PrayerWidgetProvider : HomeWidgetProvider() {
                     setViewPadding(R.id.widget_root, 16, 16, 16, 16)
                 }
 
-                // Background Click to Refresh
-                val backgroundIntent = HomeWidgetBackgroundIntent.getBroadcast(
+                // Click to Open App
+                val pendingIntent = HomeWidgetLaunchIntent.getActivity(
                     context,
-                    Uri.parse("serat://refresh")
+                    MainActivity::class.java
                 )
-                setOnClickPendingIntent(R.id.widget_root, backgroundIntent)
+                setOnClickPendingIntent(R.id.widget_root, pendingIntent)
                 // Header Details
                 setTextViewText(R.id.widget_hijri_date, widgetData.getString("hijri_date", "--"))
 
