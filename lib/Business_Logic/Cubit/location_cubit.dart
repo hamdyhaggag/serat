@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:serat/Data/Model/times_model.dart';
+import 'package:serat/Data/Model/calendar_model.dart';
 import 'package:serat/core/services/home_widget_service.dart';
 import 'package:serat/core/services/adhan_service.dart';
 import 'package:serat/imports.dart';
@@ -54,8 +55,25 @@ class LocationCubit extends Cubit<LocationState> {
 
       // Load cached timings
       final cachedTimes = await getTimeModel();
+      final cachedCalendar = await getCalendarModel();
+
       if (cachedTimes != null) {
         timesModel = cachedTimes;
+
+        // Check if calendar has more up-to-date timings for today
+        if (cachedCalendar != null) {
+          final now = DateTime.now();
+
+          try {
+            final todayData = cachedCalendar.data.firstWhere((element) =>
+                element.date.gregorian.date ==
+                "${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year}");
+            timesModel = TimesModel(code: 200, status: "OK", data: todayData);
+          } catch (_) {
+            // If not found in calendar, stick with cachedTimes
+          }
+        }
+
         emit(GetTimingsSuccess());
       }
     } catch (e) {
@@ -147,17 +165,16 @@ class LocationCubit extends Cubit<LocationState> {
     errorMessage = null;
     try {
       final now = DateTime.now();
-      final formattedTime =
-          "${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year}";
 
+      // Fetch calendar for the whole month instead of just today
       final response = await DioHelper.getData(
-        url: "timings/$formattedTime",
+        url: "calendar/${now.year}/${now.month}",
         latitude: latitude,
         longitude: longitude,
         method: radioValue,
       );
 
-      log('API Response: ${response.data}');
+      log('API Calendar Response Status: ${response.statusCode}');
 
       if (response.data is String &&
           (response.data as String).contains('<!DOCTYPE html>')) {
@@ -168,12 +185,29 @@ class LocationCubit extends Cubit<LocationState> {
 
       if (response.data is Map<String, dynamic>) {
         try {
-          timesModel = TimesModel.fromJson(response.data);
+          final calendarModel = CalendarModel.fromJson(response.data);
+          saveCalendarModel(calendarModel: calendarModel);
+
+          // Extract today's timings
+          final todayDateStr =
+              "${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year}";
+          final todayData = calendarModel.data.firstWhere(
+            (element) => element.date.gregorian.date == todayDateStr,
+            orElse: () => calendarModel.data.first,
+          );
+
+          timesModel = TimesModel(
+            code: calendarModel.code,
+            status: calendarModel.status,
+            data: todayData,
+          );
+
           saveTimeModel(timeModel: timesModel!);
           HomeWidgetService.updatePrayerWidget();
 
-          // Schedule both Adhan (audio) and regular notifications
+          // Schedule Adhan for the upcoming days (Accuracy improved by monthly data)
           await AdhanService.scheduleAdhans(timesModel!);
+
           await NotificationService().scheduleAllPrayerTimes({
             'الفجر': timesModel!.data.timings.fajr,
             'الظهر': timesModel!.data.timings.dhuhr,
@@ -185,6 +219,7 @@ class LocationCubit extends Cubit<LocationState> {
           errorStatus = false;
           emit(GetTimingsSuccess());
         } catch (parseError) {
+          log('Parse error in getTimings: $parseError');
           errorStatus = true;
           errorMessage =
               'خطأ في تحليل بيانات أوقات الصلاة. يرجى المحاولة مرة أخرى.';

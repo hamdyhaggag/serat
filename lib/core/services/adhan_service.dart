@@ -8,6 +8,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Data/Model/times_model.dart';
+import '../../Data/Model/calendar_model.dart';
 import 'home_widget_service.dart';
 
 class AdhanService {
@@ -255,6 +256,17 @@ class AdhanService {
   static Future<void> scheduleAdhans([TimesModel? timesModel]) async {
     final prefs = await SharedPreferences.getInstance();
 
+    // Try to get calendar data for multi-day scheduling
+    CalendarModel? calendarModel;
+    final calendarJson = prefs.getString('CalendarModel');
+    if (calendarJson != null) {
+      try {
+        calendarModel = CalendarModel.fromJson(jsonDecode(calendarJson));
+      } catch (e) {
+        log("Error decoding CalendarModel: $e");
+      }
+    }
+
     if (timesModel == null) {
       final timesJson = prefs.getString('TimesModel');
       if (timesJson != null) {
@@ -262,39 +274,65 @@ class AdhanService {
       }
     }
 
-    if (timesModel == null) return;
+    if (timesModel == null && calendarModel == null) return;
 
-    final timings = timesModel.data.timings;
     final now = DateTime.now();
-
     final isEnabled = prefs.getBool('isAdhanEnabled') ?? true;
     final isPreEnabled = prefs.getBool('isPreAdhanEnabled') ?? false;
     final preMinutes = prefs.getInt('preAdhanMinutes') ?? 15;
 
-    DateTime parse(String t, [int dayOffset = 0]) {
+    DateTime parseTime(String t, DateTime date) {
       final p = t.split(':');
-      final date = now.add(Duration(days: dayOffset));
       return DateTime(
           date.year, date.month, date.day, int.parse(p[0]), int.parse(p[1]));
     }
 
-    final Map<String, String> prayerTimings = {
-      'Fajr': timings.fajr,
-      'Dhuhr': timings.dhuhr,
-      'Asr': timings.asr,
-      'Maghrib': timings.maghrib,
-      'Isha': timings.isha,
-    };
+    // Schedule for the next 7 days to support offline usage
+    for (int dayOffset = 0; dayOffset < 7; dayOffset++) {
+      final targetDate = now.add(Duration(days: dayOffset));
+      final targetDateStr =
+          "${targetDate.day.toString().padLeft(2, '0')}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.year}";
 
-    // Schedule for today and tomorrow to ensure continuity
-    for (int dayOffset = 0; dayOffset <= 1; dayOffset++) {
+      Timings? dayTimings;
+
+      // Try to find correct timings for this specific day from calendar
+      if (calendarModel != null) {
+        try {
+          final dayData = calendarModel.data.firstWhere(
+            (element) => element.date.gregorian.date == targetDateStr,
+          );
+          dayTimings = dayData.timings;
+        } catch (_) {
+          // Day not found in current month's calendar (might be next month)
+        }
+      }
+
+      // Fallback to today's timings (less accurate but better than nothing)
+      // only for the first 2 days if calendar is missing
+      if (dayTimings == null && dayOffset <= 1 && timesModel != null) {
+        dayTimings = timesModel.data.timings;
+      }
+
+      if (dayTimings == null) continue;
+
+      final Map<String, String> prayerTimings = {
+        'Fajr': dayTimings.fajr,
+        'Dhuhr': dayTimings.dhuhr,
+        'Asr': dayTimings.asr,
+        'Maghrib': dayTimings.maghrib,
+        'Isha': dayTimings.isha,
+      };
+
       for (var entry in prayerTimings.entries) {
-        final prayerTime = parse(entry.value, dayOffset);
+        final prayerTime = parseTime(entry.value, targetDate);
         final prayerId = _getPrayerId(entry.key);
 
         // 1. Schedule main Adhan
         if (isEnabled && prayerTime.isAfter(now)) {
-          final alarmId = adhanAlarmId + (dayOffset * 10) + prayerId;
+          // Use a unique ID based on the day of the year to avoid duplicates
+          // formula: (day_of_month * 10) + prayerId + (isPreAdhan ? 500 : 0)
+          // Since we only schedule for 7 days, targetDate.day is sufficient.
+          final alarmId = adhanAlarmId + (targetDate.day * 10) + prayerId;
           await AndroidAlarmManager.oneShotAt(
             prayerTime,
             alarmId,
@@ -310,7 +348,7 @@ class AdhanService {
           final reminderTime =
               prayerTime.subtract(Duration(minutes: preMinutes));
           if (reminderTime.isAfter(now)) {
-            final alarmId = preAdhanAlarmId + (dayOffset * 10) + prayerId;
+            final alarmId = preAdhanAlarmId + (targetDate.day * 10) + prayerId;
             await AndroidAlarmManager.oneShotAt(
               reminderTime,
               alarmId,
@@ -319,7 +357,6 @@ class AdhanService {
               wakeup: true,
               rescheduleOnReboot: true,
             );
-            log("Scheduled Pre-Adhan for ${entry.key} (day offset $dayOffset) at $reminderTime");
           }
         }
       }

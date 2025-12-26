@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../Model/times_model.dart';
+import '../Model/calendar_model.dart';
 
 class CacheHelper {
   static SharedPreferences? sharedPreferences;
@@ -69,9 +70,58 @@ void saveTimeModel({
 }
 
 Future<TimesModel?> getTimeModel() async {
-  final timeModel = CacheHelper.getString(key: 'TimesModel');
-  if (timeModel.isNotEmpty) {
-    return TimesModel.fromJson(jsonDecode(timeModel));
+  final now = DateTime.now();
+  final todayDateStr =
+      "${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year}";
+
+  // 1. Try to get today's specific TimesModel first
+  final timeModelJson = CacheHelper.getString(key: 'TimesModel');
+  if (timeModelJson.isNotEmpty) {
+    final model = TimesModel.fromJson(jsonDecode(timeModelJson));
+    // If it's for today, return it
+    if (model.data.date.gregorian.date == todayDateStr) {
+      return model;
+    }
+  }
+
+  // 2. If not found or outdated, try to extract today's data from CalendarModel
+  final calendarModel = await getCalendarModel();
+  if (calendarModel != null) {
+    try {
+      final todayData = calendarModel.data.firstWhere(
+        (element) => element.date.gregorian.date == todayDateStr,
+      );
+      return TimesModel(
+        code: calendarModel.code,
+        status: calendarModel.status,
+        data: todayData,
+      );
+    } catch (_) {
+      // If not found in calendar, fallback to whatever we have in TimesModel
+    }
+  }
+
+  // 3. Last fallback
+  if (timeModelJson.isNotEmpty) {
+    return TimesModel.fromJson(jsonDecode(timeModelJson));
+  }
+
+  return null;
+}
+
+void saveCalendarModel({
+  required CalendarModel calendarModel,
+}) async {
+  await CacheHelper.saveData(
+    key: 'CalendarModel',
+    value: json.encode(calendarModel.toJson()),
+  );
+}
+
+Future<CalendarModel?> getCalendarModel() async {
+  final calendarModel = CacheHelper.getString(key: 'CalendarModel');
+  if (calendarModel.isNotEmpty) {
+    return CalendarModel.fromJson(jsonDecode(calendarModel));
   } else {
     return null;
   }
