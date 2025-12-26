@@ -162,7 +162,7 @@ class HadithCard extends StatelessWidget {
           _buildHighlightedText(
             hadith.hadithText,
             TextStyle(
-              fontFamily: 'Amiri',
+              fontFamily: 'Cairo',
               fontSize: 18,
               height: 1.8,
               fontWeight: FontWeight.bold,
