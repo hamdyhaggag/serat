@@ -65,7 +65,8 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
     setState(() => _batteryOptimizationGranted = status.isGranted);
   }
 
-  bool get _allRequiredGranted => _notificationsGranted && _locationGranted;
+  bool get _allRequiredGranted =>
+      _notificationsGranted && _locationGranted && _exactAlarmGranted;
 
   @override
   Widget build(BuildContext context) {

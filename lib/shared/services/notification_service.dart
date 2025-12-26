@@ -83,11 +83,31 @@ class NotificationService {
     developer.log('Current timezone offset: $timeZoneString',
         name: 'NotificationService');
 
-    // Use a default location that matches the current offset
-    final location = tz.getLocation('Europe/Istanbul'); // This covers EEST
-    tz.setLocalLocation(location);
-    developer.log('Set local timezone to: ${location.name}',
-        name: 'NotificationService');
+    // Use a default location that matches the current offset as best as possible
+    String locationName = 'Europe/Istanbul'; // Default for UTC+3
+    if (offset.inHours == 2) {
+      locationName = 'Africa/Cairo';
+    } else if (offset.inHours == 3) {
+      locationName = 'Asia/Riyadh';
+    } else if (offset.inHours == 4) {
+      locationName = 'Asia/Dubai';
+    } else if (offset.inHours == 1) {
+      locationName = 'Africa/Algiers';
+    } else if (offset.inHours == 0) {
+      locationName = 'GMT';
+    }
+
+    try {
+      final location = tz.getLocation(locationName);
+      tz.setLocalLocation(location);
+      developer.log('Set local timezone to: ${location.name}',
+          name: 'NotificationService');
+    } catch (e) {
+      developer.log('Error setting timezone $locationName: $e',
+          name: 'NotificationService');
+      // Fallback to what was there or Istanbul
+      tz.setLocalLocation(tz.getLocation('Europe/Istanbul'));
+    }
 
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',

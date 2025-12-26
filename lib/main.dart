@@ -25,6 +25,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:serat/services/firebase_messaging_service.dart';
 import 'package:quran_library/quran_library.dart';
 import 'package:serat/core/services/home_widget_service.dart';
+import 'package:serat/core/services/adhan_service.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:home_widget/home_widget.dart';
@@ -32,14 +33,30 @@ import 'package:home_widget/home_widget.dart';
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
+    WidgetsFlutterBinding.ensureInitialized();
     await CacheHelper.init();
     await HomeWidgetService.updatePrayerWidget();
+
+    // Reschedule adhans and notifications in background
+    final timesModel = await getTimeModel();
+    if (timesModel != null) {
+      await AdhanService.scheduleAdhans(timesModel);
+      await NotificationService().scheduleAllPrayerTimes({
+        'الفجر': timesModel.data.timings.fajr,
+        'الظهر': timesModel.data.timings.dhuhr,
+        'العصر': timesModel.data.timings.asr,
+        'المغرب': timesModel.data.timings.maghrib,
+        'العشاء': timesModel.data.timings.isha,
+      });
+    }
+
     return Future.value(true);
   });
 }
 
 @pragma('vm:entry-point')
 void widgetPeriodicCallback() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await CacheHelper.init();
   await HomeWidgetService.updatePrayerWidget();
 }

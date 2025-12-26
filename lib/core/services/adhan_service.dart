@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:ui';
 import 'dart:isolate';
 import 'dart:convert';
+import 'package:flutter/widgets.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -52,6 +53,7 @@ class AdhanService {
 
   @pragma('vm:entry-point')
   static void playAdhanCallback() async {
+    WidgetsFlutterBinding.ensureInitialized();
     initializeIsolateListener();
     final prefs = await SharedPreferences.getInstance();
     if (!(prefs.getBool('isAdhanEnabled') ?? true)) return;
@@ -104,6 +106,7 @@ class AdhanService {
 
   @pragma('vm:entry-point')
   static void playPreAdhanCallback() async {
+    WidgetsFlutterBinding.ensureInitialized();
     initializeIsolateListener();
     final prefs = await SharedPreferences.getInstance();
     if (!(prefs.getBool('isPreAdhanEnabled') ?? false)) return;
@@ -160,7 +163,9 @@ class AdhanService {
   }
 
   static bool _isTimeNear(DateTime now, String timeStr) {
+    if (timeStr.isEmpty) return false;
     final parts = timeStr.split(':');
+    if (parts.length < 2) return false;
     final pTime = DateTime(
         now.year, now.month, now.day, int.parse(parts[0]), int.parse(parts[1]));
     return now.difference(pTime).inMinutes.abs() <= 2;
@@ -266,47 +271,56 @@ class AdhanService {
     final isPreEnabled = prefs.getBool('isPreAdhanEnabled') ?? false;
     final preMinutes = prefs.getInt('preAdhanMinutes') ?? 15;
 
-    DateTime parse(String t) {
+    DateTime parse(String t, [int dayOffset = 0]) {
       final p = t.split(':');
+      final date = now.add(Duration(days: dayOffset));
       return DateTime(
-          now.year, now.month, now.day, int.parse(p[0]), int.parse(p[1]));
+          date.year, date.month, date.day, int.parse(p[0]), int.parse(p[1]));
     }
 
-    final Map<String, DateTime> prayers = {
-      'Fajr': parse(timings.fajr),
-      'Dhuhr': parse(timings.dhuhr),
-      'Asr': parse(timings.asr),
-      'Maghrib': parse(timings.maghrib),
-      'Isha': parse(timings.isha),
+    final Map<String, String> prayerTimings = {
+      'Fajr': timings.fajr,
+      'Dhuhr': timings.dhuhr,
+      'Asr': timings.asr,
+      'Maghrib': timings.maghrib,
+      'Isha': timings.isha,
     };
 
-    for (var entry in prayers.entries) {
-      // 1. Schedule main Adhan
-      if (isEnabled && entry.value.isAfter(now)) {
-        await AndroidAlarmManager.oneShotAt(
-          entry.value,
-          adhanAlarmId + _getPrayerId(entry.key),
-          playAdhanCallback,
-          exact: true,
-          wakeup: true,
-          rescheduleOnReboot: true,
-        );
-      }
+    // Schedule for today and tomorrow to ensure continuity
+    for (int dayOffset = 0; dayOffset <= 1; dayOffset++) {
+      for (var entry in prayerTimings.entries) {
+        final prayerTime = parse(entry.value, dayOffset);
+        final prayerId = _getPrayerId(entry.key);
 
-      // 2. Schedule Pre-Adhan Reminder
-      if (isPreEnabled) {
-        final reminderTime =
-            entry.value.subtract(Duration(minutes: preMinutes));
-        if (reminderTime.isAfter(now)) {
+        // 1. Schedule main Adhan
+        if (isEnabled && prayerTime.isAfter(now)) {
+          final alarmId = adhanAlarmId + (dayOffset * 10) + prayerId;
           await AndroidAlarmManager.oneShotAt(
-            reminderTime,
-            preAdhanAlarmId + _getPrayerId(entry.key),
-            playPreAdhanCallback,
+            prayerTime,
+            alarmId,
+            playAdhanCallback,
             exact: true,
             wakeup: true,
             rescheduleOnReboot: true,
           );
-          log("Scheduled Pre-Adhan for ${entry.key} at $reminderTime");
+        }
+
+        // 2. Schedule Pre-Adhan Reminder
+        if (isPreEnabled) {
+          final reminderTime =
+              prayerTime.subtract(Duration(minutes: preMinutes));
+          if (reminderTime.isAfter(now)) {
+            final alarmId = preAdhanAlarmId + (dayOffset * 10) + prayerId;
+            await AndroidAlarmManager.oneShotAt(
+              reminderTime,
+              alarmId,
+              playPreAdhanCallback,
+              exact: true,
+              wakeup: true,
+              rescheduleOnReboot: true,
+            );
+            log("Scheduled Pre-Adhan for ${entry.key} (day offset $dayOffset) at $reminderTime");
+          }
         }
       }
     }

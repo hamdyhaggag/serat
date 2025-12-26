@@ -7,6 +7,7 @@ import 'package:serat/Data/Model/times_model.dart';
 import 'package:serat/core/services/home_widget_service.dart';
 import 'package:serat/core/services/adhan_service.dart';
 import 'package:serat/imports.dart';
+import 'package:serat/shared/services/notification_service.dart';
 import 'package:serat/Data/utils/cache_helper.dart';
 
 class LocationCubit extends Cubit<LocationState> {
@@ -170,7 +171,17 @@ class LocationCubit extends Cubit<LocationState> {
           timesModel = TimesModel.fromJson(response.data);
           saveTimeModel(timeModel: timesModel!);
           HomeWidgetService.updatePrayerWidget();
-          AdhanService.scheduleAdhans(timesModel!);
+
+          // Schedule both Adhan (audio) and regular notifications
+          await AdhanService.scheduleAdhans(timesModel!);
+          await NotificationService().scheduleAllPrayerTimes({
+            'الفجر': timesModel!.data.timings.fajr,
+            'الظهر': timesModel!.data.timings.dhuhr,
+            'العصر': timesModel!.data.timings.asr,
+            'المغرب': timesModel!.data.timings.maghrib,
+            'العشاء': timesModel!.data.timings.isha,
+          });
+
           errorStatus = false;
           emit(GetTimingsSuccess());
         } catch (parseError) {
