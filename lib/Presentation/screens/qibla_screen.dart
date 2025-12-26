@@ -137,155 +137,150 @@ class QiblaScreenState extends State<QiblaScreen> {
                 ),
 
               SafeArea(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-                    // Status Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: qiblaCubit.isFromCache
-                            ? Colors.orange.withOpacity(0.1)
-                            : AppColors.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      // Status Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
                           color: qiblaCubit.isFromCache
-                              ? Colors.orange.withOpacity(0.3)
-                              : AppColors.primaryColor.withOpacity(0.3),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            qiblaCubit.isFromCache
-                                ? Icons.wifi_off_rounded
-                                : Icons.location_on_rounded,
-                            size: 16,
+                              ? Colors.orange.withOpacity(0.1)
+                              : AppColors.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
                             color: qiblaCubit.isFromCache
-                                ? Colors.orange
-                                : AppColors.primaryColor,
+                                ? Colors.orange.withOpacity(0.3)
+                                : AppColors.primaryColor.withOpacity(0.3),
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            qiblaCubit.isFromCache
-                                ? 'وضع غير متصل'
-                                : 'موقع دقيق',
-                            style: TextStyle(
-                              fontFamily: 'Cairo',
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              qiblaCubit.isFromCache
+                                  ? Icons.wifi_off_rounded
+                                  : Icons.location_on_rounded,
+                              size: 16,
                               color: qiblaCubit.isFromCache
                                   ? Colors.orange
                                   : AppColors.primaryColor,
                             ),
-                          ),
-                        ],
-                      ),
-                    ).animate().fade().slideY(begin: -0.5, end: 0),
-
-                    const Spacer(),
-
-                    // Compass Widget
-                    StreamBuilder<CompassEvent>(
-                      stream: FlutterCompass.events,
-                      builder: (context, snapshot) {
-                        if (snapshot.hasError) {
-                          return Center(
-                            child: Text(
-                              "خطأ في البوصلة",
+                            const SizedBox(width: 8),
+                            Text(
+                              qiblaCubit.isFromCache
+                                  ? 'وضع غير متصل'
+                                  : 'موقع دقيق',
                               style: TextStyle(
-                                fontFamily: "Cairo",
-                                color: isDarkMode ? Colors.white : Colors.black,
-                              ),
-                            ),
-                          );
-                        }
-
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        }
-
-                        final direction = snapshot.data?.heading ?? 0;
-                        final qiblaDir = qiblaDirection.toDouble();
-
-                        // Calculate deviation for feedback
-                        final deviation = (direction - qiblaDir).abs() % 360;
-                        bool isAligned = deviation < 2 || deviation > 358;
-
-                        if (isAligned && !_hasVibrated) {
-                          HapticFeedback.heavyImpact();
-                          _hasVibrated = true;
-                        } else if (!isAligned) {
-                          _hasVibrated = false;
-                        }
-
-                        return _buildModernCompass(
-                          context,
-                          direction,
-                          qiblaDir,
-                          isAligned,
-                          isDarkMode,
-                        );
-                      },
-                    ),
-
-                    const Spacer(),
-
-                    // Footer Info
-                    Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        children: [
-                          Text(
-                            "اتجاه الكعبة المشرفة",
-                            style: TextStyle(
-                              fontFamily: "Cairo",
-                              fontSize: 16,
-                              color:
-                                  isDarkMode ? Colors.white54 : Colors.black54,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          RichText(
-                            text: TextSpan(
-                              style: TextStyle(
-                                fontFamily: "Cairo",
-                                fontSize: 32,
+                                fontFamily: 'Cairo',
+                                fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color:
-                                    isDarkMode ? Colors.white : Colors.black87,
+                                color: qiblaCubit.isFromCache
+                                    ? Colors.orange
+                                    : AppColors.primaryColor,
                               ),
-                              children: [
-                                TextSpan(
-                                  text: "${qiblaDirection.round()}",
-                                ),
-                                TextSpan(
-                                  text: "°",
-                                  style: TextStyle(
-                                    color: AppColors.primaryColor,
-                                  ),
-                                ),
-                              ],
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            "درجة من الشمال",
-                            style: TextStyle(
-                              fontFamily: "Cairo",
-                              fontSize: 14,
-                              color:
-                                  isDarkMode ? Colors.white38 : Colors.black38,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
+                      ).animate().fade().slideY(begin: -0.5, end: 0),
+
+                      const SizedBox(height: 40),
+
+                      // Compass Widget
+                      StreamBuilder<CompassEvent>(
+                        stream: FlutterCompass.events,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasError) {
+                            return Center(
+                              child: Text(
+                                "خطأ في البوصلة",
+                                style: TextStyle(
+                                  fontFamily: "Cairo",
+                                  color:
+                                      isDarkMode ? Colors.white : Colors.black,
+                                ),
+                              ),
+                            );
+                          }
+
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
+
+                          final direction = snapshot.data?.heading ?? 0;
+                          final qiblaDir = qiblaDirection.toDouble();
+
+                          // Calculate deviation for feedback
+                          final deviation = (direction - qiblaDir).abs() % 360;
+                          bool isAligned = deviation < 2 || deviation > 358;
+
+                          if (isAligned && !_hasVibrated) {
+                            HapticFeedback.heavyImpact();
+                            _hasVibrated = true;
+                          } else if (!isAligned) {
+                            _hasVibrated = false;
+                          }
+
+                          return _buildModernCompass(
+                            context,
+                            direction,
+                            qiblaDir,
+                            isAligned,
+                            isDarkMode,
+                          );
+                        },
                       ),
-                    ).animate().fade().slideY(begin: 0.5, end: 0),
-                  ],
+
+                      const SizedBox(height: 40),
+
+                      // Footer Info
+                      Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          children: [
+                            RichText(
+                              text: TextSpan(
+                                style: TextStyle(
+                                  fontFamily: "Cairo",
+                                  fontSize: 42,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDarkMode
+                                      ? Colors.white
+                                      : Colors.black87,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: "${qiblaDirection.round()}",
+                                  ),
+                                  TextSpan(
+                                    text: "°",
+                                    style: TextStyle(
+                                      color: AppColors.primaryColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "درجة من الشمال",
+                              style: TextStyle(
+                                fontFamily: "Cairo",
+                                fontSize: 14,
+                                color: isDarkMode
+                                    ? Colors.white38
+                                    : Colors.black38,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ).animate().fade().slideY(begin: 0.5, end: 0),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -297,7 +292,7 @@ class QiblaScreenState extends State<QiblaScreen> {
 
   Widget _buildModernCompass(BuildContext context, double heading,
       double qiblaDir, bool isAligned, bool isDarkMode) {
-    final size = MediaQuery.of(context).size.width * 0.85;
+    final size = MediaQuery.of(context).size.width * 0.82;
 
     return Center(
       child: Container(
@@ -386,6 +381,14 @@ class QiblaScreenState extends State<QiblaScreen> {
                   _buildCardinalDirection('S', 180, isDarkMode),
                   _buildCardinalDirection('W', 270, isDarkMode),
 
+                  // Degree Numbers (30, 60, ... 330)
+                  ...List.generate(12, (index) {
+                    final degree = index * 30;
+                    if (degree % 90 == 0) return const SizedBox.shrink();
+                    return _buildDegreeNumber(
+                        degree.toString(), degree.toDouble(), isDarkMode);
+                  }),
+
                   // Kaaba Icon Pointer
                   Transform.rotate(
                     angle: qiblaDir * (math.pi / 180),
@@ -393,7 +396,7 @@ class QiblaScreenState extends State<QiblaScreen> {
                       alignment: Alignment.topCenter,
                       child: Column(
                         children: [
-                          const SizedBox(height: 40), // Offset from edge
+                          const SizedBox(height: 55), // Offset from edge
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
@@ -421,7 +424,7 @@ class QiblaScreenState extends State<QiblaScreen> {
 
                           // Guide Line to Center
                           Container(
-                            height: (size / 2) - 100,
+                            height: (size / 2) - 130,
                             width: 2,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
@@ -489,15 +492,35 @@ class QiblaScreenState extends State<QiblaScreen> {
       child: Align(
         alignment: Alignment.topCenter,
         child: Padding(
-          padding: const EdgeInsets.only(top: 40),
+          padding: const EdgeInsets.only(top: 35),
           child: Text(
             text,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: text == 'N'
                   ? Colors.red
                   : (isDarkMode ? Colors.white70 : Colors.black54),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDegreeNumber(String text, double angleDeg, bool isDarkMode) {
+    return Transform.rotate(
+      angle: angleDeg * (math.pi / 180),
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 35),
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: isDarkMode ? Colors.white38 : Colors.black26,
             ),
           ),
         ),
