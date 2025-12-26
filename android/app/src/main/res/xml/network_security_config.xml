@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <base-config cleartextTrafficPermitted="false">
+    <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
@@ -12,6 +12,11 @@
         <domain includeSubdomains="true">quranicaudio.com</domain>
         <domain includeSubdomains="true">mp3quran.net</domain>
         <domain includeSubdomains="true">islamhouse.com</domain>
+        <domain includeSubdomains="true">archive.org</domain>
+        <domain includeSubdomains="true">qurancentral.com</domain>
+        <domain includeSubdomains="true">ksu.edu.sa</domain>
+        <domain includeSubdomains="true">quran.com</domain>
+        <domain includeSubdomains="true">mirrors.quranicaudio.com</domain>
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
