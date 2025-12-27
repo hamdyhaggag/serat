@@ -59,12 +59,35 @@ class AdhanService {
     final prefs = await SharedPreferences.getInstance();
     if (!(prefs.getBool('isAdhanEnabled') ?? true)) return;
 
-    final timesJson = prefs.getString('TimesModel');
-    if (timesJson == null) return;
-
-    final timesModel = TimesModel.fromJson(jsonDecode(timesJson));
-    final timings = timesModel.data.timings;
     final now = DateTime.now();
+    Timings? timings;
+
+    // 1. Try to load from CalendarModel (Most Accurate)
+    final calendarJson = prefs.getString('CalendarModel');
+    if (calendarJson != null) {
+      try {
+        final calendarModel = CalendarModel.fromJson(jsonDecode(calendarJson));
+        final todayStr =
+            "${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year}";
+        final dayData = calendarModel.data.firstWhere(
+          (element) => element.date.gregorian.date == todayStr,
+        );
+        timings = dayData.timings;
+      } catch (e) {
+        log("Error loading calendar in callback: $e");
+      }
+    }
+
+    // 2. Fallback to TimesModel (Backup)
+    if (timings == null) {
+      final timesJson = prefs.getString('TimesModel');
+      if (timesJson != null) {
+        final timesModel = TimesModel.fromJson(jsonDecode(timesJson));
+        timings = timesModel.data.timings;
+      }
+    }
+
+    if (timings == null) return;
 
     String prayerName = "";
     String fileName = "adhan -mishary rashid.mp3";
@@ -112,39 +135,65 @@ class AdhanService {
     final prefs = await SharedPreferences.getInstance();
     if (!(prefs.getBool('isPreAdhanEnabled') ?? false)) return;
 
-    final timesJson = prefs.getString('TimesModel');
-    if (timesJson == null) return;
-
-    final timesModel = TimesModel.fromJson(jsonDecode(timesJson));
-    final timings = timesModel.data.timings;
     final now = DateTime.now();
     final leadMinutes = prefs.getInt('preAdhanMinutes') ?? 15;
+    final checkTime = now.add(Duration(minutes: leadMinutes));
+
+    Timings? timings;
+
+    // 1. Try to load from CalendarModel
+    final calendarJson = prefs.getString('CalendarModel');
+    if (calendarJson != null) {
+      try {
+        final calendarModel = CalendarModel.fromJson(jsonDecode(calendarJson));
+        // Use checkTime to find the correct day (in case lead time pushes to next day, though unlikely for 15 mins)
+        // Actually, better to use 'now' or 'checkTime' date.
+        // Prayer times are relative to the day they belong to.
+        final targetDate = checkTime;
+        final dateStr =
+            "${targetDate.day.toString().padLeft(2, '0')}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.year}";
+
+        final dayData = calendarModel.data.firstWhere(
+          (element) => element.date.gregorian.date == dateStr,
+        );
+        timings = dayData.timings;
+      } catch (e) {
+        log("Error loading calendar in pre-callback: $e");
+      }
+    }
+
+    // 2. Fallback
+    if (timings == null) {
+      final timesJson = prefs.getString('TimesModel');
+      if (timesJson != null) {
+        final timesModel = TimesModel.fromJson(jsonDecode(timesJson));
+        timings = timesModel.data.timings;
+      }
+    }
+
+    if (timings == null) return;
 
     String prayerName = "";
     String fileName = "";
 
-    if (_isTimeNear(now.add(Duration(minutes: leadMinutes)), timings.fajr)) {
+    if (_isTimeNear(checkTime, timings.fajr)) {
       prayerName = "الفجر";
       fileName = "pre_fajr.mp3";
-    } else if (_isTimeNear(
-        now.add(Duration(minutes: leadMinutes)), timings.dhuhr)) {
-      if (now.weekday == DateTime.friday) {
+    } else if (_isTimeNear(checkTime, timings.dhuhr)) {
+      if (checkTime.weekday == DateTime.friday) {
         prayerName = "الجمعة";
         fileName = "pre_jumuah.mp3";
       } else {
         prayerName = "الظهر";
         fileName = "pre_dhuhr.mp3";
       }
-    } else if (_isTimeNear(
-        now.add(Duration(minutes: leadMinutes)), timings.asr)) {
+    } else if (_isTimeNear(checkTime, timings.asr)) {
       prayerName = "العصر";
       fileName = "pre_asr.mp3";
-    } else if (_isTimeNear(
-        now.add(Duration(minutes: leadMinutes)), timings.maghrib)) {
+    } else if (_isTimeNear(checkTime, timings.maghrib)) {
       prayerName = "المغرب";
       fileName = "pre_maghrib.mp3";
-    } else if (_isTimeNear(
-        now.add(Duration(minutes: leadMinutes)), timings.isha)) {
+    } else if (_isTimeNear(checkTime, timings.isha)) {
       prayerName = "العشاء";
       fileName = "pre_isha.mp3";
     }
@@ -169,9 +218,22 @@ class AdhanService {
       final cleanTime = timeStr.split(' ')[0];
       final parts = cleanTime.split(':');
       if (parts.length < 2) return false;
+
+      // Construct the prayer time for the SAME day as 'now'
       final pTime = DateTime(now.year, now.month, now.day,
           int.parse(parts[0].trim()), int.parse(parts[1].trim()));
-      return now.difference(pTime).inMinutes.abs() <= 2;
+
+      final diff = now.difference(pTime).inMinutes.abs();
+
+      // Increased tolerance to 30 minutes to account for Android Doze mode delays
+      // or "Exact Alarm" issues where the alarm might fire several minutes late.
+      // This ensures we still show the notification even if late.
+      if (diff <= 30) {
+        log("Match found! Now: $now, Time: $pTime, Diff: $diff");
+        return true;
+      }
+
+      return false;
     } catch (e) {
       log("Error in _isTimeNear for $timeStr: $e");
       return false;
@@ -292,8 +354,8 @@ class AdhanService {
       try {
         final cleanTime = t.split(' ')[0];
         final p = cleanTime.split(':');
-        return DateTime(
-            date.year, date.month, date.day, int.parse(p[0].trim()), int.parse(p[1].trim()));
+        return DateTime(date.year, date.month, date.day, int.parse(p[0].trim()),
+            int.parse(p[1].trim()));
       } catch (e) {
         log("Error parsing time $t: $e");
         return date;
