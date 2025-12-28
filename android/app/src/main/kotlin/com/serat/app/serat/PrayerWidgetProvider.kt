@@ -8,6 +8,7 @@ import android.net.Uri
 import android.view.View
 import android.widget.RemoteViews
 import android.content.Intent
+import android.os.SystemClock
 import es.antonborri.home_widget.HomeWidgetLaunchIntent
 import es.antonborri.home_widget.HomeWidgetProvider
 
@@ -64,9 +65,23 @@ class PrayerWidgetProvider : HomeWidgetProvider() {
                 setViewVisibility(targetId, View.VISIBLE)
                 setProgressBar(targetId, 100, progress, false)
 
-                // Footer Countdown
-                setTextViewText(R.id.widget_rem_h, widgetData.getString("rem_h", "0"))
-                setTextViewText(R.id.widget_rem_m, widgetData.getString("rem_m", "00"))
+                // Footer Countdown using Native Chronometer
+                val targetTimestamp = widgetData.getLong("target_timestamp", 0L)
+
+                if (targetTimestamp > 0) {
+                    val remainingMs = targetTimestamp - System.currentTimeMillis()
+                    val base = SystemClock.elapsedRealtime() + remainingMs
+                    
+                    setChronometer(R.id.widget_countdown, base, null, true)
+                    setChronometerCountDown(R.id.widget_countdown, true)
+                } else {
+                    // Fallback to 00:00 if no data
+                    setViewVisibility(R.id.widget_countdown, View.GONE)
+                }
+                
+                // Old static implementation removed/ignored
+                // setTextViewText(R.id.widget_rem_h, widgetData.getString("rem_h", "0"))
+                // setTextViewText(R.id.widget_rem_m, widgetData.getString("rem_m", "00"))
                 
                 // Status Label (Iqamah/Prayer)
                 val label = widgetData.getString("iqamah_label", "للصلاة")
@@ -85,5 +100,17 @@ class PrayerWidgetProvider : HomeWidgetProvider() {
             }
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
+    }
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: android.os.Bundle
+    ) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+        // Trigger an update when resized so we can switch layouts (Compact vs Full) immediately
+        val widgetData = es.antonborri.home_widget.HomeWidgetPlugin.getData(context)
+        onUpdate(context, appWidgetManager, intArrayOf(appWidgetId), widgetData)
     }
 }

@@ -3,6 +3,7 @@ package com.serat.app.serat
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Bundle
 import android.view.View
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetLaunchIntent
@@ -70,5 +71,16 @@ class ListPrayerWidgetProvider : HomeWidgetProvider() {
             }
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
+    }
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: android.os.Bundle
+    ) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+        val widgetData = es.antonborri.home_widget.HomeWidgetPlugin.getData(context)
+        onUpdate(context, appWidgetManager, intArrayOf(appWidgetId), widgetData)
     }
 }

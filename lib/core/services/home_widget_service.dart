@@ -90,6 +90,7 @@ class HomeWidgetService {
     String progressColor;
     String remH, remM;
     String label = "للصلاة";
+    DateTime targetTime;
 
     // 1. Check for Iqamah (First 15 mins after prayer)
     final diffFromPrev = now.difference(pTime);
@@ -100,24 +101,25 @@ class HomeWidgetService {
       remH = "0";
       remM = (15 - diffFromPrev.inMinutes).toString().padLeft(2, '0');
       label = "للإقامة";
+      targetTime = pTime.add(const Duration(minutes: 15));
     }
-    // 2. Check for Standby (Last 15 mins before next prayer)
-    else if (remaining.inMinutes < 15) {
-      progressColor = "#FF4444"; // Red
-      final totalInterval = nTime.difference(pTime).inSeconds;
-      final elapsed = now.difference(pTime).inSeconds;
-      progress = (elapsed / totalInterval) * 100;
-      remH = remaining.inHours.toString();
-      remM = remaining.inMinutes.remainder(60).toString().padLeft(2, '0');
-    }
-    // 3. Normal State
+    // 2. Check for Standby (Last 15 mins before next prayer) and Normal
     else {
-      progressColor = "#00FFCC"; // Turquoise
-      final totalInterval = nTime.difference(pTime).inSeconds;
+      if (remaining.inMinutes < 15) {
+        progressColor = "#FF4444"; // Red
+      } else {
+        progressColor = "#00FFCC"; // Turquoise
+      }
+      final totalInterval = nTime.difference(pTime).inSeconds.abs();
+      // Avoid division by zero
+      final interval = totalInterval == 0 ? 1 : totalInterval;
+
       final elapsed = now.difference(pTime).inSeconds;
-      progress = (elapsed / totalInterval) * 100;
+      progress = (elapsed / interval) * 100;
       remH = remaining.inHours.toString();
       remM = remaining.inMinutes.remainder(60).toString().padLeft(2, '0');
+      label = "للصلاة";
+      targetTime = nTime;
     }
 
     // --- Save Data for Classic Widget ---
@@ -134,6 +136,10 @@ class HomeWidgetService {
         'next_time', DateFormat('hh:mm').format(nTime));
     await HomeWidget.saveWidgetData('rem_h', remH);
     await HomeWidget.saveWidgetData('rem_m', remM);
+
+    // Save Timestamp for Native Chronometer
+    await HomeWidget.saveWidgetData(
+        'target_timestamp', targetTime.millisecondsSinceEpoch);
 
     // --- Save Data for List Widget ---
     await HomeWidget.saveWidgetData('next_index', highlightedIndex);
