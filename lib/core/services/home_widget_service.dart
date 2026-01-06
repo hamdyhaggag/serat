@@ -92,9 +92,13 @@ class HomeWidgetService {
     String label = "للصلاة";
     DateTime targetTime;
 
-    // 1. Check for Iqamah (First 15 mins after prayer)
+    // 1. Check for Iqamah (First 15 mins after prayer) - EXCLUDING Sunrise
     final diffFromPrev = now.difference(pTime);
-    if (diffFromPrev.inMinutes >= 0 && diffFromPrev.inMinutes < 15) {
+    final isSunrise = prev['key'] == 'sunrise';
+
+    if (!isSunrise &&
+        diffFromPrev.inMinutes >= 0 &&
+        diffFromPrev.inMinutes < 15) {
       progressColor = "#FFD700"; // Gold
       progress =
           (diffFromPrev.inSeconds / (15 * 60)) * 100; // Progress of the 15 mins
@@ -115,7 +119,8 @@ class HomeWidgetService {
       final interval = totalInterval == 0 ? 1 : totalInterval;
 
       final elapsed = now.difference(pTime).inSeconds;
-      progress = (elapsed / interval) * 100;
+      // Inverted Logic: Start at 100% and decrease to 0%
+      progress = 100 - ((elapsed / interval) * 100);
       remH = remaining.inHours.toString();
       remM = remaining.inMinutes.remainder(60).toString().padLeft(2, '0');
       label = "للصلاة";

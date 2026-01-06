@@ -36,10 +36,11 @@
             android:textColor="#CCFFFFFF"
             android:textSize="10sp" />
 
-        <View
+        <TextView
             android:layout_width="0dp"
             android:layout_height="1dp"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:text="" />
 
         <TextView
             android:id="@+id/name_fajr"
@@ -80,10 +81,11 @@
             android:textColor="#CCFFFFFF"
             android:textSize="10sp" />
 
-        <View
+        <TextView
             android:layout_width="0dp"
             android:layout_height="1dp"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:text="" />
 
         <TextView
             android:id="@+id/name_sunrise"
@@ -124,10 +126,11 @@
             android:textColor="#CCFFFFFF"
             android:textSize="10sp" />
 
-        <View
+        <TextView
             android:layout_width="0dp"
             android:layout_height="1dp"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:text="" />
 
         <TextView
             android:id="@+id/name_dhuhr"
@@ -168,10 +171,11 @@
             android:textColor="#CCFFFFFF"
             android:textSize="10sp" />
 
-        <View
+        <TextView
             android:layout_width="0dp"
             android:layout_height="1dp"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:text="" />
 
         <TextView
             android:id="@+id/name_asr"
@@ -212,10 +216,11 @@
             android:textColor="#CCFFFFFF"
             android:textSize="10sp" />
 
-        <View
+        <TextView
             android:layout_width="0dp"
             android:layout_height="1dp"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:text="" />
 
         <TextView
             android:id="@+id/name_maghrib"
@@ -256,10 +261,11 @@
             android:textColor="#CCFFFFFF"
             android:textSize="10sp" />
 
-        <View
+        <TextView
             android:layout_width="0dp"
             android:layout_height="1dp"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:text="" />
 
         <TextView
             android:id="@+id/name_isha"
