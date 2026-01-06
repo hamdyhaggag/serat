@@ -191,6 +191,7 @@ class NotificationService {
                 enableVibration: true,
                 showBadge: true,
                 enableLights: true,
+                audioAttributesUsage: AudioAttributesUsage.alarm,
               ),
             );
         developer.log('Android notification channel created',
@@ -372,7 +373,8 @@ class NotificationService {
           id: id++,
         );
       } catch (e) {
-        developer.log('Error parsing time in scheduleAllPrayerTimes: ${entry.value} - $e');
+        developer.log(
+            'Error parsing time in scheduleAllPrayerTimes: ${entry.value} - $e');
       }
     }
   }

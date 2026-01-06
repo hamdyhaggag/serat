@@ -34,6 +34,8 @@
     
     <!-- Alarm permission -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Required for Android 14+ (API 34+) for alarm apps like prayer apps -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     
     <application
         android:label="serat - صراط"

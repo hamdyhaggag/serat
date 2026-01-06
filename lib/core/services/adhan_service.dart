@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:flutter/widgets.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:audio_session/audio_session.dart' as as_session;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Data/Model/times_model.dart';
@@ -54,6 +55,8 @@ class AdhanService {
 
   @pragma('vm:entry-point')
   static void playAdhanCallback() async {
+    final start = DateTime.now();
+    log("AdhanService: playAdhanCallback started at $start");
     WidgetsFlutterBinding.ensureInitialized();
     initializeIsolateListener();
     final prefs = await SharedPreferences.getInstance();
@@ -89,21 +92,59 @@ class AdhanService {
 
     if (timings == null) return;
 
+    // ---------------------------------------------------------
+    // ROBUST PRAYER DETECTION LOGIC
+    // ---------------------------------------------------------
     String prayerName = "";
     String fileName = "adhan -mishary rashid.mp3";
+    int minDiffMinutes = 9999;
 
-    if (_isTimeNear(now, timings.fajr)) {
-      prayerName = "الفجر";
-      fileName = "adhan fajr -mishary rashid.mp3";
-    } else if (_isTimeNear(now, timings.dhuhr)) {
-      prayerName = "الظهر";
-    } else if (_isTimeNear(now, timings.asr)) {
-      prayerName = "العصر";
-    } else if (_isTimeNear(now, timings.maghrib)) {
-      prayerName = "المغرب";
-    } else if (_isTimeNear(now, timings.isha)) {
-      prayerName = "العشاء";
+    var prayers = {
+      "الفجر": timings.fajr,
+      "الظهر": timings.dhuhr,
+      "العصر": timings.asr,
+      "المغرب": timings.maghrib,
+      "العشاء": timings.isha,
+    };
+
+    // Helper to parse today's time
+    DateTime? parseTodayTime(String t) {
+      try {
+        final clean = t.split(' ')[0].trim();
+        final parts = clean.split(':');
+        return DateTime(now.year, now.month, now.day, int.parse(parts[0]),
+            int.parse(parts[1]));
+      } catch (_) {
+        return null;
+      }
     }
+
+    prayers.forEach((pName, pTimeStr) {
+      final pDate = parseTodayTime(pTimeStr);
+      if (pDate != null) {
+        final diff = now.difference(pDate).inMinutes.abs();
+        // Check today's prayers (Window: 60 mins)
+        if (diff < 60 && diff < minDiffMinutes) {
+          minDiffMinutes = diff;
+          prayerName = pName;
+        }
+      }
+    });
+
+    // Handle midnight edge case (E.g. Isha was at 23:50 yesterday, now is 00:10)
+    // If no match found for today, check last prayer of yesterday implied
+    if (prayerName.isEmpty && now.hour < 1) {
+      // Force check Isha as a potential candidate if we are just past midnight
+      prayerName = "العشاء"; // High probability it's Isha delayed
+      log("AdhanService: Late night detected, assuming Isha due to system delay");
+    }
+
+    log("AdhanService: Detected Prayer: $prayerName (Diff: $minDiffMinutes min)");
+
+    if (prayerName == "الفجر") {
+      fileName = "adhan fajr -mishary rashid.mp3";
+    }
+    // ---------------------------------------------------------
 
     if (prayerName.isEmpty) return;
 
@@ -116,15 +157,33 @@ class AdhanService {
     };
     if (!(prefs.getBool('adhan_${keyMap[prayerName]}') ?? true)) return;
 
+    // Configure AudioSession for Alarm usage
+    final session = await as_session.AudioSession.instance;
+    await session.configure(const as_session.AudioSessionConfiguration(
+      avAudioSessionCategory: as_session.AVAudioSessionCategory.playback,
+      avAudioSessionCategoryOptions:
+          as_session.AVAudioSessionCategoryOptions.duckOthers,
+      avAudioSessionMode: as_session.AVAudioSessionMode.defaultMode,
+      androidAudioAttributes: as_session.AndroidAudioAttributes(
+        contentType: as_session.AndroidAudioContentType.music,
+        flags: as_session.AndroidAudioFlags.audibilityEnforced,
+        usage: as_session.AndroidAudioUsage.alarm,
+      ),
+      androidAudioFocusGainType:
+          as_session.AndroidAudioFocusGainType.gainTransient,
+      androidWillPauseWhenDucked: true,
+    ));
+
     await _showAdhanNotification(prayerName);
 
     // Update Widget to sync state (Next prayer, etc.)
     await HomeWidgetService.updatePrayerWidget();
 
     try {
+      log("AdhanService: Playing adhan file: adhan/$fileName");
       await _player.play(AssetSource("adhan/$fileName"));
     } catch (e) {
-      log("Play error: $e");
+      log("AdhanService: Play error: $e");
     }
   }
 
@@ -173,32 +232,85 @@ class AdhanService {
 
     if (timings == null) return;
 
+    // ---------------------------------------------------------
+    // ROBUST PRE-PRAYER DETECTION LOGIC
+    // ---------------------------------------------------------
     String prayerName = "";
     String fileName = "";
+    int minDiffMinutes = 9999;
 
-    if (_isTimeNear(checkTime, timings.fajr)) {
-      prayerName = "الفجر";
+    var prayers = {
+      "الفجر": timings.fajr,
+      "الظهر": timings.dhuhr,
+      "العصر": timings.asr,
+      "المغرب": timings.maghrib,
+      "العشاء": timings.isha,
+    };
+
+    // Helper to parse target day's time
+    // We use checkTime's date components because timings belong to that day
+    DateTime? parseTargetTime(String t) {
+      try {
+        final clean = t.split(' ')[0].trim();
+        final parts = clean.split(':');
+        return DateTime(checkTime.year, checkTime.month, checkTime.day,
+            int.parse(parts[0]), int.parse(parts[1]));
+      } catch (_) {
+        return null;
+      }
+    }
+
+    prayers.forEach((pName, pTimeStr) {
+      final pDate = parseTargetTime(pTimeStr);
+      if (pDate != null) {
+        final diff = checkTime.difference(pDate).inMinutes.abs();
+        // Window: 60 mins tolerance
+        if (diff < 60 && diff < minDiffMinutes) {
+          minDiffMinutes = diff;
+          prayerName = pName;
+        }
+      }
+    });
+
+    log("AdhanService: Detected Pre-Prayer: $prayerName (Diff: $minDiffMinutes min)");
+
+    if (prayerName == "الفجر") {
       fileName = "pre_fajr.mp3";
-    } else if (_isTimeNear(checkTime, timings.dhuhr)) {
+    } else if (prayerName == "الظهر") {
+      // Check for Jumuah (Friday)
       if (checkTime.weekday == DateTime.friday) {
         prayerName = "الجمعة";
         fileName = "pre_jumuah.mp3";
       } else {
-        prayerName = "الظهر";
         fileName = "pre_dhuhr.mp3";
       }
-    } else if (_isTimeNear(checkTime, timings.asr)) {
-      prayerName = "العصر";
+    } else if (prayerName == "العصر") {
       fileName = "pre_asr.mp3";
-    } else if (_isTimeNear(checkTime, timings.maghrib)) {
-      prayerName = "المغرب";
+    } else if (prayerName == "المغرب") {
       fileName = "pre_maghrib.mp3";
-    } else if (_isTimeNear(checkTime, timings.isha)) {
-      prayerName = "العشاء";
+    } else if (prayerName == "العشاء") {
       fileName = "pre_isha.mp3";
     }
+    // ---------------------------------------------------------
 
     if (prayerName.isEmpty || fileName.isEmpty) return;
+
+    // Configure AudioSession for Alarm usage (Pre-Adhan)
+    final session = await as_session.AudioSession.instance;
+    await session.configure(const as_session.AudioSessionConfiguration(
+      avAudioSessionCategory: as_session.AVAudioSessionCategory.playback,
+      avAudioSessionCategoryOptions:
+          as_session.AVAudioSessionCategoryOptions.duckOthers,
+      avAudioSessionMode: as_session.AVAudioSessionMode.defaultMode,
+      androidAudioAttributes: as_session.AndroidAudioAttributes(
+        contentType: as_session.AndroidAudioContentType.music,
+        flags: as_session.AndroidAudioFlags.audibilityEnforced,
+        usage: as_session.AndroidAudioUsage.alarm,
+      ),
+      androidAudioFocusGainType:
+          as_session.AndroidAudioFocusGainType.gainTransient,
+      androidWillPauseWhenDucked: true,
+    ));
 
     await _showPreAdhanNotification(prayerName, leadMinutes);
 
@@ -206,37 +318,10 @@ class AdhanService {
     await HomeWidgetService.updatePrayerWidget();
 
     try {
+      log("AdhanService: Playing pre-adhan file: adhan/$fileName");
       await _player.play(AssetSource("adhan/$fileName"));
     } catch (e) {
-      log("Pre-Adhan Play error: $e");
-    }
-  }
-
-  static bool _isTimeNear(DateTime now, String timeStr) {
-    if (timeStr.isEmpty) return false;
-    try {
-      final cleanTime = timeStr.split(' ')[0];
-      final parts = cleanTime.split(':');
-      if (parts.length < 2) return false;
-
-      // Construct the prayer time for the SAME day as 'now'
-      final pTime = DateTime(now.year, now.month, now.day,
-          int.parse(parts[0].trim()), int.parse(parts[1].trim()));
-
-      final diff = now.difference(pTime).inMinutes.abs();
-
-      // Increased tolerance to 30 minutes to account for Android Doze mode delays
-      // or "Exact Alarm" issues where the alarm might fire several minutes late.
-      // This ensures we still show the notification even if late.
-      if (diff <= 30) {
-        log("Match found! Now: $now, Time: $pTime, Diff: $diff");
-        return true;
-      }
-
-      return false;
-    } catch (e) {
-      log("Error in _isTimeNear for $timeStr: $e");
-      return false;
+      log("AdhanService: Pre-Adhan Play error: $e");
     }
   }
 
@@ -322,6 +407,7 @@ class AdhanService {
   }
 
   static Future<void> scheduleAdhans([TimesModel? timesModel]) async {
+    log("AdhanService: Starting scheduleAdhans...");
     final prefs = await SharedPreferences.getInstance();
 
     // Try to get calendar data for multi-day scheduling
@@ -330,8 +416,9 @@ class AdhanService {
     if (calendarJson != null) {
       try {
         calendarModel = CalendarModel.fromJson(jsonDecode(calendarJson));
+        log("AdhanService: Loaded CalendarModel with ${calendarModel.data.length} days");
       } catch (e) {
-        log("Error decoding CalendarModel: $e");
+        log("AdhanService: Error decoding CalendarModel: $e");
       }
     }
 
@@ -339,10 +426,14 @@ class AdhanService {
       final timesJson = prefs.getString('TimesModel');
       if (timesJson != null) {
         timesModel = TimesModel.fromJson(jsonDecode(timesJson));
+        log("AdhanService: Loaded TimesModel from cache");
       }
     }
 
-    if (timesModel == null && calendarModel == null) return;
+    if (timesModel == null && calendarModel == null) {
+      log("AdhanService: No prayer times data available, cannot schedule adhans!");
+      return;
+    }
 
     final now = DateTime.now();
     final isEnabled = prefs.getBool('isAdhanEnabled') ?? true;
@@ -415,18 +506,32 @@ class AdhanService {
 
         // 1. Schedule main Adhan
         if (isEnabled && prayerTime.isAfter(now)) {
-          // Use a unique ID based on the day of the year to avoid duplicates
-          // formula: (day_of_month * 10) + prayerId + (isPreAdhan ? 500 : 0)
-          // Since we only schedule for 7 days, targetDate.day is sufficient.
           final alarmId = adhanAlarmId + (targetDate.day * 10) + prayerId;
-          await AndroidAlarmManager.oneShotAt(
-            prayerTime,
-            alarmId,
-            playAdhanCallback,
-            exact: true,
-            wakeup: true,
-            rescheduleOnReboot: true,
-          );
+          bool scheduled = false;
+
+          try {
+            scheduled = await AndroidAlarmManager.oneShotAt(
+              prayerTime,
+              alarmId,
+              playAdhanCallback,
+              exact: true, // Try exact first
+              wakeup: true,
+              rescheduleOnReboot: true,
+            );
+          } catch (e) {
+            log("AdhanService: Exact alarm failed ($e), retrying with non-exact...");
+            // Fallback to non-exact if permission is missing
+            scheduled = await AndroidAlarmManager.oneShotAt(
+              prayerTime,
+              alarmId,
+              playAdhanCallback,
+              exact: false,
+              wakeup: true,
+              rescheduleOnReboot: true,
+            );
+          }
+
+          log("AdhanService: Scheduled ${entry.key} at $prayerTime (ID: $alarmId, success: $scheduled)");
         }
 
         // 2. Schedule Pre-Adhan Reminder
@@ -435,14 +540,28 @@ class AdhanService {
               prayerTime.subtract(Duration(minutes: preMinutes));
           if (reminderTime.isAfter(now)) {
             final alarmId = preAdhanAlarmId + (targetDate.day * 10) + prayerId;
-            await AndroidAlarmManager.oneShotAt(
-              reminderTime,
-              alarmId,
-              playPreAdhanCallback,
-              exact: true,
-              wakeup: true,
-              rescheduleOnReboot: true,
-            );
+            bool scheduled = false;
+            try {
+              scheduled = await AndroidAlarmManager.oneShotAt(
+                reminderTime,
+                alarmId,
+                playPreAdhanCallback,
+                exact: true,
+                wakeup: true,
+                rescheduleOnReboot: true,
+              );
+            } catch (e) {
+              log("AdhanService: Pre-Adhan exact alarm failed, retrying non-exact...");
+              scheduled = await AndroidAlarmManager.oneShotAt(
+                reminderTime,
+                alarmId,
+                playPreAdhanCallback,
+                exact: false, // Fallback
+                wakeup: true,
+                rescheduleOnReboot: true,
+              );
+            }
+            log("AdhanService: Scheduled Pre-${entry.key} at $reminderTime (ID: $alarmId, success: $scheduled)");
           }
         }
       }

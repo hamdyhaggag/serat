@@ -87,6 +87,32 @@ class AdhanSettingsScreen extends StatelessWidget {
                       context, 'المغرب', 'Maghrib', cubit, isDarkMode),
                   _buildPrayerItem(
                       context, 'العشاء', 'Isha', cubit, isDarkMode),
+
+                  const SizedBox(height: 30),
+
+                  // Test Button
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        cubit.testFullAdhan();
+                      },
+                      icon: const Icon(
+                        Icons.volume_up_rounded,
+                        color: Colors.white,
+                      ),
+                      label: const Text(
+                        "تجربة صوت الأذان",
+                        style:
+                            TextStyle(fontFamily: 'Cairo', color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: shared_colors.AppColors.primaryColor,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),

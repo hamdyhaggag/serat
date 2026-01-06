@@ -1,0 +1,6 @@
+Justification for USE_EXACT_ALARM permission:
+
+"Our application, Serat (صراط), is a Prayer Times and Adhan application. Its core functionality is to notify users exactly when the prayer time arrives. 
+Religious prayer times are precise, and even a delay of a few minutes (caused by Android's Doze mode or battery optimizations) invalidates the primary purpose of the app.
+Therefore, we require the USE_EXACT_ALARM permission to schedule exact notifications for Adhan at the specific prayer times calculated based on the user's location.
+This aligns with the 'Calendar or Reminder' core functionality use case allowed by Google Play policies."

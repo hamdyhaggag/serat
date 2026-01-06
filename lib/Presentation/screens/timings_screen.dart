@@ -10,7 +10,8 @@ import 'package:serat/Presentation/screens/reciters_screen.dart';
 import 'package:serat/Presentation/screens/islamic_quiz_screen.dart';
 import 'package:serat/Presentation/screens/history_screen.dart';
 import 'package:serat/imports.dart';
-import 'package:serat/Presentation/screens/adhan/adhan_settings_screen.dart';
+// TODO: Re-enable when Adhan feature is fixed
+// import 'package:serat/Presentation/screens/adhan/adhan_settings_screen.dart';
 
 import 'package:serat/Business_Logic/Cubit/navigation_cubit.dart' as navigation;
 import 'package:serat/Presentation/screens/dailygoal_screens/daily_goal_navigation_screen.dart';
@@ -1125,17 +1126,19 @@ class _TimingsScreenState extends State<TimingsScreen> {
                       onTap: () => showMethods(context),
                       isDarkMode: isDarkMode,
                     ),
-                    _buildDrawerItem(
-                      icon: Icons.mosque_outlined,
-                      title: 'إعدادات المؤذن',
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AdhanSettingsScreen(),
-                        ),
-                      ),
-                      isDarkMode: isDarkMode,
-                    ),
+                    // TODO: Re-enable when Adhan feature is fixed
+                    // The Adhan notification feature is currently not working correctly
+                    // _buildDrawerItem(
+                    //   icon: Icons.mosque_outlined,
+                    //   title: 'إعدادات المؤذن',
+                    //   onTap: () => Navigator.push(
+                    //     context,
+                    //     MaterialPageRoute(
+                    //       builder: (context) => const AdhanSettingsScreen(),
+                    //     ),
+                    //   ),
+                    //   isDarkMode: isDarkMode,
+                    // ),
                     _buildDrawerItem(
                       icon: Icons.brightness_6,
                       title: 'المظهر',

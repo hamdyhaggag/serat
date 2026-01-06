@@ -92,20 +92,43 @@ void main() async {
   await CacheHelper.init();
   await initializeAppSettings();
 
-  // Permissions are now handled in the dedicated PermissionsScreen during onboarding or startup
-
-  // Initialize notification service
+  // Request critical permissions for notifications and alarms (Async)
   final notificationService = NotificationService();
   await notificationService.initialize();
+  // Don't await permissions here to allow app to open quickly
+  notificationService.requestPermissions();
 
   // Initialize Firebase Messaging
-  await FirebaseMessagingService().initNotifications();
+  // Use try-catch to prevent firebase errors from blocking the app
+  try {
+    await FirebaseMessagingService().initNotifications();
+  } catch (e) {
+    log("Firebase init error: $e");
+  }
 
   // Initialize Quran Library for KFGQPC fonts
   await QuranLibrary.init();
 
   Bloc.observer = MyGlobalObserver();
   HomeWidgetService.updatePrayerWidget(); // Initial update
+
+  // CRITICAL: Schedule Adhan immediately from cached data on app start
+  // Run this in background (Fire and Forget) to NOT block UI startup
+  getTimeModel().then((cachedTimesModel) {
+    if (cachedTimesModel != null) {
+      AdhanService.scheduleAdhans(cachedTimesModel);
+      notificationService.scheduleAllPrayerTimes({
+        'الفجر': cachedTimesModel.data.timings.fajr,
+        'الظهر': cachedTimesModel.data.timings.dhuhr,
+        'العصر': cachedTimesModel.data.timings.asr,
+        'المغرب': cachedTimesModel.data.timings.maghrib,
+        'العشاء': cachedTimesModel.data.timings.isha,
+      });
+      log('Adhan scheduled from cached data on app start (Background)');
+    }
+  }).catchError((e) {
+    log("Error scheduling adhan on start: $e");
+  });
 
   // Initialize Workmanager for background updates
   await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
