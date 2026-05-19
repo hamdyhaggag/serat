@@ -71,8 +71,17 @@ Future<void> homeWidgetBackgroundCallback(Uri? uri) async {
 
 TimeOfDay? stringToTimeOfDay(String timeString) {
   if (timeString.isNotEmpty) {
-    final parts = timeString.split(":");
-    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+    try {
+      final parts = timeString.split(':');
+      if (parts.length >= 2) {
+        return TimeOfDay(
+          hour: int.parse(parts[0]),
+          minute: int.parse(parts[1]),
+        );
+      }
+    } catch (e) {
+      log('Error parsing saved time "$timeString": $e');
+    }
   }
   return null;
 }
@@ -167,8 +176,8 @@ Future<void> initializeAppSettings() async {
   isLight = CacheHelper.getBoolean(key: 'isLight');
   selectedMorning = CacheHelper.getString(key: 'Morning');
   selectedEvening = CacheHelper.getString(key: 'Evening');
-  selectedTimeMorning = stringToTimeOfDay(selectedMorning!);
-  selectedTimeEvening = stringToTimeOfDay(selectedEvening!);
+  selectedTimeMorning = stringToTimeOfDay(selectedMorning ?? '');
+  selectedTimeEvening = stringToTimeOfDay(selectedEvening ?? '');
 
   log(selectedMorning ?? "No Morning Time");
   log(selectedEvening ?? "No Evening Time");

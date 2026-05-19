@@ -7,7 +7,9 @@ class QuranVideoWebServices {
 
   Future<List<QuranVideoModel>> getVideos() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl?language=ar'));
+      final response = await http
+          .get(Uri.parse('$baseUrl?language=ar'))
+          .timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         final List<dynamic> videosList = data['videos'];

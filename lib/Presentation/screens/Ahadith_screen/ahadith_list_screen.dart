@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:async';
 import 'package:serat/imports.dart' hide AppColors;
@@ -12,6 +13,16 @@ import 'package:serat/domain/models/search_state.dart';
 import 'package:serat/Presentation/widgets/hadith_chapter_expansion.dart';
 import 'package:serat/Presentation/widgets/hadith_loading_shimmer.dart';
 import 'package:serat/shared/constants/app_colors.dart';
+
+// Top-level function required by compute() — runs in a separate isolate.
+// Receives a map {hadiths, query} and returns filtered HadithModel list.
+List<HadithModel> _filterHadithsIsolate(Map<String, dynamic> args) {
+  final hadiths = args['hadiths'] as List<HadithModel>;
+  final query = args['query'] as String;
+  return hadiths.where((h) {
+    return h.hadithText.contains(query) || h.explanation.contains(query);
+  }).toList();
+}
 
 class AhadithListScreen extends StatefulWidget {
   final String? bookName;
@@ -140,28 +151,37 @@ class _AhadithListScreenState extends State<AhadithListScreen>
         false;
   }
 
-  void _filterHadiths(String query) {
+  Future<void> _filterHadiths(String query) async {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () {
+    _debounce = Timer(const Duration(milliseconds: 300), () async {
       if (query == _lastSearchQuery) return;
       _lastSearchQuery = query;
 
+      if (query.isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _searchState = _searchState.copyWith(
+            query: query,
+            filteredHadiths: _hadiths,
+            groupedHadiths: _groupHadithsByChapter(_hadiths),
+          );
+        });
+        return;
+      }
+
+      // Run filtering in a separate isolate to avoid UI jank.
+      final filtered = await compute(
+        _filterHadithsIsolate,
+        {'hadiths': _hadiths, 'query': query},
+      );
+
+      if (!mounted) return;
       setState(() {
-        if (query.isEmpty) {
-          _searchState = _searchState.copyWith(
-              query: query,
-              filteredHadiths: _hadiths,
-              groupedHadiths: _groupHadithsByChapter(_hadiths));
-        } else {
-          final filtered = _hadiths.where((hadith) {
-            return hadith.hadithText.contains(query) ||
-                hadith.explanation.contains(query);
-          }).toList();
-          _searchState = _searchState.copyWith(
-              query: query,
-              filteredHadiths: filtered,
-              groupedHadiths: _groupHadithsByChapter(filtered));
-        }
+        _searchState = _searchState.copyWith(
+          query: query,
+          filteredHadiths: filtered,
+          groupedHadiths: _groupHadithsByChapter(filtered),
+        );
       });
     });
   }

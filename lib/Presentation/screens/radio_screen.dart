@@ -108,10 +108,10 @@ class _RadioScreenState extends State<RadioScreen>
       }
     });
 
-    // Listen for audio session interruptions
+    // Pause playback when headphones are removed (becoming noisy)
     session.becomingNoisyEventStream.listen((_) {
       if (_isPlaying) {
-        _playStation(_currentStation, _currentStationName);
+        _audioPlayer.pause();
       }
     });
   }
@@ -148,10 +148,9 @@ class _RadioScreenState extends State<RadioScreen>
 
   @override
   void dispose() {
-    // Only dispose if we're not playing
-    if (!_isPlaying) {
-      _audioPlayer.dispose();
-    }
+    // Always dispose AudioPlayer to prevent resource leaks.
+    // Background playback is handled via audio_service, not by keeping this alive.
+    _audioPlayer.dispose();
     _tabController.dispose();
     _searchController.dispose();
     _scrollController.dispose();

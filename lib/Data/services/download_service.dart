@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -16,11 +18,28 @@ class DownloadService {
   final Map<String, DownloadBatch> _downloadBatches = {};
   bool _isInitialized = false;
   Directory? _downloadsDirectory;
+  // Debounce timer: prevents writing to SharedPreferences on every download chunk.
+  // Terminal state changes (completed/failed/cancelled) bypass this via _saveNow().
+  Timer? _saveDebounce;
 
   // Singleton pattern
   static final DownloadService _instance = DownloadService._internal();
   factory DownloadService() => _instance;
   DownloadService._internal();
+
+  /// Schedules a debounced save (fires after 2 s of inactivity).
+  /// Used for intermediate progress updates during streaming.
+  void _scheduleSave() {
+    _saveDebounce?.cancel();
+    _saveDebounce = Timer(const Duration(seconds: 2), _saveDownloadBatches);
+  }
+
+  /// Saves immediately, cancelling any pending debounced save.
+  /// Used for terminal state changes (completed / failed / cancelled).
+  Future<void> _saveNow() async {
+    _saveDebounce?.cancel();
+    await _saveDownloadBatches();
+  }
 
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -36,7 +55,7 @@ class DownloadService {
       await _loadDownloadBatches();
       _isInitialized = true;
     } catch (e) {
-      print('Error initializing DownloadService: $e');
+      log('Error initializing DownloadService: $e');
     }
   }
 
@@ -53,7 +72,7 @@ class DownloadService {
         }
       }
     } catch (e) {
-      print('Error loading download batches: $e');
+      log('Error loading download batches: $e');
     }
   }
 
@@ -65,7 +84,7 @@ class DownloadService {
           .toList();
       await prefs.setString(_downloadsKey, json.encode(batchesList));
     } catch (e) {
-      print('Error saving download batches: $e');
+      log('Error saving download batches: $e');
     }
   }
 
@@ -314,8 +333,8 @@ class DownloadService {
       onBatchCreated(batch);
     }
 
-    // Start downloads
-    for (final surahNumber in surahNumbers) {
+    // Start downloads concurrently in batches of _maxConcurrentDownloads
+    final pending = surahNumbers.where((surahNumber) {
       final existingProgress = batch.progressList.firstWhere(
         (p) => p.surahNumber == surahNumber,
         orElse: () => DownloadProgress(
@@ -325,12 +344,14 @@ class DownloadService {
           status: DownloadStatus.notStarted,
         ),
       );
+      return existingProgress.status != DownloadStatus.completed;
+    }).toList();
 
-      if (existingProgress.status == DownloadStatus.completed) {
-        continue;
-      }
+    for (var i = 0; i < pending.length; i += _maxConcurrentDownloads) {
+      final end = (i + _maxConcurrentDownloads).clamp(0, pending.length);
+      final chunk = pending.sublist(i, end);
 
-      await downloadSurah(
+      await Future.wait(chunk.map((surahNumber) => downloadSurah(
         reciter: reciter,
         moshaf: moshaf,
         surahNumber: surahNumber,
@@ -353,7 +374,7 @@ class DownloadService {
             onError(updatedBatch);
           }
         },
-      );
+      )));
     }
   }
 
@@ -386,8 +407,10 @@ class DownloadService {
           p.status != DownloadStatus.downloading;
     }).toList();
 
-    for (final surah in pending) {
-      await downloadSurah(
+    for (var i = 0; i < pending.length; i += _maxConcurrentDownloads) {
+      final end = (i + _maxConcurrentDownloads).clamp(0, pending.length);
+      final chunk = pending.sublist(i, end);
+      await Future.wait(chunk.map((surah) => downloadSurah(
         reciter: reciter,
         moshaf: moshaf,
         surahNumber: surah,
@@ -406,11 +429,9 @@ class DownloadService {
         onError: (progress) {
           _updateBatchProgress(reciter, moshaf, progress);
           final updatedBatch = _downloadBatches[batchKey];
-          if (updatedBatch != null) {
-            onError(updatedBatch);
-          }
+          if (updatedBatch != null) onError(updatedBatch);
         },
-      );
+      )));
     }
   }
 
@@ -431,7 +452,7 @@ class DownloadService {
         createdAt: DateTime.now(),
       );
       _downloadBatches[batchKey] = newBatch;
-      _saveDownloadBatches();
+      _saveNow(); // New batch — always save immediately
       return;
     }
 
@@ -455,7 +476,7 @@ class DownloadService {
         progressList: updatedProgressList,
         createdAt: existing.createdAt,
       );
-      _saveDownloadBatches();
+      _saveNow(); // Structural change — save immediately
       return;
     }
 
@@ -474,7 +495,14 @@ class DownloadService {
       createdAt: existing.createdAt,
     );
 
-    _saveDownloadBatches();
+    // For terminal states (completed/failed/cancelled) save immediately;
+    // for in-progress updates use debounced save to reduce I/O.
+    const terminalStates = {DownloadStatus.completed, DownloadStatus.failed, DownloadStatus.cancelled};
+    if (terminalStates.contains(progress.status)) {
+      _saveNow();
+    } else {
+      _scheduleSave();
+    }
   }
 
   Future<bool> _isSurahDownloaded(
