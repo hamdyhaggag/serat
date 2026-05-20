@@ -109,7 +109,7 @@ class SurahHeaderPainter extends CustomPainter {
 
     // Draw border
     final borderPaint = Paint()
-      ..color = color.withOpacity(0.3)
+      ..color = color.withValues(alpha: 0.3)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
@@ -142,7 +142,7 @@ class VerseNumberWidget extends StatelessWidget {
       child: CustomPaint(
         painter: DiamondPainter(
           fillColor: theme.verseNumberBg,
-          borderColor: theme.verseNumberBg.withOpacity(0.7),
+          borderColor: theme.verseNumberBg.withValues(alpha: 0.7),
         ),
         child: Center(
           child: Text(
@@ -227,7 +227,7 @@ class PageNumberWidget extends StatelessWidget {
                 gradient: LinearGradient(
                   colors: [
                     Colors.transparent,
-                    theme.frameColor.withOpacity(0.5),
+                    theme.frameColor.withValues(alpha: 0.5),
                   ],
                 ),
               ),
@@ -240,7 +240,7 @@ class PageNumberWidget extends StatelessWidget {
               color: theme.pageNumberBg,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: theme.frameColor.withOpacity(0.3),
+                color: theme.frameColor.withValues(alpha: 0.3),
                 width: 2,
               ),
             ),
@@ -262,7 +262,7 @@ class PageNumberWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    theme.frameColor.withOpacity(0.5),
+                    theme.frameColor.withValues(alpha: 0.5),
                     Colors.transparent,
                   ],
                 ),
@@ -298,7 +298,7 @@ class PageHeaderWidget extends StatelessWidget {
         color: theme.headerBg,
         border: Border(
           bottom: BorderSide(
-            color: theme.frameColor.withOpacity(0.3),
+            color: theme.frameColor.withValues(alpha: 0.3),
             width: 1,
           ),
         ),

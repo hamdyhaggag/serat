@@ -37,6 +37,9 @@ class _RecitersScreenState extends State<RecitersScreen>
   Moshaf? _currentMoshaf;
   Reciter? _currentReciter;
   ValueNotifier<int>? _currentSurahNotifier;
+  final ValueNotifier<Duration> _positionNotifier = ValueNotifier(Duration.zero);
+  final ValueNotifier<Duration> _durationNotifier = ValueNotifier(Duration.zero);
+  final ValueNotifier<PlayerState> _playerStateNotifier = ValueNotifier(PlayerState.stopped);
 
   @override
   void initState() {
@@ -94,6 +97,7 @@ class _RecitersScreenState extends State<RecitersScreen>
 
     _audioPlayer.onPlayerComplete.listen((_) async {
       if (mounted) setState(() => _isPlaying = false);
+      _playerStateNotifier.value = PlayerState.completed;
       if (_autoPlayNextSura &&
           _currentSurahNumber != null &&
           _currentMoshaf != null &&
@@ -124,7 +128,16 @@ class _RecitersScreenState extends State<RecitersScreen>
     });
 
     _audioPlayer.onPlayerStateChanged.listen((state) {
+      _playerStateNotifier.value = state;
       if (mounted) setState(() => _isPlaying = state == PlayerState.playing);
+    });
+
+    _audioPlayer.onPositionChanged.listen((pos) {
+      _positionNotifier.value = pos;
+    });
+
+    _audioPlayer.onDurationChanged.listen((dur) {
+      _durationNotifier.value = dur;
     });
   }
 
@@ -139,6 +152,11 @@ class _RecitersScreenState extends State<RecitersScreen>
       if (_isPlaying) {
         await _stopAudio();
       }
+
+      // Reset values
+      _positionNotifier.value = Duration.zero;
+      _durationNotifier.value = Duration.zero;
+      _playerStateNotifier.value = PlayerState.stopped;
 
       await _audioPlayer.setSourceUrl(url);
       await _audioPlayer.resume();
@@ -197,6 +215,10 @@ class _RecitersScreenState extends State<RecitersScreen>
       if (!_isPlaying) return;
 
       await _audioPlayer.stop();
+      _positionNotifier.value = Duration.zero;
+      _durationNotifier.value = Duration.zero;
+      _playerStateNotifier.value = PlayerState.stopped;
+
       setState(() {
         _isPlaying = false;
         _currentReciterName = '';
@@ -713,6 +735,9 @@ class _RecitersScreenState extends State<RecitersScreen>
     _audioPlayer.dispose();
     _animationController.dispose();
     _searchController.dispose();
+    _positionNotifier.dispose();
+    _durationNotifier.dispose();
+    _playerStateNotifier.dispose();
     super.dispose();
   }
 
@@ -1074,10 +1099,9 @@ class _RecitersScreenState extends State<RecitersScreen>
   }
 
   Widget _buildPlayPauseButton() {
-    return StreamBuilder<PlayerState>(
-      stream: _audioPlayer.onPlayerStateChanged,
-      builder: (context, snapshot) {
-        final state = snapshot.data;
+    return ValueListenableBuilder<PlayerState>(
+      valueListenable: _playerStateNotifier,
+      builder: (context, state, _) {
         final isPlaying = state == PlayerState.playing;
 
         return Container(
@@ -1114,18 +1138,17 @@ class _RecitersScreenState extends State<RecitersScreen>
   }
 
   Widget _buildProgressBar() {
-    return StreamBuilder<Duration?>(
-      stream: _audioPlayer.onPositionChanged,
-      builder: (context, snapshot) {
-        final position = snapshot.data ?? Duration.zero;
-        return StreamBuilder<Duration?>(
-          stream: _audioPlayer.onDurationChanged,
-          builder: (context, snapshot) {
-            final duration = snapshot.data ?? Duration.zero;
+    return ValueListenableBuilder<Duration>(
+      valueListenable: _positionNotifier,
+      builder: (context, position, _) {
+        return ValueListenableBuilder<Duration>(
+          valueListenable: _durationNotifier,
+          builder: (context, duration, _) {
+            final hasDuration = duration.inSeconds > 0;
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (duration.inSeconds > 0) ...[
+                if (hasDuration) ...[
                   SliderTheme(
                     data: SliderThemeData(
                       trackHeight: 4,
@@ -1169,14 +1192,24 @@ class _RecitersScreenState extends State<RecitersScreen>
                   ),
                 ] else ...[
                   const SizedBox(height: 20),
-                  StreamBuilder<PlayerState>(
-                    stream: _audioPlayer.onPlayerStateChanged,
-                    builder: (context, snapshot) {
-                      final state = snapshot.data;
+                  ValueListenableBuilder<PlayerState>(
+                    valueListenable: _playerStateNotifier,
+                    builder: (context, state, _) {
                       if (state == PlayerState.playing ||
                           state == PlayerState.completed ||
                           state == PlayerState.paused) {
-                        return const SizedBox.shrink();
+                        return const SizedBox(
+                          height: 40,
+                          child: Center(
+                            child: SizedBox(
+                              width: 150,
+                              child: LinearProgressIndicator(
+                                color: Colors.teal,
+                                backgroundColor: Color(0x20009688),
+                              ),
+                            ),
+                          ),
+                        );
                       }
                       return Column(
                         children: [

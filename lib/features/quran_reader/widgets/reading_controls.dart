@@ -42,7 +42,7 @@ class ReadingControlsSheet extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -106,7 +106,7 @@ class ReadingControlsSheet extends StatelessWidget {
                       'أ',
                       style: TextStyle(
                         fontSize: 16,
-                        color: textColor.withOpacity(0.6),
+                        color: textColor.withValues(alpha: 0.6),
                         fontFamily: 'Amiri',
                       ),
                     ),
@@ -117,7 +117,7 @@ class ReadingControlsSheet extends StatelessWidget {
                         max: QuranTypography.maxFontSize,
                         divisions: 10,
                         activeColor: AppColors.primaryColor,
-                        inactiveColor: AppColors.primaryColor.withOpacity(0.2),
+                        inactiveColor: AppColors.primaryColor.withValues(alpha: 0.2),
                         onChanged: onFontSizeChanged,
                       ),
                     ),
@@ -125,7 +125,7 @@ class ReadingControlsSheet extends StatelessWidget {
                       'أ',
                       style: TextStyle(
                         fontSize: 28,
-                        color: textColor.withOpacity(0.6),
+                        color: textColor.withValues(alpha: 0.6),
                         fontFamily: 'Amiri',
                       ),
                     ),
@@ -137,7 +137,7 @@ class ReadingControlsSheet extends StatelessWidget {
                   margin: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
                     color: isDarkMode
-                        ? Colors.black.withOpacity(0.2)
+                        ? Colors.black.withValues(alpha: 0.2)
                         : Colors.grey[100],
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -212,7 +212,7 @@ class ReadingControlsSheet extends StatelessWidget {
                     'صفحة',
                     style: TextStyle(
                       fontSize: 16,
-                      color: textColor.withOpacity(0.7),
+                      color: textColor.withValues(alpha: 0.7),
                       fontFamily: 'DIN',
                     ),
                   ),
@@ -228,7 +228,7 @@ class ReadingControlsSheet extends StatelessWidget {
                         max: totalPages.toDouble(),
                         divisions: totalPages - 1,
                         activeColor: AppColors.primaryColor,
-                        inactiveColor: AppColors.primaryColor.withOpacity(0.2),
+                        inactiveColor: AppColors.primaryColor.withValues(alpha: 0.2),
                         label: ArabicNumbers.convert(currentPage),
                         onChanged: (value) {
                           onPageJump(value.round());
@@ -325,7 +325,7 @@ class ReadingControlsSheet extends StatelessWidget {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: borderColor.withOpacity(0.3),
+                    color: borderColor.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -400,11 +400,11 @@ class QuranFloatingControls extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.8),
+            color: Colors.black.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -457,7 +457,7 @@ class QuranFloatingControls extends StatelessWidget {
             decoration: BoxDecoration(
               color: isHighlighted
                   ? AppColors.primaryColor
-                  : Colors.white.withOpacity(0.1),
+                  : Colors.white.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(

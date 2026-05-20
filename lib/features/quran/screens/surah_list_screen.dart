@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/surah_model.dart';
 import '../services/surah_service.dart';
 import '../services/image_cache_service.dart';
 import '../services/image_cache_manager.dart';
 import 'dart:async';
+import 'package:serat/Presentation/Widgets/share_verse_generator.dart';
 
 class SurahListScreen extends StatefulWidget {
   const SurahListScreen({Key? key}) : super(key: key);
@@ -470,6 +472,25 @@ class _SurahListScreenState extends State<SurahListScreen>
                                     child: InkWell(
                                       onTap: () =>
                                           _showSurahDetails(context, surah),
+                                      onLongPress: () {
+                                        // Haptic Feedback for premium feel
+                                        HapticFeedback.mediumImpact();
+                                        // Open ShareVerseGenerator with the surah's fadluha as a sample verse
+                                        final verseText = surah.fadluha.toString().isNotEmpty
+                                            ? surah.fadluha.toString()
+                                            : 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ';
+                                        ShareVerseGenerator.show(
+                                          context,
+                                          verseText: verseText.length > 200
+                                              ? '${verseText.substring(0, 200)}...'
+                                              : verseText,
+                                          shareText: verseText.length > 200
+                                              ? '${verseText.substring(0, 200)}...'
+                                              : verseText,
+                                          surahName: surah.surah,
+                                          verseNumber: 1,
+                                        );
+                                      },
                                       borderRadius: BorderRadius.circular(20),
                                       child: Padding(
                                         padding: const EdgeInsets.all(16),

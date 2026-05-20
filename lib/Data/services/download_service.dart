@@ -335,7 +335,7 @@ class DownloadService {
 
     // Start downloads concurrently in batches of _maxConcurrentDownloads
     final pending = surahNumbers.where((surahNumber) {
-      final existingProgress = batch.progressList.firstWhere(
+      final existingProgress = batch!.progressList.firstWhere(
         (p) => p.surahNumber == surahNumber,
         orElse: () => DownloadProgress(
           reciterId: reciter.id.toString(),

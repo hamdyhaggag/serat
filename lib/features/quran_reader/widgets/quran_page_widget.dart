@@ -2,12 +2,13 @@
 /// Renders verses with proper Arabic typography and decorative elements
 /// Fixed: No scrolling, proper layout, RTL support
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../data/quran_page_data.dart';
 import '../theme/quran_reader_theme.dart';
 import 'quran_decorative_widgets.dart';
 
-class QuranPageWidget extends StatelessWidget {
+class QuranPageWidget extends StatefulWidget {
   final QuranPageData pageData;
   final QuranThemeData theme;
   final double fontSize;
@@ -30,19 +31,40 @@ class QuranPageWidget extends StatelessWidget {
   });
 
   @override
+  State<QuranPageWidget> createState() => _QuranPageWidgetState();
+}
+
+class _QuranPageWidgetState extends State<QuranPageWidget> {
+  final List<LongPressGestureRecognizer> _recognizers = [];
+
+  @override
+  void dispose() {
+    for (var recognizer in _recognizers) {
+      recognizer.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Clear old recognizers on rebuild
+    for (var recognizer in _recognizers) {
+      recognizer.dispose();
+    }
+    _recognizers.clear();
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Container(
-        color: theme.background,
+        color: widget.theme.background,
         child: Column(
           children: [
             // Page Header
             PageHeaderWidget(
-              juzNumber: pageData.juzNumber,
-              hizbNumber: pageData.hizbNumber,
-              surahName: primarySurahName,
-              theme: theme,
+              juzNumber: widget.pageData.juzNumber,
+              hizbNumber: widget.pageData.hizbNumber,
+              surahName: widget.primarySurahName,
+              theme: widget.theme,
             ),
             // Main content with decorative frame - NO SCROLL
             Expanded(
@@ -50,7 +72,7 @@ class QuranPageWidget extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: theme.frameColor,
+                    color: widget.theme.frameColor,
                     width: 2,
                   ),
                   borderRadius: BorderRadius.circular(8),
@@ -58,7 +80,7 @@ class QuranPageWidget extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(6),
                   child: Container(
-                    color: theme.background,
+                    color: widget.theme.background,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
@@ -70,8 +92,8 @@ class QuranPageWidget extends StatelessWidget {
             ),
             // Page Number Footer
             PageNumberWidget(
-              pageNumber: pageData.pageNumber,
-              theme: theme,
+              pageNumber: widget.pageData.pageNumber,
+              theme: widget.theme,
             ),
             const SizedBox(height: 4),
           ],
@@ -84,8 +106,8 @@ class QuranPageWidget extends StatelessWidget {
     final content = <Widget>[];
     int? currentSurah;
 
-    for (int i = 0; i < pageData.verses.length; i++) {
-      final verse = pageData.verses[i];
+    for (int i = 0; i < widget.pageData.verses.length; i++) {
+      final verse = widget.pageData.verses[i];
 
       // Check if we need to add a surah header
       if (verse.isSurahStart && verse.surahNumber != currentSurah) {
@@ -93,7 +115,7 @@ class QuranPageWidget extends StatelessWidget {
           SurahHeaderWidget(
             surahName: verse.surahName,
             surahNumber: verse.surahNumber,
-            theme: theme,
+            theme: widget.theme,
             showBismillah: true,
           ),
         );
@@ -120,18 +142,27 @@ class QuranPageWidget extends StatelessWidget {
     // Build inline text with verse numbers
     final textSpans = <InlineSpan>[];
 
-    for (final verse in pageData.verses) {
+    for (final verse in widget.pageData.verses) {
       // Add verse text
-      final isHighlighted = highlightedVerse == verse.verseNumber &&
-          highlightedSurah == verse.surahNumber;
+      final isHighlighted = widget.highlightedVerse == verse.verseNumber &&
+          widget.highlightedSurah == verse.surahNumber;
+
+      final recognizer = LongPressGestureRecognizer()
+        ..onLongPress = () {
+          if (widget.onVerseLongPress != null) {
+            widget.onVerseLongPress!(verse);
+          }
+        };
+      _recognizers.add(recognizer);
 
       textSpans.add(
         TextSpan(
           text: verse.arabicText,
           style: QuranTypography.quranTextStyle(
-            fontSize: fontSize,
-            color: isHighlighted ? theme.surahHeaderBg : theme.textColor,
+            fontSize: widget.fontSize,
+            color: isHighlighted ? widget.theme.surahHeaderBg : widget.theme.textColor,
           ),
+          recognizer: recognizer,
         ),
       );
 
@@ -143,8 +174,8 @@ class QuranPageWidget extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: VerseNumberWidget(
               verseNumber: verse.verseNumber,
-              theme: theme,
-              size: fontSize * 0.85,
+              theme: widget.theme,
+              size: widget.fontSize * 0.85,
             ),
           ),
         ),
@@ -200,7 +231,7 @@ class QuranVerseWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
           color: isHighlighted
-              ? theme.surahHeaderBg.withOpacity(0.1)
+              ? theme.surahHeaderBg.withValues(alpha: 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),

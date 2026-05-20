@@ -66,26 +66,35 @@ class _SebhaAzkarListScreenState extends State<SebhaAzkarListScreen> {
           ),
         ),
         child: SafeArea(
-          child: _buildBody(),
-        ),
-      ),
-      persistentFooterButtons: [
-        Container(
-          color: Colors.transparent,
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: AppButton(
-            horizontalPadding: 20.w,
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AddAzkarScreen()),
-              );
-              _loadAzkarItems();
-            },
-            title: 'إضافة ذكر',
+          child: Stack(
+            children: [
+              _buildBody(),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 100,
+                child: Center(
+                  child: SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.6,
+                    child: AppButton(
+                      horizontalPadding: 0,
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const AddAzkarScreen()),
+                        );
+                        _loadAzkarItems();
+                      },
+                      title: 'إضافة ذكر',
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 
@@ -118,7 +127,7 @@ class _SebhaAzkarListScreenState extends State<SebhaAzkarListScreen> {
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 170),
           itemCount: azkar.length,
           itemBuilder: (context, index) {
             final item = azkar[index];

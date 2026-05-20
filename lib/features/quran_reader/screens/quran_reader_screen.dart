@@ -11,6 +11,7 @@ import '../theme/quran_reader_theme.dart';
 import '../services/quran_page_service.dart';
 import '../widgets/quran_page_widget.dart';
 import '../widgets/reading_controls.dart';
+import 'package:serat/Presentation/Widgets/share_verse_generator.dart';
 
 class QuranReaderScreen extends StatefulWidget {
   final int initialPage;
@@ -288,7 +289,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen>
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: AppColors.primaryColor.withOpacity(0.1),
+                      color: AppColors.primaryColor.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Center(
@@ -324,8 +325,8 @@ class _QuranReaderScreenState extends State<QuranReaderScreen>
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: chapter.revelationPlace['en'] == 'meccan'
-                          ? Colors.orange.withOpacity(0.1)
-                          : Colors.blue.withOpacity(0.1),
+                          ? Colors.orange.withValues(alpha: 0.1)
+                          : Colors.blue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -440,6 +441,16 @@ class _QuranReaderScreenState extends State<QuranReaderScreen>
                         fontSize: _fontSize,
                         primarySurahName:
                             snapshot.data!.getPrimarySurahName(_chapters),
+                        onVerseLongPress: (verse) {
+                          HapticFeedback.mediumImpact();
+                          ShareVerseGenerator.show(
+                            context,
+                            verseText: verse.arabicText,
+                            shareText: verse.arabicText,
+                            surahName: verse.surahName,
+                            verseNumber: verse.verseNumber,
+                          );
+                        },
                       );
                     },
                   );
@@ -465,7 +476,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen>
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.7),
+                      Colors.black.withValues(alpha: 0.7),
                       Colors.transparent,
                     ],
                   ),

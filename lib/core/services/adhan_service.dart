@@ -123,8 +123,8 @@ class AdhanService {
       final pDate = parseTodayTime(pTimeStr);
       if (pDate != null) {
         final diff = now.difference(pDate).inMinutes.abs();
-        // Check today's prayers (Window: 60 mins)
-        if (diff < 60 && diff < minDiffMinutes) {
+        // Tight window: 5 minutes to avoid matching wrong prayer
+        if (diff < 5 && diff < minDiffMinutes) {
           minDiffMinutes = diff;
           prayerName = pName;
         }
@@ -132,10 +132,8 @@ class AdhanService {
     });
 
     // Handle midnight edge case (E.g. Isha was at 23:50 yesterday, now is 00:10)
-    // If no match found for today, check last prayer of yesterday implied
     if (prayerName.isEmpty && now.hour < 1) {
-      // Force check Isha as a potential candidate if we are just past midnight
-      prayerName = "العشاء"; // High probability it's Isha delayed
+      prayerName = "العشاء";
       log("AdhanService: Late night detected, assuming Isha due to system delay");
     }
 
@@ -264,8 +262,8 @@ class AdhanService {
       final pDate = parseTargetTime(pTimeStr);
       if (pDate != null) {
         final diff = checkTime.difference(pDate).inMinutes.abs();
-        // Window: 60 mins tolerance
-        if (diff < 60 && diff < minDiffMinutes) {
+        // Tight window: 5 minutes to avoid matching wrong prayer
+        if (diff < 5 && diff < minDiffMinutes) {
           minDiffMinutes = diff;
           prayerName = pName;
         }
@@ -406,29 +404,38 @@ class AdhanService {
     await FlutterLocalNotificationsPlugin().cancel(999);
   }
 
+  static bool _isScheduling = false;
+
   static Future<void> scheduleAdhans([TimesModel? timesModel]) async {
-    log("AdhanService: Starting scheduleAdhans...");
-    final prefs = await SharedPreferences.getInstance();
-
-    // Try to get calendar data for multi-day scheduling
-    CalendarModel? calendarModel;
-    final calendarJson = prefs.getString('CalendarModel');
-    if (calendarJson != null) {
-      try {
-        calendarModel = CalendarModel.fromJson(jsonDecode(calendarJson));
-        log("AdhanService: Loaded CalendarModel with ${calendarModel.data.length} days");
-      } catch (e) {
-        log("AdhanService: Error decoding CalendarModel: $e");
-      }
+    if (_isScheduling) {
+      log("AdhanService: scheduleAdhans already running. Skipping...");
+      return;
     }
+    _isScheduling = true;
 
-    if (timesModel == null) {
-      final timesJson = prefs.getString('TimesModel');
-      if (timesJson != null) {
-        timesModel = TimesModel.fromJson(jsonDecode(timesJson));
-        log("AdhanService: Loaded TimesModel from cache");
+    try {
+      log("AdhanService: Starting scheduleAdhans...");
+      final prefs = await SharedPreferences.getInstance();
+
+      // Try to get calendar data for multi-day scheduling
+      CalendarModel? calendarModel;
+      final calendarJson = prefs.getString('CalendarModel');
+      if (calendarJson != null) {
+        try {
+          calendarModel = CalendarModel.fromJson(jsonDecode(calendarJson));
+          log("AdhanService: Loaded CalendarModel with ${calendarModel.data.length} days");
+        } catch (e) {
+          log("AdhanService: Error decoding CalendarModel: $e");
+        }
       }
-    }
+
+      if (timesModel == null) {
+        final timesJson = prefs.getString('TimesModel');
+        if (timesJson != null) {
+          timesModel = TimesModel.fromJson(jsonDecode(timesJson));
+          log("AdhanService: Loaded TimesModel from cache");
+        }
+      }
 
     if (timesModel == null && calendarModel == null) {
       log("AdhanService: No prayer times data available, cannot schedule adhans!");
@@ -453,15 +460,11 @@ class AdhanService {
       }
     }
 
-    // --- Safety Cleanup for older versions ---
-    // Cancel old potential IDs from previous logic (1001-1005, 1011-1015, etc.)
-    // to avoid double adhans for the first day after update.
-    for (int oldId = 1000; oldId <= 1020; oldId++) {
-      await AndroidAlarmManager.cancel(oldId);
-    }
-    for (int oldId = 2000; oldId <= 2020; oldId++) {
-      await AndroidAlarmManager.cancel(oldId);
-    }
+    // --- Smart Cleanup ---
+    // Instead of cancelling 384 potential IDs every time, we track active IDs.
+    final List<String> prevIdsStr = prefs.getStringList('active_alarm_ids') ?? [];
+    final Set<int> previousAlarmIds = prevIdsStr.map((e) => int.tryParse(e) ?? 0).where((id) => id != 0).toSet();
+    final Set<int> newAlarmIds = {};
     // ----------------------------------------
 
     // Schedule for the next 7 days to support offline usage
@@ -507,6 +510,7 @@ class AdhanService {
         // 1. Schedule main Adhan
         if (isEnabled && prayerTime.isAfter(now)) {
           final alarmId = adhanAlarmId + (targetDate.day * 10) + prayerId;
+          newAlarmIds.add(alarmId);
           bool scheduled = false;
 
           try {
@@ -540,6 +544,7 @@ class AdhanService {
               prayerTime.subtract(Duration(minutes: preMinutes));
           if (reminderTime.isAfter(now)) {
             final alarmId = preAdhanAlarmId + (targetDate.day * 10) + prayerId;
+            newAlarmIds.add(alarmId);
             bool scheduled = false;
             try {
               scheduled = await AndroidAlarmManager.oneShotAt(
@@ -565,6 +570,23 @@ class AdhanService {
           }
         }
       }
+    }
+
+    // --- Execute Smart Cleanup ---
+    // Cancel old alarms that are no longer needed
+    for (int oldId in previousAlarmIds) {
+      if (!newAlarmIds.contains(oldId)) {
+        try {
+          await AndroidAlarmManager.cancel(oldId);
+        } catch (_) {}
+      }
+    }
+
+    // Save newly active IDs
+    await prefs.setStringList('active_alarm_ids', newAlarmIds.map((e) => e.toString()).toList());
+    log("AdhanService: Smart cleanup complete. ${newAlarmIds.length} alarms are active.");
+    } finally {
+      _isScheduling = false;
     }
   }
 

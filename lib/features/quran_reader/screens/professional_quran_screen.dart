@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:quran_library/quran_library.dart';
 import 'package:serat/Presentation/Config/constants/colors.dart';
+import 'package:serat/Presentation/Widgets/share_verse_generator.dart';
 
 class ProfessionalQuranScreen extends StatelessWidget {
   final int? initialSurah;
@@ -44,7 +45,7 @@ class ProfessionalQuranScreen extends StatelessWidget {
       backgroundColor:
           isDarkMode ? const Color(0xFF1A1A2E) : const Color(0xFFFFFDF5),
       textColor: isDarkMode ? Colors.white : Colors.black87,
-      ayahSelectedBackgroundColor: AppColors.primaryColor.withOpacity(0.2),
+      ayahSelectedBackgroundColor: AppColors.primaryColor.withValues(alpha: 0.2),
       ayahIconColor: AppColors.primaryColor,
       surahInfoStyle: SurahInfoStyle.defaults(
         isDark: isDarkMode,
@@ -100,6 +101,53 @@ class ProfessionalQuranScreen extends StatelessWidget {
         yellowGroupText: 'المفضلة الصفراء',
         redGroupText: 'المفضلة الحمراء',
       ),
+      // ignore: deprecated_member_use
+      anotherMenuChild: Icon(
+        Icons.share_rounded,
+        color: AppColors.primaryColor,
+        size: 24,
+      ),
+      // ignore: deprecated_member_use
+      anotherMenuChildOnTap: (AyahModel ayah) {
+        // Use ayaTextEmlaey (standard Unicode) for sharing — 'text' may be
+        // font-encoded and unreadable outside the app.
+        final shareText = ayah.ayaTextEmlaey.isNotEmpty
+            ? ayah.ayaTextEmlaey
+            : ayah.text;
+            
+        // Use the original text for the Uthmanic font rendering
+        final verseText = ayah.text;
+
+        // arabicName is populated for original fonts; fall back to QuranCtrl
+        // for downloaded fonts where it may be null.
+        final surahData = QuranLibrary().getCurrentSurahDataByAyahUniqueNumber(ayahUniqueNumber: ayah.ayahUQNumber);
+        final surahName = ayah.arabicName?.isNotEmpty == true
+            ? ayah.arabicName!
+            : surahData.arabicName;
+
+        // IMPORTANT: Defer to the next event-loop tick.
+        // The library calls close() immediately after this callback returns,
+        // which calls Navigator.pop(). If we push the BottomSheet
+        // synchronously here, that pop removes the BottomSheet instead of
+        // the menu dialog. Delaying by one tick lets the dialog dismiss
+        // first, then the BottomSheet is pushed onto a clean navigator stack.
+        Future.delayed(Duration.zero, () {
+          if (context.mounted) {
+            final surahAyahs = surahData.ayahs;
+            final initialAyahIndex = surahAyahs.indexWhere((a) => a.ayahNumber == ayah.ayahNumber);
+            
+            ShareVerseGenerator.show(
+              context,
+              verseText: verseText,
+              shareText: shareText,
+              surahName: surahName,
+              verseNumber: ayah.ayahNumber,
+              surahAyahs: surahAyahs,
+              initialAyahIndex: initialAyahIndex != -1 ? initialAyahIndex : null,
+            );
+          }
+        });
+      },
       ayahMenuStyle: AyahMenuStyle.defaults(
         isDark: isDarkMode,
         context: context,

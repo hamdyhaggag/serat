@@ -10,8 +10,7 @@ import 'package:serat/Presentation/screens/reciters_screen.dart';
 import 'package:serat/Presentation/screens/islamic_quiz_screen.dart';
 import 'package:serat/Presentation/screens/history_screen.dart';
 import 'package:serat/imports.dart';
-// TODO: Re-enable when Adhan feature is fixed
-// import 'package:serat/Presentation/screens/adhan/adhan_settings_screen.dart';
+import 'package:serat/Presentation/screens/adhan/adhan_settings_screen.dart';
 
 import 'package:serat/Business_Logic/Cubit/navigation_cubit.dart' as navigation;
 import 'package:serat/Presentation/screens/dailygoal_screens/daily_goal_navigation_screen.dart';
@@ -21,6 +20,7 @@ import 'dart:math';
 
 import 'package:serat/Features/NamesOfAllah/Presentation/Screens/names_of_allah_screen.dart';
 import 'package:serat/shared/constants/app_colors.dart' as shared_colors;
+import 'package:serat/Presentation/Widgets/emotional_state_widget.dart';
 
 import 'package:serat/Presentation/screens/about/constants/about_constants.dart';
 import 'dart:ui' show ImageFilter;
@@ -92,6 +92,58 @@ class _TimingsScreenState extends State<TimingsScreen> {
     super.dispose();
   }
 
+  Map<String, dynamic> _getContextData(bool isDarkMode) {
+    final now = DateTime.now();
+    final hour = now.hour;
+    final isFriday = now.weekday == DateTime.friday;
+
+    if (isFriday && (hour >= 0 && hour <= 23)) {
+      // Friday Context
+      return {
+        'hasContext': true,
+        'title': 'يوم الجمعة',
+        'subtitle': 'سورة الكهف والصلاة على النبي',
+        'icon': Icons.menu_book_rounded,
+        'colors': isDarkMode 
+            ? [const Color(0xff1A2B22), const Color(0xff183025)]
+            : [shared_colors.AppColors.primaryColor, const Color(0xff237A57)],
+      };
+    } else if (hour >= 4 && hour < 9) {
+      // Morning Context
+      return {
+        'hasContext': true,
+        'title': 'إشراقة الصباح',
+        'subtitle': 'أذكار الصباح تزين يومك',
+        'icon': Icons.wb_sunny_rounded,
+        'colors': isDarkMode
+            ? [const Color(0xff2B231A), const Color(0xff1A1A1A)]
+            : [const Color(0xffD39D38), shared_colors.AppColors.primaryColor],
+      };
+    } else if (hour >= 19 || hour < 4) {
+      // Night Context
+      return {
+        'hasContext': true,
+        'title': 'سكون الليل',
+        'subtitle': 'أذكار المساء وقيام الليل',
+        'icon': Icons.nights_stay_rounded,
+        'colors': isDarkMode
+            ? [const Color(0xff0A101A), const Color(0xff1A1A1A)]
+            : [const Color(0xff2c5364), shared_colors.AppColors.primaryColor],
+      };
+    } else {
+      // Default Context
+      return {
+        'hasContext': false,
+        'colors': isDarkMode
+            ? [const Color(0xff1A1A1A), const Color(0xff2D2D2D)]
+            : [
+                shared_colors.AppColors.primaryColor,
+                shared_colors.AppColors.primaryColor.withOpacity(0.8),
+              ],
+      };
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<location.LocationCubit, location.LocationState>(
@@ -110,6 +162,9 @@ class _TimingsScreenState extends State<TimingsScreen> {
       builder: (context, state) {
         var locationCubit = location.LocationCubit.get(context);
         final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        // Cache context data once per build to avoid repeated computation
+        final contextData = _getContextData(isDarkMode);
+        final bool hasContext = contextData['hasContext'] == true;
 
         return Scaffold(
           key: _scaffoldKey,
@@ -161,16 +216,7 @@ class _TimingsScreenState extends State<TimingsScreen> {
                                 gradient: LinearGradient(
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
-                                  colors: isDarkMode
-                                      ? [
-                                          const Color(0xff1A1A1A),
-                                          const Color(0xff2D2D2D),
-                                        ]
-                                      : [
-                                          shared_colors.AppColors.primaryColor,
-                                          shared_colors.AppColors.primaryColor
-                                              .withOpacity(0.8),
-                                        ],
+                                  colors: contextData['colors'] as List<Color>,
                                 ),
                                 borderRadius: const BorderRadius.vertical(
                                   bottom: Radius.circular(40),
@@ -518,6 +564,109 @@ class _TimingsScreenState extends State<TimingsScreen> {
                           ],
                         ),
 
+                        const SizedBox(height: 80),
+                        if (hasContext) ...[
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: InkWell(
+                              onTap: () {
+                                if (contextData['title'] == 'يوم الجمعة') {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const QuranScreen()),
+                                  );
+                                } else {
+                                  navigation.NavigationCubit.get(context).changeIndex(2); // Go to Azkar tab
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(24),
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: isDarkMode 
+                                        ? [const Color(0xff2A2A2A), const Color(0xff222222)]
+                                        : [
+                                            (contextData['colors'] as List<Color>)[0].withOpacity(0.08),
+                                            (contextData['colors'] as List<Color>)[1].withOpacity(0.08),
+                                          ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(
+                                    color: isDarkMode 
+                                        ? Colors.white.withOpacity(0.05)
+                                        : (contextData['colors'] as List<Color>)[0].withOpacity(0.2),
+                                    width: 1.5,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: isDarkMode
+                                          ? Colors.black.withOpacity(0.2)
+                                          : (contextData['colors'] as List<Color>)[0].withOpacity(0.05),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: isDarkMode 
+                                            ? Colors.white.withOpacity(0.05)
+                                            : (contextData['colors'] as List<Color>)[0].withOpacity(0.12),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        contextData['icon'] as IconData,
+                                        color: isDarkMode 
+                                            ? Colors.white.withOpacity(0.9)
+                                            : (contextData['colors'] as List<Color>)[0],
+                                        size: 24,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            contextData['title'] as String,
+                                            style: TextStyle(
+                                              color: isDarkMode ? Colors.white : const Color(0xff1B1B1B),
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              fontFamily: 'Cairo',
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            contextData['subtitle'] as String,
+                                            style: TextStyle(
+                                              color: isDarkMode ? Colors.grey[400] : const Color(0xff555555),
+                                              fontSize: 13,
+                                              fontFamily: 'Cairo',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
+                                      size: 16,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
+                          const SizedBox(height: 24),
+                        ],
+                        EmotionalStateWidget(isDarkMode: isDarkMode),
                         const SizedBox(height: 20),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1126,8 +1275,6 @@ class _TimingsScreenState extends State<TimingsScreen> {
                       onTap: () => showMethods(context),
                       isDarkMode: isDarkMode,
                     ),
-                    // TODO: Re-enable when Adhan feature is fixed
-                    // The Adhan notification feature is currently not working correctly
                     // _buildDrawerItem(
                     //   icon: Icons.mosque_outlined,
                     //   title: 'إعدادات المؤذن',

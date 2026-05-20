@@ -109,25 +109,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                               children: [
                                 Hero(
                                   tag: 'onboarding_image_$index',
-                                  child: Container(
+                                  child: SizedBox(
                                     height: size.height * 0.35,
                                     width: size.width * 0.8,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(20),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
-                                          blurRadius: 20,
-                                          offset: const Offset(0, 10),
-                                        ),
-                                      ],
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(20),
-                                      child: Image.asset(
-                                        contents[index].image,
-                                        fit: BoxFit.cover,
-                                      ),
+                                    child: Image.asset(
+                                      contents[index].image,
+                                      fit: BoxFit.contain,
                                     ),
                                   ),
                                 ),

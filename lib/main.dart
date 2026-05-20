@@ -18,6 +18,7 @@ import 'package:serat/Business_Logic/Cubit/quran_cubit.dart';
 import 'package:serat/Business_Logic/Cubit/download_cubit.dart';
 import 'package:serat/features/quran/routes/quran_routes.dart';
 import 'package:serat/Business_Logic/Cubit/theme_cubit.dart';
+import 'package:serat/Business_Logic/Cubit/last_read_cubit.dart';
 import 'package:serat/shared/services/notification_service.dart';
 import 'package:serat/core/theme/app_theme.dart';
 import 'package:upgrader/upgrader.dart';
@@ -236,6 +237,7 @@ class SeratApp extends StatelessWidget {
         BlocProvider(create: (context) => QuranCubit()),
         BlocProvider(create: (context) => DownloadCubit()),
         BlocProvider(create: (context) => ThemeCubit()),
+        BlocProvider(create: (context) => LastReadCubit()..loadLastRead()),
       ],
       child: ScreenUtilInit(
         designSize: const Size(360, 690),

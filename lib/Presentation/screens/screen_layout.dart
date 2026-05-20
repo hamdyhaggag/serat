@@ -5,6 +5,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serat/Business_Logic/Cubit/navigation_cubit.dart';
 import 'package:serat/imports.dart';
+import 'package:serat/Presentation/Widgets/resume_bottom_bar.dart';
+import 'package:serat/Business_Logic/Cubit/last_read_cubit.dart';
 
 class ScreenLayout extends StatelessWidget {
   const ScreenLayout({super.key});
@@ -48,8 +50,33 @@ class ScreenLayout extends StatelessWidget {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  child: ClipRRect(
-                    borderRadius:
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // The Resume Bottom Bar (Premium UX)
+                      BlocBuilder<LastReadCubit, LastReadState>(
+                        builder: (context, state) {
+                          if (state is LastReadLoaded && state.hasData) {
+                            return ResumeBottomBar(
+                              title: state.type == 'audio' ? 'استئناف الاستماع' : 'استئناف القراءة',
+                              subtitle: '${state.title} - ${state.subtitle}',
+                              icon: state.type == 'audio' ? Icons.headset_rounded : Icons.menu_book_rounded,
+                              onTap: () {
+                                // TODO: Navigate to the correct screen based on state
+                                // Example: if type == 'audio' push AudioScreen
+                                // if type == 'quran' push SurahScreen
+                              },
+                              onClose: () {
+                                LastReadCubit.get(context).clearLastRead();
+                              },
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+
+                      ClipRRect(
+                        borderRadius:
                         const BorderRadius.vertical(top: Radius.circular(24)),
                     child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
@@ -118,21 +145,25 @@ class ScreenLayout extends StatelessWidget {
                                               hz: 4,
                                               curve: Curves.easeInOut,
                                               duration: 200.ms),
-                                      if (isSelected) ...[
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          navItems[index]['label'] as String,
+                                       const SizedBox(height: 4),
+                                        AnimatedDefaultTextStyle(
+                                          duration: const Duration(milliseconds: 250),
                                           style: TextStyle(
                                             fontFamily: 'Cairo',
                                             fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            color: theme.primaryColor,
+                                            fontWeight: isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.w400,
+                                            color: isSelected
+                                                ? theme.primaryColor
+                                                : (isDarkMode
+                                                    ? Colors.grey
+                                                    : Colors.grey.shade500),
+                                          ),
+                                          child: Text(
+                                            navItems[index]['label'] as String,
                                           ),
                                         )
-                                            .animate()
-                                            .fade()
-                                            .slideY(begin: 0.5, end: 0),
-                                      ]
                                     ],
                                   ),
                                 ),
@@ -140,14 +171,16 @@ class ScreenLayout extends StatelessWidget {
                             }),
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+                      ), // Container
+                    ), // BackdropFilter
+                  ), // ClipRRect
+                ], // Column children
+              ), // Column
+            ), // Positioned
+          ], // Stack children
+        ), // Stack
+      ), // WillPopScope
+    ); // Scaffold
       },
     );
   }
