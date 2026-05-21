@@ -228,16 +228,22 @@ class _RecitersScreenState extends State<RecitersScreen>
     }
   }
 
-  void _loadReciters() {
+  Future<void> _loadReciters() async {
     try {
-      RecitersCubit.get(context).getReciters().then((_) {
+      if (!mounted) return;
+      await RecitersCubit.get(context).getReciters();
+      if (!mounted) return;
+
+      final state = RecitersCubit.get(context).state;
+      if (state is RecitersError) {
+        setState(() => _isOfflineMode = true);
+        _showErrorSnackBar('تعذر الاتصال بالشبكة، يرجى المحاولة لاحقاً');
+      } else {
         setState(() => _isOfflineMode = false);
         _filterReciters(_searchController.text);
-      }).catchError((_) {
-        setState(() => _isOfflineMode = true);
-        _showErrorSnackBar('حدث خطأ أثناء تحميل بيانات القراء');
-      });
+      }
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isOfflineMode = true);
       _showErrorSnackBar('حدث خطأ أثناء تحميل بيانات القراء');
     }
@@ -302,7 +308,7 @@ class _RecitersScreenState extends State<RecitersScreen>
         stretchModes: const [StretchMode.blurBackground, StretchMode.zoomBackground],
         centerTitle: true,
         title: const AppText(
-          'القراء والمصاحف',
+          'القـراء',
           fontSize: 18,
           fontWeight: FontWeight.bold,
           color: Colors.white,
@@ -387,10 +393,39 @@ class _RecitersScreenState extends State<RecitersScreen>
           );
         }
 
+        final cubit = RecitersCubit.get(context);
+
+        if (_isOfflineMode && (cubit.recitersModel?.reciters.isEmpty ?? true)) {
+          return SliverFillRemaining(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.wifi_off_rounded, size: 64, color: Colors.grey.withOpacity(0.5)),
+                  const SizedBox(height: 16),
+                  const AppText('لا يوجد اتصال بالإنترنت', fontSize: 18, color: Colors.grey, fontWeight: FontWeight.bold),
+                  const SizedBox(height: 8),
+                  const AppText('تأكد من اتصالك بالشبكة للمتابعة', fontSize: 14, color: Colors.grey),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      setState(() => _isOfflineMode = false);
+                      _loadReciters();
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const AppText('إعادة المحاولة', color: Colors.white),
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
+                  )
+                ],
+              ),
+            ),
+          );
+        }
+
         if (state is RecitersError && !_isOfflineMode) {
           return SliverFillRemaining(
             child: _ErrorView(
-              error: RecitersCubit.get(context).error ?? 'حدث خطأ غير معروف',
+              error: cubit.error ?? 'حدث خطأ غير معروف',
               onRetry: () {
                 setState(() => _isOfflineMode = false);
                 _loadReciters();
@@ -399,7 +434,6 @@ class _RecitersScreenState extends State<RecitersScreen>
           );
         }
 
-        final cubit = RecitersCubit.get(context);
         if (cubit.recitersModel?.reciters.isEmpty ?? true) {
           return SliverFillRemaining(
             child: Center(
@@ -1254,7 +1288,7 @@ class _ReciterCard extends StatelessWidget {
                     children: [
                       AppText(
                         reciter.name,
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: isDarkMode ? Colors.white : const Color(0xff1A1A1A),
                         fontFamily: 'Cairo',

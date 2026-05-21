@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:serat/Business_Logic/Cubit/location_cubit.dart' as location;
 import 'package:serat/Business_Logic/Cubit/theme_cubit.dart';
-import 'package:serat/Presentation/screens/about/about_screen.dart'
-    show AboutScreen;
+// import 'package:serat/Presentation/screens/about/about_screen.dart'
+//     show AboutScreen;
 import 'package:serat/Presentation/screens/qasas_screen.dart';
 import 'package:serat/Presentation/screens/quran_screen.dart';
 import 'package:serat/Presentation/screens/radio_screen.dart';
@@ -14,9 +14,9 @@ import 'package:serat/features/badges/screens/badges_screen.dart';
 import 'package:serat/features/prophetic_day/screens/prophetic_day_screen.dart';
 
 import 'package:serat/Business_Logic/Cubit/navigation_cubit.dart' as navigation;
-import 'package:serat/Presentation/screens/dailygoal_screens/daily_goal_navigation_screen.dart';
 import 'package:serat/Presentation/screens/zakah_calculator_screen.dart';
 import 'package:serat/features/quran/routes/quran_routes.dart';
+import 'package:serat/features/spiritual_progress/screens/spiritual_dashboard_screen.dart';
 import 'dart:math';
 
 import 'package:serat/Features/NamesOfAllah/Presentation/Screens/names_of_allah_screen.dart';
@@ -104,7 +104,7 @@ class _TimingsScreenState extends State<TimingsScreen> {
         'title': 'يوم الجمعة',
         'subtitle': 'سورة الكهف والصلاة على النبي',
         'icon': Icons.menu_book_rounded,
-        'colors': isDarkMode 
+        'colors': isDarkMode
             ? [const Color(0xff1A2B22), const Color(0xff183025)]
             : [shared_colors.AppColors.primaryColor, const Color(0xff237A57)],
       };
@@ -573,10 +573,12 @@ class _TimingsScreenState extends State<TimingsScreen> {
                                 if (contextData['title'] == 'يوم الجمعة') {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (_) => const QuranScreen()),
+                                    MaterialPageRoute(
+                                        builder: (_) => const QuranScreen(initialPage: 293)),
                                   );
                                 } else {
-                                  navigation.NavigationCubit.get(context).changeIndex(2); // Go to Azkar tab
+                                  navigation.NavigationCubit.get(context)
+                                      .changeIndex(2); // Go to Azkar tab
                                 }
                               },
                               borderRadius: BorderRadius.circular(24),
@@ -584,27 +586,38 @@ class _TimingsScreenState extends State<TimingsScreen> {
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
-                                    colors: isDarkMode 
-                                        ? [const Color(0xff2A2A2A), const Color(0xff222222)]
+                                    colors: isDarkMode
+                                        ? [
+                                            const Color(0xff2A2A2A),
+                                            const Color(0xff222222)
+                                          ]
                                         : [
-                                            (contextData['colors'] as List<Color>)[0].withOpacity(0.08),
-                                            (contextData['colors'] as List<Color>)[1].withOpacity(0.08),
+                                            (contextData['colors']
+                                                    as List<Color>)[0]
+                                                .withOpacity(0.08),
+                                            (contextData['colors']
+                                                    as List<Color>)[1]
+                                                .withOpacity(0.08),
                                           ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   ),
                                   borderRadius: BorderRadius.circular(24),
                                   border: Border.all(
-                                    color: isDarkMode 
+                                    color: isDarkMode
                                         ? Colors.white.withOpacity(0.05)
-                                        : (contextData['colors'] as List<Color>)[0].withOpacity(0.2),
+                                        : (contextData['colors']
+                                                as List<Color>)[0]
+                                            .withOpacity(0.2),
                                     width: 1.5,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
                                       color: isDarkMode
                                           ? Colors.black.withOpacity(0.2)
-                                          : (contextData['colors'] as List<Color>)[0].withOpacity(0.05),
+                                          : (contextData['colors']
+                                                  as List<Color>)[0]
+                                              .withOpacity(0.05),
                                       blurRadius: 15,
                                       offset: const Offset(0, 8),
                                     ),
@@ -615,28 +628,34 @@ class _TimingsScreenState extends State<TimingsScreen> {
                                     Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: isDarkMode 
+                                        color: isDarkMode
                                             ? Colors.white.withOpacity(0.05)
-                                            : (contextData['colors'] as List<Color>)[0].withOpacity(0.12),
+                                            : (contextData['colors']
+                                                    as List<Color>)[0]
+                                                .withOpacity(0.12),
                                         shape: BoxShape.circle,
                                       ),
                                       child: Icon(
                                         contextData['icon'] as IconData,
-                                        color: isDarkMode 
+                                        color: isDarkMode
                                             ? Colors.white.withOpacity(0.9)
-                                            : (contextData['colors'] as List<Color>)[0],
+                                            : (contextData['colors']
+                                                as List<Color>)[0],
                                         size: 24,
                                       ),
                                     ),
                                     const SizedBox(width: 16),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             contextData['title'] as String,
                                             style: TextStyle(
-                                              color: isDarkMode ? Colors.white : const Color(0xff1B1B1B),
+                                              color: isDarkMode
+                                                  ? Colors.white
+                                                  : const Color(0xff1B1B1B),
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
                                               fontFamily: 'Cairo',
@@ -646,7 +665,9 @@ class _TimingsScreenState extends State<TimingsScreen> {
                                           Text(
                                             contextData['subtitle'] as String,
                                             style: TextStyle(
-                                              color: isDarkMode ? Colors.grey[400] : const Color(0xff555555),
+                                              color: isDarkMode
+                                                  ? Colors.grey[400]
+                                                  : const Color(0xff555555),
                                               fontSize: 13,
                                               fontFamily: 'Cairo',
                                             ),
@@ -656,42 +677,51 @@ class _TimingsScreenState extends State<TimingsScreen> {
                                     ),
                                     Icon(
                                       Icons.arrow_forward_ios_rounded,
-                                      color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
+                                      color: isDarkMode
+                                          ? Colors.grey[600]
+                                          : Colors.grey[400],
                                       size: 16,
                                     ),
                                   ],
                                 ),
                               ),
                             ),
-                          ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
+                          )
+                              .animate()
+                              .fadeIn(duration: 400.ms)
+                              .slideY(begin: 0.1, end: 0),
                           const SizedBox(height: 24),
                         ],
-                        
 
                         EmotionalStateWidget(isDarkMode: isDarkMode),
                         const SizedBox(height: 28),
 
-                        // ── Featured Card: الهدف اليومي ──────────────────────────
+                        // ── Featured Card: مركز العبادات ──────────────────────────
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: GestureDetector(
-                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DailyGoalNavigationScreen())),
+                            onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        const SpiritualDashboardScreen())),
                             child: Container(
                               width: double.infinity,
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(24),
-                                gradient: LinearGradient(
+                                gradient: const LinearGradient(
                                   begin: Alignment.topRight,
                                   end: Alignment.bottomLeft,
                                   colors: [
                                     shared_colors.AppColors.primaryColor,
-                                    shared_colors.AppColors.primaryColor.withOpacity(0.75),
+                                    Color(0xff237A57),
                                   ],
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: shared_colors.AppColors.primaryColor.withOpacity(0.35),
+                                    color: shared_colors.AppColors.primaryColor
+                                        .withOpacity(0.35),
                                     blurRadius: 20,
                                     offset: const Offset(0, 8),
                                   ),
@@ -705,29 +735,49 @@ class _TimingsScreenState extends State<TimingsScreen> {
                                       color: Colors.white.withOpacity(0.2),
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const Icon(Icons.flag_rounded, color: Colors.white, size: 30),
+                                    child: const Icon(
+                                        Icons.auto_awesome_rounded,
+                                        color: Colors.white,
+                                        size: 30),
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        const Text('الهدف اليومي', style: TextStyle(color: Colors.white, fontFamily: 'Cairo', fontWeight: FontWeight.bold, fontSize: 18)),
+                                        const AppText(
+                                          'مركـز العبـادات',
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.white,
+                                          fontFamily: 'Cairo',
+                                        ),
                                         const SizedBox(height: 4),
-                                        Text('تابع إنجازاتك اليومية', style: TextStyle(color: Colors.white.withOpacity(0.8), fontFamily: 'Cairo', fontSize: 13)),
+                                        AppText(
+                                          'تتبع مهامك وإحصائياتك اليومية',
+                                          fontSize: 12,
+                                          color: Colors.white.withOpacity(0.8),
+                                          fontFamily: 'Cairo',
+                                        ),
                                       ],
                                     ),
                                   ),
-                                  Icon(Icons.arrow_back_ios_rounded, color: Colors.white.withOpacity(0.7), size: 18),
+                                  const Icon(Icons.arrow_forward_ios_rounded,
+                                      color: Colors.white, size: 18),
                                 ],
                               ),
                             ),
-                          ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1, end: 0),
+                          )
+                              .animate()
+                              .fadeIn(delay: 400.ms)
+                              .slideY(begin: 0.1, end: 0),
                         ),
                         const SizedBox(height: 32),
 
                         // ── Section: القرآن والذكر ────────────────────────────────
-                        _buildSectionHeader('القرآن والذكر', Icons.menu_book_rounded, isDarkMode),
+                        _buildSectionHeader('القرآن والذكر',
+                            Icons.menu_book_rounded, isDarkMode),
                         const SizedBox(height: 14),
                         SizedBox(
                           height: 130,
@@ -736,23 +786,61 @@ class _TimingsScreenState extends State<TimingsScreen> {
                             physics: const BouncingScrollPhysics(),
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             children: [
-                              _buildHorizontalCard('القرآن الكريم', Icons.menu_book_rounded, const Color(0xff1E6B4A), isDarkMode,
-                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuranScreen()))),
-                              _buildHorizontalCard('بطاقات القرآن', Icons.style_rounded, const Color(0xff4A28A0), isDarkMode,
-                                  onTap: () => Navigator.pushNamed(context, QuranRoutes.surahList)),
-                              _buildHorizontalCard('أسماء الله الحسنى', Icons.verified_rounded, const Color(0xffB8860B), isDarkMode,
-                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NamesOfAllahScreen()))),
-                              _buildHorizontalCard('القراء', Icons.record_voice_over_rounded, const Color(0xff2980B9), isDarkMode,
-                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RecitersScreen()))),
-                              _buildHorizontalCard('الراديو', Icons.radio_rounded, const Color(0xffC0392B), isDarkMode,
-                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RadioScreen()))),
+                              _buildHorizontalCard(
+                                  'القرآن الكريم',
+                                  Icons.menu_book_rounded,
+                                  const Color(0xff1E6B4A),
+                                  isDarkMode,
+                                  onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const QuranScreen()))),
+                              _buildHorizontalCard(
+                                  'القراء',
+                                  Icons.record_voice_over_rounded,
+                                  const Color(0xff2980B9),
+                                  isDarkMode,
+                                  onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const RecitersScreen()))),
+                              _buildHorizontalCard(
+                                  'الراديو',
+                                  Icons.radio_rounded,
+                                  const Color(0xffC0392B),
+                                  isDarkMode,
+                                  onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const RadioScreen()))),
+                              _buildHorizontalCard(
+                                  'بطاقات القرآن',
+                                  Icons.style_rounded,
+                                  const Color(0xff4A28A0),
+                                  isDarkMode,
+                                  onTap: () => Navigator.pushNamed(
+                                      context, QuranRoutes.surahList)),
+                              _buildHorizontalCard(
+                                  'أسماء الله الحسنى',
+                                  Icons.verified_rounded,
+                                  const Color(0xffB8860B),
+                                  isDarkMode,
+                                  onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const NamesOfAllahScreen()))),
                             ],
                           ),
                         ),
                         const SizedBox(height: 32),
 
                         // ── Section: التطور الإيماني ──────────────────────────────
-                        _buildSectionHeader('التطور الإيماني', Icons.military_tech_rounded, isDarkMode),
+                        _buildSectionHeader('التطور الإيماني',
+                            Icons.military_tech_rounded, isDarkMode),
                         const SizedBox(height: 14),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -764,33 +852,78 @@ class _TimingsScreenState extends State<TimingsScreen> {
                             crossAxisSpacing: 14,
                             childAspectRatio: 1.15,
                             children: [
-                              _buildFeatureCard('الأوسمة النبوية', Icons.military_tech_rounded, isDarkMode,
-                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BadgesScreen()))),
-                              _buildFeatureCard('اليوم النبوي', Icons.av_timer_rounded, isDarkMode,
-                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PropheticDayScreen(isDarkMode: isDarkMode)))),
-                              _buildFeatureCard('اختبار إسلامي', Icons.quiz_rounded, isDarkMode,
-                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IslamicQuizScreen()))),
-                              _buildFeatureCard('روائع القصص', Icons.auto_stories_rounded, isDarkMode,
-                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QasasScreen()))),
+                              _buildFeatureCard('الأوسمة النبوية',
+                                  Icons.military_tech_rounded, isDarkMode,
+                                  onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const BadgesScreen()))),
+                              _buildFeatureCard('اليوم النبوي',
+                                  Icons.av_timer_rounded, isDarkMode,
+                                  onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) => PropheticDayScreen(
+                                              isDarkMode: isDarkMode)))),
+                              _buildFeatureCard('اختبار إسلامي',
+                                  Icons.quiz_rounded, isDarkMode,
+                                  onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const IslamicQuizScreen()))),
+                              _buildFeatureCard('روائع القصص',
+                                  Icons.auto_stories_rounded, isDarkMode,
+                                  onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const QasasScreen()))),
                             ],
-                          ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.1, end: 0),
+                          )
+                              .animate()
+                              .fadeIn(delay: 500.ms)
+                              .slideY(begin: 0.1, end: 0),
                         ),
                         const SizedBox(height: 32),
 
                         // ── Section: المعرفة الإسلامية ────────────────────────────
-                        _buildSectionHeader('المعرفة الإسلامية', Icons.history_edu_rounded, isDarkMode),
+                        _buildSectionHeader('المعرفة الإسلامية',
+                            Icons.history_edu_rounded, isDarkMode),
                         const SizedBox(height: 14),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: Column(
                             children: [
-                              _buildListTileCard('التاريخ الإسلامي', 'استكشف الحضارة الإسلامية عبر القرون', Icons.history_rounded, const Color(0xff8B4513), isDarkMode,
-                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryScreen()))),
+                              _buildListTileCard(
+                                  'التاريخ الإسلامي',
+                                  'استكشف الحضارة الإسلامية عبر القرون',
+                                  Icons.history_rounded,
+                                  const Color(0xff8B4513),
+                                  isDarkMode,
+                                  onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const HistoryScreen()))),
                               const SizedBox(height: 12),
-                              _buildListTileCard('حاسبة الزكاة', 'احسب زكاتك بسهولة واحترافية', Icons.calculate_rounded, const Color(0xff1E6B4A), isDarkMode,
-                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ZakahCalculatorScreen()))),
+                              _buildListTileCard(
+                                  'حاسبة الزكاة',
+                                  'احسب زكاتك بسهولة واحترافية',
+                                  Icons.calculate_rounded,
+                                  const Color(0xff1E6B4A),
+                                  isDarkMode,
+                                  onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const ZakahCalculatorScreen()))),
                             ],
-                          ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.1, end: 0),
+                          )
+                              .animate()
+                              .fadeIn(delay: 600.ms)
+                              .slideY(begin: 0.1, end: 0),
                         ),
 
                         const SizedBox(height: 100),
@@ -936,7 +1069,8 @@ class _TimingsScreenState extends State<TimingsScreen> {
               color: shared_colors.AppColors.primaryColor.withOpacity(0.12),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: shared_colors.AppColors.primaryColor, size: 18),
+            child: Icon(icon,
+                color: shared_colors.AppColors.primaryColor, size: 18),
           ),
           const SizedBox(width: 10),
           Text(
@@ -980,9 +1114,16 @@ class _TimingsScreenState extends State<TimingsScreen> {
           color: isDarkMode ? const Color(0xff2A2A2A) : Colors.white,
           boxShadow: isDarkMode
               ? []
-              : [BoxShadow(color: color.withOpacity(0.12), blurRadius: 12, offset: const Offset(0, 4))],
+              : [
+                  BoxShadow(
+                      color: color.withOpacity(0.12),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4))
+                ],
           border: Border.all(
-            color: isDarkMode ? Colors.white.withOpacity(0.07) : color.withOpacity(0.15),
+            color: isDarkMode
+                ? Colors.white.withOpacity(0.07)
+                : color.withOpacity(0.15),
           ),
         ),
         child: Column(
@@ -1011,7 +1152,10 @@ class _TimingsScreenState extends State<TimingsScreen> {
             ),
           ],
         ),
-      ).animate().fadeIn(duration: 350.ms).scale(begin: const Offset(0.95, 0.95), curve: Curves.easeOut),
+      )
+          .animate()
+          .fadeIn(duration: 350.ms)
+          .scale(begin: const Offset(0.95, 0.95), curve: Curves.easeOut),
     );
   }
 
@@ -1035,9 +1179,16 @@ class _TimingsScreenState extends State<TimingsScreen> {
             color: isDarkMode ? const Color(0xff2A2A2A) : Colors.white,
             boxShadow: isDarkMode
                 ? []
-                : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 3))],
+                : [
+                    BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3))
+                  ],
             border: Border.all(
-              color: isDarkMode ? Colors.white.withOpacity(0.07) : color.withOpacity(0.2),
+              color: isDarkMode
+                  ? Colors.white.withOpacity(0.07)
+                  : color.withOpacity(0.2),
             ),
           ),
           child: Row(
@@ -1061,7 +1212,8 @@ class _TimingsScreenState extends State<TimingsScreen> {
                         fontFamily: 'Cairo',
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
-                        color: isDarkMode ? Colors.white : const Color(0xff1B1B2F),
+                        color:
+                            isDarkMode ? Colors.white : const Color(0xff1B1B2F),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -1076,7 +1228,9 @@ class _TimingsScreenState extends State<TimingsScreen> {
                   ],
                 ),
               ),
-              Icon(Icons.arrow_back_ios_rounded, size: 15, color: isDarkMode ? Colors.white30 : Colors.grey[400]),
+              Icon(Icons.arrow_back_ios_rounded,
+                  size: 15,
+                  color: isDarkMode ? Colors.white30 : Colors.grey[400]),
             ],
           ),
         ),
@@ -1475,7 +1629,7 @@ class _TimingsScreenState extends State<TimingsScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const AboutScreen(),
+                          builder: (context) => const AppInfo(),
                         ),
                       ),
                       isDarkMode: isDarkMode,

@@ -297,6 +297,60 @@ class NotificationService {
     );
   }
 
+  Future<void> scheduleSpiritualTaskReminder({
+    required String title,
+    required String body,
+    required String timeString, // "HH:mm"
+    required int id,
+  }) async {
+    final now = DateTime.now();
+    final timeParts = timeString.split(':');
+    var scheduledTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      int.parse(timeParts[0]),
+      int.parse(timeParts[1]),
+    );
+
+    if (scheduledTime.isBefore(now)) {
+      scheduledTime = scheduledTime.add(const Duration(days: 1));
+    }
+
+    const androidDetails = AndroidNotificationDetails(
+      'general_channel',
+      'General Notifications',
+      channelDescription: 'Notifications for reminders',
+      importance: Importance.max,
+      priority: Priority.high,
+      enableVibration: true,
+      playSound: true,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notifications.zonedSchedule(
+      id,
+      title,
+      body,
+      tz.TZDateTime.from(scheduledTime, tz.local),
+      details,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time, // Repeat daily
+    );
+  }
+
   Future<void> schedulePrayerNotification({
     required String prayerName,
     required DateTime prayerTime,

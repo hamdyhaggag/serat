@@ -7,6 +7,8 @@ import '../../features/radio/domain/radio_model.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../services/notification_service.dart';
 import 'package:audio_session/audio_session.dart' as audio_session;
+import '../Widgets/radio/radio_player_sheet.dart';
+import '../Widgets/radio/radio_mini_player.dart';
 
 class RadioScreen extends StatefulWidget {
   const RadioScreen({super.key});
@@ -20,18 +22,19 @@ class _RadioScreenState extends State<RadioScreen>
   late final AudioPlayer _audioPlayer;
   final RadioService _radioService = RadioService();
   final NotificationService _notificationService = NotificationService();
+  
   bool _isPlaying = false;
-  String _currentStation = '';
-  String _currentStationName = '';
+  RadioStation? _currentStation;
   double _volume = 1.0;
+  
   List<RadioStation> _stations = [];
   List<RadioStation> _filteredStations = [];
   List<RadioStation> _bookmarkedStations = [];
+  
   bool _isLoading = true;
   String? _error;
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
   late SharedPreferences _prefs;
 
   @override
@@ -53,6 +56,7 @@ class _RadioScreenState extends State<RadioScreen>
   }
 
   Future<void> _loadBookmarks() async {
+    if (_stations.isEmpty) return;
     final bookmarkedUrls = _prefs.getStringList('bookmarked_stations') ?? [];
     setState(() {
       _bookmarkedStations = _stations
@@ -84,7 +88,6 @@ class _RadioScreenState extends State<RadioScreen>
     _audioPlayer = AudioPlayer();
     await _audioPlayer.setReleaseMode(ReleaseMode.stop);
 
-    // Configure for background playback
     final session = await audio_session.AudioSession.instance;
     await session.configure(const audio_session.AudioSessionConfiguration(
       avAudioSessionCategory: audio_session.AVAudioSessionCategory.playback,
@@ -105,13 +108,16 @@ class _RadioScreenState extends State<RadioScreen>
         setState(() {
           _isPlaying = state == PlayerState.playing;
         });
+        if (state != PlayerState.playing) {
+          _notificationService.removeNotification();
+        }
       }
     });
 
-    // Pause playback when headphones are removed (becoming noisy)
     session.becomingNoisyEventStream.listen((_) {
       if (_isPlaying) {
         _audioPlayer.pause();
+        _notificationService.removeNotification();
       }
     });
   }
@@ -125,6 +131,7 @@ class _RadioScreenState extends State<RadioScreen>
           _filteredStations = stations;
           _isLoading = false;
         });
+        _loadBookmarks();
       }
     } catch (e) {
       if (mounted) {
@@ -139,8 +146,8 @@ class _RadioScreenState extends State<RadioScreen>
   Future<void> _initNotificationService() async {
     await _notificationService.initialize();
     _notificationService.onPlayPause = () {
-      if (_currentStation.isNotEmpty) {
-        _playStation(_currentStation, _currentStationName);
+      if (_currentStation != null) {
+        _playStation(_currentStation!);
       }
     };
     _notificationService.onStop = _stopPlayback;
@@ -148,47 +155,38 @@ class _RadioScreenState extends State<RadioScreen>
 
   @override
   void dispose() {
-    // Always dispose AudioPlayer to prevent resource leaks.
-    // Background playback is handled via audio_service, not by keeping this alive.
     _audioPlayer.dispose();
     _tabController.dispose();
     _searchController.dispose();
-    _scrollController.dispose();
     super.dispose();
   }
 
-  Future<void> _playStation(String url, String name) async {
+  Future<void> _playStation(RadioStation station) async {
     try {
-      if (_currentStation == url) {
+      if (_currentStation?.url == station.url) {
         if (_isPlaying) {
           await _audioPlayer.pause();
-          await _notificationService.showRadioNotification(
-            stationName: name,
-            isPlaying: false,
-          );
+          await _notificationService.removeNotification();
         } else {
           await _audioPlayer.resume();
           await _notificationService.showRadioNotification(
-            stationName: name,
+            stationName: station.name,
             isPlaying: true,
           );
         }
       } else {
-        // Stop current playback if any
-        if (_currentStation.isNotEmpty) {
+        if (_currentStation != null) {
           await _audioPlayer.stop();
         }
 
-        // Set new source and start playback
-        await _audioPlayer.setSourceUrl(url);
+        await _audioPlayer.setSourceUrl(station.url);
         await _audioPlayer.resume();
         await _notificationService.showRadioNotification(
-          stationName: name,
+          stationName: station.name,
           isPlaying: true,
         );
         setState(() {
-          _currentStation = url;
-          _currentStationName = name;
+          _currentStation = station;
         });
       }
     } catch (e) {
@@ -202,598 +200,435 @@ class _RadioScreenState extends State<RadioScreen>
   }
 
   Future<void> _stopPlayback() async {
-    if (_isPlaying) {
-      await _audioPlayer.stop();
-      await _notificationService.removeNotification();
-      setState(() {
-        _isPlaying = false;
-        _currentStation = '';
-        _currentStationName = '';
-      });
-    }
+    await _audioPlayer.stop();
+    await _notificationService.removeNotification();
+    setState(() {
+      _isPlaying = false;
+      _currentStation = null;
+    });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
-
-    return Scaffold(
-      backgroundColor: isDarkMode ? const Color(0xff1F1F1F) : Colors.white,
-      resizeToAvoidBottomInset: true,
-      appBar: const CustomAppBar(
-        title: 'الراديو',
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: _buildUnifiedLayout(_tabController.index == 0
-                  ? (_filteredStations.isEmpty ? _stations : _filteredStations)
-                  : _bookmarkedStations),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildControlButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        shape: BoxShape.circle,
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: Colors.white, size: 32),
-        onPressed: onPressed,
-        iconSize: 32,
-      ),
-    );
-  }
-
-  Widget _buildSkeletonLoading() {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return Shimmer.fromColors(
-      baseColor: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
-      highlightColor: isDarkMode ? Colors.grey[700]! : Colors.grey[100]!,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: 10,
-        itemBuilder: (context, index) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 15),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 10,
-              ),
-              leading: Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              title: Container(
-                height: 20,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(5),
-                ),
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+  void _showFullPlayer() {
+    if (_currentStation == null) return;
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          return RadioPlayerSheet(
+            station: _currentStation!,
+            isPlaying: _isPlaying,
+            volume: _volume,
+            isBookmarked: _bookmarkedStations.any((s) => s.url == _currentStation!.url),
+            onToggleBookmark: () async {
+              await _toggleBookmark(_currentStation!);
+              setSheetState(() {});
+            },
+            onPlayPause: () {
+              _playStation(_currentStation!);
+              setSheetState(() {});
+            },
+            onStop: () {
+              _stopPlayback();
+              Navigator.pop(context);
+            },
+            onVolumeChanged: (val) {
+              setSheetState(() => _volume = val);
+              _audioPlayer.setVolume(val);
+            },
+            onNext: () {
+              _playNext();
+              setSheetState(() {});
+            },
+            onPrevious: () {
+              _playPrevious();
+              setSheetState(() {});
+            },
+            onClose: () => Navigator.pop(context),
           );
         },
       ),
     );
   }
 
-  Widget _buildUnifiedLayout(List<RadioStation> stations) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    if (_isLoading) {
-      return _buildSkeletonLoading();
+  void _playNext() {
+    final list = _tabController.index == 0 ? _stations : _bookmarkedStations;
+    if (list.isEmpty || _currentStation == null) return;
+    
+    int index = list.indexWhere((s) => s.url == _currentStation!.url);
+    if (index != -1) {
+      int nextIndex = (index + 1) % list.length;
+      _playStation(list[nextIndex]);
     }
+  }
 
-    if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+  void _playPrevious() {
+    final list = _tabController.index == 0 ? _stations : _bookmarkedStations;
+    if (list.isEmpty || _currentStation == null) return;
+    
+    int index = list.indexWhere((s) => s.url == _currentStation!.url);
+    if (index != -1) {
+      int prevIndex = (index - 1 + list.length) % list.length;
+      _playStation(list[prevIndex]);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return Scaffold(
+      backgroundColor: isDarkMode ? const Color(0xff121212) : const Color(0xffF8FAF9),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              _buildSliverAppBar(isDarkMode),
+              _buildSearchAndTabs(isDarkMode),
+              _buildStationsList(isDarkMode),
+              if (_currentStation != null)
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            ],
+          ),
+          
+          // Mini Player
+          if (_currentStation != null)
+            Positioned(
+              bottom: MediaQuery.of(context).padding.bottom + 10,
+              left: 0,
+              right: 0,
+              child: RadioMiniPlayer(
+                station: _currentStation!,
+                isPlaying: _isPlaying,
+                onTap: _showFullPlayer,
+                onPlayPause: () => _playStation(_currentStation!),
+                onStop: _stopPlayback,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSliverAppBar(bool isDarkMode) {
+    final primaryColor = isDarkMode ? const Color(0xff1A2B25) : AppColors.primaryColor;
+    
+    return SliverAppBar(
+      expandedHeight: 140,
+      pinned: true,
+      stretch: true,
+      backgroundColor: primaryColor,
+      flexibleSpace: FlexibleSpaceBar(
+        centerTitle: true,
+        title: const AppText(
+          'الراديو الإسلامي',
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+          fontFamily: 'Cairo',
+        ),
+        background: Stack(
+          fit: StackFit.expand,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 80,
-              color: Colors.red.withOpacity(0.7),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              _error!,
-              style: const TextStyle(
-                color: Colors.red,
-                fontFamily: 'Cairo',
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _loadRadioStations,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryColor,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 30,
-                  vertical: 15,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDarkMode 
+                    ? [const Color(0xff1A2B25), const Color(0xff121212)]
+                    : [AppColors.primaryColor, const Color(0xff138A70)],
                 ),
               ),
-              child: const Text(
-                'إعادة المحاولة',
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 16,
-                  color: Colors.white,
-                ),
+            ),
+            Positioned(
+              right: -30,
+              top: -30,
+              child: Icon(
+                Icons.radio,
+                size: 180,
+                color: Colors.white.withValues(alpha: 0.05),
               ),
             ),
           ],
         ),
-      );
-    }
+      ),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+        onPressed: () => Navigator.pop(context),
+      ),
+    );
+  }
 
-    return SingleChildScrollView(
-      controller: _scrollController,
+  Widget _buildSearchAndTabs(bool isDarkMode) {
+    return SliverToBoxAdapter(
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color:
-                  isDarkMode ? const Color(0xff2F2F2F) : AppColors.primaryColor,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      if (_isPlaying)
-                        TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0.8, end: 1.2),
-                          duration: const Duration(seconds: 1),
-                          curve: Curves.easeInOut,
-                          builder: (context, value, child) {
-                            return Transform.scale(
-                              scale: value,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white.withOpacity(0.3),
-                                    width: 2,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      Icon(
-                        _isPlaying ? Icons.radio : Icons.radio_button_unchecked,
-                        size: 80,
-                        color: Colors.white,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                AppText(
-                  _currentStation.isEmpty ? 'اختر محطة' : _currentStationName,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontFamily: 'Cairo',
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildControlButton(
-                      icon: _isPlaying ? Icons.pause : Icons.play_arrow,
-                      onPressed: () {
-                        if (_currentStation.isNotEmpty) {
-                          _playStation(_currentStation, _currentStationName);
-                        }
-                      },
-                    ),
-                    const SizedBox(width: 20),
-                    _buildControlButton(
-                      icon: Icons.stop,
-                      onPressed: () async {
-                        await _stopPlayback();
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.volume_down, color: Colors.white),
-                      Expanded(
-                        child: Slider(
-                          value: _volume,
-                          onChanged: (value) {
-                            setState(() {
-                              _volume = value;
-                            });
-                            _audioPlayer.setVolume(value);
-                          },
-                          activeColor: Colors.white,
-                          inactiveColor: Colors.white.withOpacity(0.3),
-                        ),
-                      ),
-                      const Icon(Icons.volume_up, color: Colors.white),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // Search Bar
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
             child: Container(
               decoration: BoxDecoration(
-                color: isDarkMode ? const Color(0xff2F2F2F) : Colors.grey[100],
-                borderRadius: BorderRadius.circular(30),
+                color: isDarkMode ? const Color(0xff1E1E1E) : Colors.white,
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
-                    offset: const Offset(0, 5),
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: TextField(
                 controller: _searchController,
                 onChanged: _filterStations,
-                onTap: () {
-                  // Scroll to top when search field is tapped
-                  _scrollController.animateTo(
-                    0,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                },
                 decoration: InputDecoration(
                   hintText: 'ابحث عن محطة...',
-                  hintStyle: TextStyle(
-                    color: isDarkMode ? Colors.white70 : Colors.grey[600],
-                    fontFamily: 'Cairo',
-                  ),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: isDarkMode ? Colors.white70 : Colors.grey[600],
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor:
-                      isDarkMode ? const Color(0xff2F2F2F) : Colors.grey[100],
+                  prefixIcon: Icon(Icons.search_rounded, color: isDarkMode ? Colors.white60 : Colors.grey),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                 ),
-                style: TextStyle(
-                  color: isDarkMode ? Colors.white : Colors.black,
-                  fontFamily: 'Cairo',
-                ),
+                style: const TextStyle(fontFamily: 'Cairo'),
               ),
             ),
           ),
+          
+          // Tabs
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: Container(
+              height: 45,
               decoration: BoxDecoration(
-                color: isDarkMode ? const Color(0xff2F2F2F) : Colors.grey[50],
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
+                color: isDarkMode ? const Color(0xff1E1E1E) : Colors.grey[200],
+                borderRadius: BorderRadius.circular(12),
               ),
               child: TabBar(
                 controller: _tabController,
                 indicator: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.primaryColor,
-                      AppColors.primaryColor.withOpacity(0.8),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primaryColor.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  color: isDarkMode ? const Color(0xff4CAF93) : AppColors.primaryColor,
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
                 labelColor: Colors.white,
-                unselectedLabelColor:
-                    isDarkMode ? Colors.white60 : Colors.grey[600],
-                labelStyle: const TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
-                unselectedLabelStyle: const TextStyle(
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                ),
+                unselectedLabelColor: isDarkMode ? Colors.white60 : Colors.grey[600],
                 dividerColor: Colors.transparent,
-                padding: const EdgeInsets.all(4),
-                tabs: [
-                  Tab(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.radio,
-                          size: 18,
-                          color: _tabController.index == 0
-                              ? Colors.white
-                              : (isDarkMode
-                                  ? Colors.white60
-                                  : Colors.grey[600]),
-                        ),
-                        const SizedBox(width: 6),
-                        const Text('كل المحطات'),
-                      ],
-                    ),
-                  ),
-                  Tab(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.bookmark,
-                          size: 18,
-                          color: _tabController.index == 1
-                              ? Colors.white
-                              : (isDarkMode
-                                  ? Colors.white60
-                                  : Colors.grey[600]),
-                        ),
-                        const SizedBox(width: 6),
-                        const Text('المفضلة'),
-                      ],
-                    ),
-                  ),
+                tabs: const [
+                  Tab(text: 'كل المحطات'),
+                  Tab(text: 'المفضلة'),
                 ],
+                labelStyle: const TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold),
               ),
             ),
           ),
-          if (_tabController.index == 1 && _bookmarkedStations.isEmpty)
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStationsList(bool isDarkMode) {
+    if (_isLoading) {
+      return SliverToBoxAdapter(child: _buildSkeletonLoading(isDarkMode));
+    }
+
+    if (_error != null) {
+      return SliverFillRemaining(child: _buildErrorView());
+    }
+
+    final stations = _tabController.index == 0 
+        ? (_searchController.text.isEmpty ? _stations : _filteredStations)
+        : _bookmarkedStations;
+
+    if (stations.isEmpty) {
+      return SliverFillRemaining(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.signal_wifi_off_rounded, size: 64, color: Colors.grey.withValues(alpha: 0.5)),
+              const SizedBox(height: 16),
+              AppText(_tabController.index == 0 ? 'لا توجد محطات' : 'لا توجد محطات مفضلة', color: Colors.grey),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SliverPadding(
+      padding: const EdgeInsets.all(20),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 15,
+          mainAxisSpacing: 15,
+          childAspectRatio: 1.1,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final station = stations[index];
+            final isSelected = _currentStation?.url == station.url;
+            final isBookmarked = _bookmarkedStations.any((s) => s.url == station.url);
+            
+            return _StationCard(
+              station: station,
+              isSelected: isSelected,
+              isPlaying: isSelected && _isPlaying,
+              isBookmarked: isBookmarked,
+              isDarkMode: isDarkMode,
+              onTap: () => _playStation(station),
+              onBookmark: () => _toggleBookmark(station),
+            );
+          },
+          childCount: stations.length,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSkeletonLoading(bool isDarkMode) {
+    return Shimmer.fromColors(
+      baseColor: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
+      highlightColor: isDarkMode ? Colors.grey[700]! : Colors.grey[100]!,
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(20),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 15,
+          mainAxisSpacing: 15,
+          childAspectRatio: 1.1,
+        ),
+        itemCount: 6,
+        itemBuilder: (context, index) => Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 64, color: Colors.red),
+          const SizedBox(height: 16),
+          AppText(_error!, color: Colors.red),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: _loadRadioStations,
+            child: const AppText('إعادة المحاولة', color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StationCard extends StatelessWidget {
+  final RadioStation station;
+  final bool isSelected;
+  final bool isPlaying;
+  final bool isBookmarked;
+  final bool isDarkMode;
+  final VoidCallback onTap;
+  final VoidCallback onBookmark;
+
+  const _StationCard({
+    required this.station,
+    required this.isSelected,
+    required this.isPlaying,
+    required this.isBookmarked,
+    required this.isDarkMode,
+    required this.onTap,
+    required this.onBookmark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final primaryColor = isDarkMode ? const Color(0xff4CAF93) : AppColors.primaryColor;
+    
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        decoration: BoxDecoration(
+          color: isDarkMode ? const Color(0xff1E1E1E) : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected 
+                ? primaryColor.withValues(alpha: 0.2) 
+                : Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: isSelected ? primaryColor : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Stack(
+          children: [
             Padding(
-              padding: const EdgeInsets.all(40.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    width: 120,
-                    height: 120,
+                    width: 50,
+                    height: 50,
                     decoration: BoxDecoration(
-                      color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                      color: isSelected ? primaryColor : primaryColor.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      Icons.bookmark_border,
-                      size: 60,
-                      color: isDarkMode ? Colors.white60 : Colors.grey[600],
+                      isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                      color: isSelected ? Colors.white : primaryColor,
+                      size: 32,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'لا توجد محطات مفضلة',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: isDarkMode ? Colors.white : Colors.grey[800],
-                      fontFamily: 'Cairo',
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'اضغط على أيقونة المفضلة لإضافة محطات إلى قائمة المفضلة',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: isDarkMode ? Colors.white60 : Colors.grey[600],
-                      fontFamily: 'Cairo',
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      _tabController.animateTo(0);
-                    },
-                    icon: const Icon(Icons.radio),
-                    label: const Text('استكشف المحطات'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                    ),
+                  const SizedBox(height: 12),
+                  AppText(
+                    station.name,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Cairo',
+                    align: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
-            )
-          else
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(20),
-              itemCount: stations.length,
-              itemBuilder: (context, index) {
-                final station = stations[index];
-                final isSelected = station.url == _currentStation;
-                final isBookmarked = _bookmarkedStations.any(
-                  (s) => s.url == station.url,
-                );
-
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.only(bottom: 15),
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? const Color(0xff2F2F2F) : Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                    border: isSelected
-                        ? Border.all(color: AppColors.primaryColor, width: 2)
-                        : null,
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                    leading: Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: isDarkMode
-                            ? Colors.grey[800]
-                            : AppColors.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.radio,
-                        color:
-                            isDarkMode ? Colors.white : AppColors.primaryColor,
-                      ),
-                    ),
-                    title: Text(
-                      station.name,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color:
-                            isDarkMode ? Colors.white : AppColors.primaryColor,
-                        fontFamily: 'Cairo',
-                      ),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            isBookmarked
-                                ? Icons.bookmark
-                                : Icons.bookmark_border,
-                            color: isDarkMode
-                                ? Colors.white
-                                : AppColors.primaryColor,
-                          ),
-                          onPressed: () => _toggleBookmark(station),
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            isSelected && _isPlaying
-                                ? Icons.pause
-                                : Icons.play_arrow,
-                            color: isDarkMode
-                                ? Colors.white
-                                : AppColors.primaryColor,
-                          ),
-                          onPressed: () =>
-                              _playStation(station.url, station.name),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
             ),
-        ],
+            Positioned(
+              top: 8,
+              left: 8,
+              child: GestureDetector(
+                onTap: () {
+                  // Handled by parent or specific button?
+                  // Better explicitly handle bookmark here to avoid double tap
+                  onBookmark();
+                },
+                child: IconButton(
+                  icon: Icon(
+                    isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_outline_rounded,
+                    color: isBookmarked ? primaryColor : Colors.grey,
+                    size: 20,
+                  ),
+                  onPressed: onBookmark,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

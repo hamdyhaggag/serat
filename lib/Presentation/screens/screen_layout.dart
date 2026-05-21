@@ -7,6 +7,9 @@ import 'package:serat/Business_Logic/Cubit/navigation_cubit.dart';
 import 'package:serat/imports.dart';
 import 'package:serat/Presentation/Widgets/resume_bottom_bar.dart';
 import 'package:serat/Business_Logic/Cubit/last_read_cubit.dart';
+import 'package:serat/features/quran/screens/surah_list_screen.dart';
+import 'package:serat/features/spiritual_progress/screens/spiritual_dashboard_screen.dart';
+import 'package:serat/Presentation/screens/SettingsScreen/app_info.dart';
 
 class ScreenLayout extends StatelessWidget {
   const ScreenLayout({super.key});
@@ -16,6 +19,7 @@ class ScreenLayout extends StatelessWidget {
     return BlocBuilder<NavigationCubit, NavigationState>(
       builder: (context, state) {
         final cubit = NavigationCubit.get(context);
+        cubit.startTrackingIfNeeded(context);
         final isDarkMode = Theme.of(context).brightness == Brightness.dark;
         final theme = Theme.of(context);
 
@@ -261,34 +265,188 @@ class _CustomDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isTablet = size.width > 600;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
+      width: isTablet ? 400 : size.width * 0.8,
+      backgroundColor: isDarkMode ? const Color(0xff121212) : const Color(0xffF8FAF9),
+      child: Column(
         children: [
-          DrawerHeader(
-            decoration: BoxDecoration(color: Theme.of(context).primaryColor),
-            child: const Text(
-              'Menu',
-              style: TextStyle(
-                  color: Colors.white, fontSize: 24, fontFamily: 'Cairo'),
+          _buildHeader(context, isDarkMode),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              children: [
+                const SizedBox(height: 12),
+                _buildDrawerItem(
+                  context,
+                  title: 'الرئيسية',
+                  icon: Icons.home_rounded,
+                  index: 0,
+                  isDarkMode: isDarkMode,
+                ),
+                _buildDrawerItem(
+                  context,
+                  title: 'القرآن الكريم',
+                  icon: Icons.menu_book_rounded,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const SurahListScreen()));
+                  },
+                  isDarkMode: isDarkMode,
+                ),
+                _buildDrawerItem(
+                  context,
+                  title: 'مركز العبادات',
+                  icon: Icons.auto_awesome_rounded,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const SpiritualDashboardScreen()));
+                  },
+                  isDarkMode: isDarkMode,
+                ),
+                const Divider(height: 32, thickness: 0.5),
+                _buildDrawerItem(
+                  context,
+                  title: 'الإعدادات',
+                  icon: Icons.settings_rounded,
+                  index: 4,
+                  isDarkMode: isDarkMode,
+                ),
+                _buildDrawerItem(
+                  context,
+                  title: 'عن التطبيق',
+                  icon: Icons.info_outline_rounded,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const AppInfo()));
+                  },
+                  isDarkMode: isDarkMode,
+                ),
+              ],
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.home),
-            title: const Text('Home', style: TextStyle(fontFamily: 'Cairo')),
-            onTap: () {
-              Navigator.pop(context);
-              NavigationCubit.get(context).changeIndex(0);
-            },
+          _buildFooter(isDarkMode),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, bool isDarkMode) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 60, 20, 30),
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor,
+        image: DecorationImage(
+          image: const AssetImage('assets/images/pattern.png'),
+          opacity: 0.05,
+          fit: BoxFit.cover,
+          repeat: ImageRepeat.repeat,
+          colorFilter: ColorFilter.mode(
+            Colors.white.withOpacity(0.1),
+            BlendMode.srcIn,
           ),
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title:
-                const Text('Settings', style: TextStyle(fontFamily: 'Cairo')),
-            onTap: () {
-              Navigator.pop(context);
-              NavigationCubit.get(context).changeIndex(4);
-            },
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.person_rounded, color: Colors.white, size: 40),
+          ),
+          const SizedBox(height: 16),
+          const AppText(
+            'أهلاً بك في صراط',
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontFamily: 'Cairo',
+          ),
+          const AppText(
+            'صحبتك في رحلة العبادة',
+            fontSize: 12,
+            color: Colors.white70,
+            fontFamily: 'Cairo',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    int? index,
+    VoidCallback? onTap,
+    required bool isDarkMode,
+  }) {
+    final isSelected = index != null && NavigationCubit.get(context).index == index;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: isSelected 
+            ? Theme.of(context).primaryColor.withOpacity(0.1) 
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onTap ?? () {
+            Navigator.pop(context);
+            if (index != null) {
+              NavigationCubit.get(context).changeIndex(index);
+            }
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected 
+                      ? Theme.of(context).primaryColor 
+                      : (isDarkMode ? Colors.white60 : Colors.black54),
+                  size: 24,
+                ),
+                const SizedBox(width: 16),
+                AppText(
+                  title,
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected 
+                      ? Theme.of(context).primaryColor 
+                      : (isDarkMode ? Colors.white70 : Colors.black87),
+                  fontFamily: 'Cairo',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFooter(bool isDarkMode) {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        children: [
+          const Divider(),
+          const SizedBox(height: 10),
+          AppText(
+            'صراط - الإصدار 2.0.0',
+            fontSize: 10,
+            color: isDarkMode ? Colors.white24 : Colors.grey,
+            fontFamily: 'Cairo',
           ),
         ],
       ),

@@ -6,9 +6,11 @@ import 'package:serat/Business_Logic/Cubit/counter_cubit.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
 import 'dart:ui';
+import 'dart:async';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:serat/Presentation/theme/app_theme.dart';
+import 'package:serat/features/spiritual_progress/cubit/spiritual_cubit.dart';
 
 class Sebha extends StatefulWidget {
   final String title;
@@ -37,11 +39,22 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
   Timer? _longPressTimer;
   int _longPressCount = 0;
   bool _isInitialized = false;
+  final Stopwatch _sessionStopwatch = Stopwatch();
+  Timer? _sessionTimer;
 
   @override
   void initState() {
     super.initState();
     _initialize();
+    _sessionStopwatch.start();
+    // Report every full minute spent in Sebha
+    _sessionTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) {
+        SpiritualCubit.get(context).updateStats(
+          totalWorshipMinutes: 1,
+        );
+      }
+    });
   }
 
   Future<void> _initialize() async {
@@ -78,6 +91,12 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    _sessionTimer?.cancel();
+    _sessionStopwatch.stop();
+    final remainingSecs = _sessionStopwatch.elapsed.inSeconds % 60;
+    if (remainingSecs >= 30 && mounted) {
+      SpiritualCubit.get(context).updateStats(totalWorshipMinutes: 1);
+    }
     _controller?.dispose();
     _counterController?.dispose();
     _longPressTimer?.cancel();
@@ -108,7 +127,6 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
   void _handleCounterIncrement(CounterCubit cubit) async {
     if (!_isInitialized) return;
 
-    // Use lighter impact for better feel
     HapticFeedback.lightImpact();
     _counterController?.forward(from: 0.0);
     cubit.incrementCounter();
@@ -118,6 +136,11 @@ class SebhaState extends State<Sebha> with TickerProviderStateMixin {
       cubit.totalCounter,
       cubit.cycleCounter,
     );
+
+    // Track each tasbeeha in spiritual stats
+    if (mounted) {
+      SpiritualCubit.get(context).updateStats(sunnahCount: 1);
+    }
 
     if (widget.maxCounter != null && cubit.counter >= widget.maxCounter!) {
       _showCompletionDialog();

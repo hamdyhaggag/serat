@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serat/imports.dart';
 import 'package:serat/features/adhkar/screens/adhkar_screen.dart';
+import 'package:serat/features/spiritual_progress/cubit/spiritual_cubit.dart';
 import 'package:serat/Presentation/screens/Ahadith_screen/hadith_books_screen.dart';
 
 class NavigationCubit extends Cubit<NavigationState> {
@@ -28,6 +30,25 @@ class NavigationCubit extends Cubit<NavigationState> {
         _buildBottomNavItem('qibla', 'القبلة', 4),
       ];
 
+  // Time tracking
+  Timer? _worshipTimer;
+  BuildContext? _trackingContext;
+
+  void startTrackingIfNeeded(BuildContext context) {
+    _trackingContext = context;
+    if (_worshipTimer == null || !_worshipTimer!.isActive) {
+      _worshipTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+        if (index == 1 || index == 2) { // Sebha or Adhkar tabs
+          if (_trackingContext != null) {
+            if (_trackingContext!.mounted) {
+               SpiritualCubit.get(_trackingContext!).updateStats(totalWorshipMinutes: 1);
+            }
+          }
+        }
+      });
+    }
+  }
+
   void changeIndex(int newIndex) {
     index = newIndex;
     emit(ChangeBottomNavState());
@@ -50,6 +71,12 @@ class NavigationCubit extends Cubit<NavigationState> {
       label: label,
     );
   }
+
+  @override
+  Future<void> close() {
+    _worshipTimer?.cancel();
+    return super.close();
+  }
 }
 
 // Navigation States
@@ -58,3 +85,4 @@ abstract class NavigationState {}
 class NavigationInitial extends NavigationState {}
 
 class ChangeBottomNavState extends NavigationState {}
+

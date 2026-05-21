@@ -21,6 +21,8 @@ import 'package:serat/Business_Logic/Cubit/theme_cubit.dart';
 import 'package:serat/Business_Logic/Cubit/last_read_cubit.dart';
 import 'package:serat/shared/services/notification_service.dart';
 import 'package:serat/core/theme/app_theme.dart';
+import 'package:serat/features/spiritual_progress/cubit/spiritual_cubit.dart';
+
 import 'package:upgrader/upgrader.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:serat/services/firebase_messaging_service.dart';
@@ -238,6 +240,7 @@ class SeratApp extends StatelessWidget {
         BlocProvider(create: (context) => DownloadCubit()),
         BlocProvider(create: (context) => ThemeCubit()),
         BlocProvider(create: (context) => LastReadCubit()..loadLastRead()),
+        BlocProvider(create: (context) => SpiritualCubit()..init()),
       ],
       child: ScreenUtilInit(
         designSize: const Size(360, 690),

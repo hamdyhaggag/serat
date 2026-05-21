@@ -1,11 +1,13 @@
 /// Professional Quran Reader Screen
 /// Provides an immersive reading experience inspired by Madinah Mushaf
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:serat/Core/models/quran_chapter.dart';
 import 'package:serat/Presentation/Config/constants/colors.dart';
+import 'package:serat/features/spiritual_progress/cubit/spiritual_cubit.dart';
 import '../data/quran_page_data.dart';
 import '../theme/quran_reader_theme.dart';
 import '../services/quran_page_service.dart';
@@ -46,6 +48,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen>
   QuranPageData? _currentPageData;
   List<QuranChapter> _chapters = [];
   Set<int> _bookmarkedPages = {};
+  Timer? _worshipTimer;
 
   // Preferences keys
   static const String _fontSizeKey = 'quran_reader_font_size';
@@ -63,6 +66,16 @@ class _QuranReaderScreenState extends State<QuranReaderScreen>
     );
     _currentPage = widget.initialPage;
     _initializeReader();
+
+    // Start tracking worship time
+    _worshipTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      if (mounted) {
+        SpiritualCubit.get(context).updateStats(
+          quranMinutes: 1, 
+          totalWorshipMinutes: 1
+        );
+      }
+    });
   }
 
   Future<void> _initializeReader() async {
@@ -359,6 +372,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen>
 
   @override
   void dispose() {
+    _worshipTimer?.cancel();
     _pageController.dispose();
     _fadeController.dispose();
     _savePreferences();

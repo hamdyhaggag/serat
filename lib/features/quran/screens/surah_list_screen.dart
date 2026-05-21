@@ -1,15 +1,16 @@
+import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:serat/imports.dart';
 import '../models/surah_model.dart';
 import '../services/surah_service.dart';
-import '../services/image_cache_service.dart';
-import '../services/image_cache_manager.dart';
-import 'dart:async';
 import 'package:serat/Presentation/Widgets/share_verse_generator.dart';
 
 class SurahListScreen extends StatefulWidget {
-  const SurahListScreen({Key? key}) : super(key: key);
+  const SurahListScreen({super.key});
 
   @override
   State<SurahListScreen> createState() => _SurahListScreenState();
@@ -18,71 +19,40 @@ class SurahListScreen extends StatefulWidget {
 class _SurahListScreenState extends State<SurahListScreen>
     with SingleTickerProviderStateMixin {
   final SurahService _surahService = SurahService();
-  final ImageCacheService _imageCacheService = ImageCacheService();
-  final ImageCacheManager _imageCacheManager = ImageCacheManager();
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
+  
   List<SurahModel> _surahs = [];
   List<SurahModel> _filteredSurahs = [];
+  
   bool _isLoading = true;
-  bool _isSearching = false;
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  final int _cacheExtent = 5;
-  bool _isScrolling = false;
-  int _lastVisibleIndex = 0;
+  late AnimationController _animCtrl;
   Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _fadeAnimation =
-        Tween<double>(begin: 0.0, end: 1.0).animate(_animationController);
-    _initializeServices();
-    _setupScrollListener();
+    _animCtrl = AnimationController(vsync: this, duration: 600.ms);
+    _loadSurahs();
     _setupSearchListener();
-  }
-
-  void _setupScrollListener() {
-    _scrollController.addListener(() {
-      if (_scrollController.position.isScrollingNotifier.value) {
-        _isScrolling = true;
-        _lastVisibleIndex = (_scrollController.position.pixels / 100).floor();
-        _preloadImages();
-      } else {
-        _isScrolling = false;
-      }
-    });
   }
 
   void _setupSearchListener() {
     _searchController.addListener(() {
       if (_debounce?.isActive ?? false) _debounce!.cancel();
       _debounce = Timer(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          setState(() {
-            _filterSurahs(_searchController.text);
-          });
-        }
+        if (mounted) setState(() => _filterSurahs(_searchController.text));
       });
     });
   }
 
   void _filterSurahs(String query) {
     if (query.isEmpty) {
-      setState(() {
-        _filteredSurahs = _surahs;
-        _isSearching = false;
-      });
+      setState(() => _filteredSurahs = _surahs);
       return;
     }
 
     setState(() {
-      _isSearching = true;
       _filteredSurahs = _surahs.where((surah) {
         final surahName = surah.surah.toLowerCase();
         final surahNumber = (_surahs.indexOf(surah) + 1).toString();
@@ -96,27 +66,6 @@ class _SurahListScreenState extends State<SurahListScreen>
     });
   }
 
-  Future<void> _preloadImages() async {
-    if (!_isScrolling) return;
-
-    final int startIndex = _lastVisibleIndex - 2;
-    final int endIndex = _lastVisibleIndex + 3;
-
-    for (int i = startIndex; i <= endIndex; i++) {
-      if (i >= 0 && i < _surahs.length) {
-        final surah = _surahs[i];
-        if (surah.image.isNotEmpty) {
-          await _imageCacheManager.getCachedImagePath(surah.image);
-        }
-      }
-    }
-  }
-
-  Future<void> _initializeServices() async {
-    await _imageCacheService.init();
-    await _loadSurahs();
-  }
-
   Future<void> _loadSurahs() async {
     final surahs = await _surahService.loadSurahs();
     if (mounted) {
@@ -125,734 +74,594 @@ class _SurahListScreenState extends State<SurahListScreen>
         _filteredSurahs = surahs;
         _isLoading = false;
       });
-      _animationController.forward();
-      _preloadInitialImages(surahs);
-    }
-  }
-
-  Future<void> _preloadInitialImages(List<SurahModel> surahs) async {
-    for (var i = 0; i < surahs.length && i < _cacheExtent; i++) {
-      if (surahs[i].image.isNotEmpty) {
-        await _imageCacheManager.getCachedImagePath(surahs[i].image);
-      }
+      _animCtrl.forward();
     }
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _animationController.dispose();
+    _animCtrl.dispose();
     _searchController.dispose();
     _debounce?.cancel();
     super.dispose();
   }
 
-  void _showFullScreenImage(BuildContext context, SurahModel surah, int index) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        opaque: false,
-        pageBuilder: (context, animation, secondaryAnimation) {
-          return _FullScreenImageView(
-            imageUrl: surah.image,
-            heroTag: 'surah_${surah.surah}',
-            index: index,
-          );
-        },
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
-        },
-      ),
+  void _showSurahDetails(BuildContext context, SurahModel surah) {
+    HapticFeedback.selectionClick();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _SurahDetailsSheet(surah: surah),
     );
-  }
-
-  Widget _buildSurahImage(SurahModel surah, int index) {
-    if (surah.image.isEmpty) {
-      return _buildPlaceholder(index);
-    }
-
-    return GestureDetector(
-      onTap: () => _showFullScreenImage(context, surah, index),
-      child: CachedNetworkImage(
-        imageUrl: surah.image,
-        width: 65,
-        height: 65,
-        fit: BoxFit.cover,
-        memCacheWidth: 130,
-        memCacheHeight: 130,
-        fadeInDuration: const Duration(milliseconds: 300),
-        placeholder: (context, url) => _buildPlaceholder(index),
-        errorWidget: (context, url, error) => _buildPlaceholder(index),
-        imageBuilder: (context, imageProvider) => Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            image: DecorationImage(
-              image: imageProvider,
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPlaceholder(int index) {
-    return Center(
-      child: Text(
-        '${index + 1}',
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Color _getBackgroundColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? Colors.grey[900]!
-        : Colors.white;
-  }
-
-  Color _getCardColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? Colors.grey[800]!
-        : Colors.white;
-  }
-
-  Color _getTextColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? Colors.white
-        : Colors.black87;
-  }
-
-  Color _getSecondaryTextColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? Colors.grey[300]!
-        : Colors.grey[600]!;
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xff0A0A0A) : const Color(0xffF8F9FA);
 
     return Scaffold(
-      body: CustomScrollView(
-        controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 180,
-            floating: false,
-            pinned: true,
-            backgroundColor: Theme.of(context).primaryColor,
-            flexibleSpace: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Theme.of(context).primaryColor,
-                    Theme.of(context).primaryColor.withOpacity(0.8),
-                  ],
-                ),
-              ),
-              child: Stack(
-                children: [
-                  Positioned(
-                    right: -20,
-                    top: -20,
-                    child: Container(
-                      width: 150,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.1),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    left: -30,
-                    bottom: -30,
-                    child: Container(
-                      width: 200,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.1),
-                      ),
-                    ),
-                  ),
-                  SafeArea(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'بطاقات القرآن',
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.2,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            width: 40,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(60),
-              child: Container(
-                height: 60,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: _getBackgroundColor(context),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(20),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -2),
-                    ),
-                  ],
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[700] : Colors.grey[100],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'ابحث عن سورة...',
-                      hintStyle: TextStyle(
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
-                        fontSize: 16,
-                        fontFamily: 'Din',
-                      ),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
-                      ),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.clear,
-                                color: isDark
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600],
-                              ),
-                              onPressed: () {
-                                _searchController.clear();
-                                _filterSurahs('');
-                              },
-                            )
-                          : null,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                    ),
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: _getTextColor(context),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
+      backgroundColor: bgColor,
+      body: Stack(
+        children: [
+          // Elegant Glow Background
+          Positioned(
+            top: -100,
+            left: MediaQuery.of(context).size.width / 4,
             child: Container(
+              width: 300,
+              height: 300,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Theme.of(context).primaryColor.withOpacity(0.05),
-                    _getBackgroundColor(context),
-                  ],
-                ),
+                shape: BoxShape.circle,
+                color: AppColors.primaryColor.withOpacity(isDark ? 0.15 : 0.08),
               ),
-              child: _isLoading
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: CircularProgressIndicator(
-                          strokeWidth: 3,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ),
-                    )
-                  : _isSearching && _filteredSurahs.isEmpty
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.search_off_rounded,
-                                  size: 64,
-                                  color: isDark
-                                      ? Colors.grey[600]
-                                      : Colors.grey[400],
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'لم يتم العثور على نتائج',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: _getSecondaryTextColor(context),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'حاول البحث بكلمات مختلفة',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: _getSecondaryTextColor(context),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : FadeTransition(
-                          opacity: _fadeAnimation,
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 16,
-                            ),
-                            itemCount: _filteredSurahs.length,
-                            itemBuilder: (context, index) {
-                              final surah = _filteredSurahs[index];
-                              return Hero(
-                                tag: 'surah_${surah.surah}',
-                                child: Container(
-                                  margin: const EdgeInsets.only(bottom: 12),
-                                  decoration: BoxDecoration(
-                                    color: _getCardColor(context),
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.05),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTap: () =>
-                                          _showSurahDetails(context, surah),
-                                      onLongPress: () {
-                                        // Haptic Feedback for premium feel
-                                        HapticFeedback.mediumImpact();
-                                        // Open ShareVerseGenerator with the surah's fadluha as a sample verse
-                                        final verseText = surah.fadluha.toString().isNotEmpty
-                                            ? surah.fadluha.toString()
-                                            : 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ';
-                                        ShareVerseGenerator.show(
-                                          context,
-                                          verseText: verseText.length > 200
-                                              ? '${verseText.substring(0, 200)}...'
-                                              : verseText,
-                                          shareText: verseText.length > 200
-                                              ? '${verseText.substring(0, 200)}...'
-                                              : verseText,
-                                          surahName: surah.surah,
-                                          verseNumber: 1,
-                                        );
-                                      },
-                                      borderRadius: BorderRadius.circular(20),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              width: 65,
-                                              height: 65,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(15),
-                                                gradient: LinearGradient(
-                                                  begin: Alignment.topLeft,
-                                                  end: Alignment.bottomRight,
-                                                  colors: [
-                                                    Theme.of(context)
-                                                        .primaryColor
-                                                        .withOpacity(0.8),
-                                                    Theme.of(context)
-                                                        .primaryColor,
-                                                  ],
-                                                ),
-                                              ),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(15),
-                                                child: _buildSurahImage(
-                                                    surah, index),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 16),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    surah.surah,
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: _getTextColor(
-                                                          context),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    surah.ayaatiha,
-                                                    style: TextStyle(
-                                                      fontSize: 15,
-                                                      color:
-                                                          _getSecondaryTextColor(
-                                                              context),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-            ),
+            ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                  begin: const Offset(0.9, 0.9),
+                  end: const Offset(1.1, 1.1),
+                  duration: 4.seconds,
+                  curve: Curves.easeInOut,
+                ),
+          ),
+          CustomScrollView(
+            controller: _scrollController,
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              _buildAppBar(isDark),
+              _buildSearchBar(isDark),
+              if (_isLoading)
+                _buildShimmer(isDark)
+              else if (_filteredSurahs.isEmpty)
+                _buildEmptyState(isDark)
+              else
+                _buildList(isDark),
+            ],
           ),
         ],
       ),
     );
   }
 
-  void _showSurahDetails(BuildContext context, SurahModel surah) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.9,
-        maxChildSize: 0.9,
-        minChildSize: 0.5,
-        expand: false,
-        builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
-            color: _getBackgroundColor(context),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+  Widget _buildAppBar(bool isDark) {
+    return SliverAppBar(
+      expandedHeight: 140,
+      floating: false,
+      pinned: true,
+      elevation: 0,
+      backgroundColor: isDark ? const Color(0xff0A0A0A).withOpacity(0.9) : const Color(0xffF8F9FA).withOpacity(0.9),
+      systemOverlayStyle: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back_ios_new_rounded,
+            color: isDark ? Colors.white : Colors.black87),
+        onPressed: () => Navigator.pop(context),
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        titlePadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        title: Text(
+          'بطاقات القرآن',
+          style: TextStyle(
+            fontFamily: 'Cairo',
+            fontSize: 22,
+            color: isDark ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.5,
           ),
-          child: Column(
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 12),
+        ),
+        centerTitle: false,
+      ),
+    );
+  }
+
+  Widget _buildSearchBar(bool isDark) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+        child: Container(
+          height: 56,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xff1C1C1E) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.3 : 0.04),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+            border: Border.all(
+              color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.02),
+            ),
+          ),
+          child: TextField(
+            controller: _searchController,
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              color: isDark ? Colors.white : Colors.black87,
+              fontSize: 16,
+            ),
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              hintText: 'ابحث باسم السورة...',
+              hintStyle: TextStyle(
+                fontFamily: 'Cairo',
+                color: isDark ? Colors.grey[600] : Colors.grey[400],
+                fontSize: 14,
+              ),
+              prefixIcon: Icon(Icons.search_rounded, 
+                color: isDark ? Colors.grey[500] : Colors.grey[400], size: 22),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: Icon(Icons.clear_rounded,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600], size: 20),
+                      onPressed: () {
+                        _searchController.clear();
+                        _filterSurahs('');
+                      },
+                    )
+                  : null,
+            ),
+          ),
+        ).animate().fadeIn().slideY(begin: 0.1, end: 0, curve: Curves.easeOut),
+      ),
+    );
+  }
+
+  Widget _buildList(bool isDark) {
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final surah = _filteredSurahs[index];
+            final globalIndex = _surahs.indexOf(surah) + 1; // Real surah number
+            return _SurahTile(
+              surah: surah,
+              listIndex: index,
+              surahNumber: globalIndex,
+              isDark: isDark,
+              onTap: () => _showSurahDetails(context, surah),
+            );
+          },
+          childCount: _filteredSurahs.length,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmer(bool isDark) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            return Shimmer.fromColors(
+              baseColor: isDark ? const Color(0xff2a2a2a) : Colors.grey[200]!,
+              highlightColor: isDark ? const Color(0xff3a3a3a) : Colors.grey[50]!,
+              child: Container(
+                height: 100,
+                margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[600] : Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
                 ),
               ),
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(24),
+            );
+          },
+          childCount: 8,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(bool isDark) {
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primaryColor.withOpacity(0.05),
+              ),
+              child: Icon(Icons.search_off_rounded,
+                  size: 48, color: AppColors.primaryColor.withOpacity(0.5)),
+            ),
+            const SizedBox(height: 24),
+            Text('لم يتم العثور على نتائج',
+                style: TextStyle(
+                    fontFamily: 'Cairo', 
+                    color: Colors.grey[500], 
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600)),
+          ],
+        ).animate().fadeIn().scale(),
+      ),
+    );
+  }
+}
+
+// ─── Minimal List Card (No Images) ────────────────────────────────────────────
+
+class _SurahTile extends StatefulWidget {
+  final SurahModel surah;
+  final int listIndex;
+  final int surahNumber;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _SurahTile({
+    required this.surah,
+    required this.listIndex,
+    required this.surahNumber,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  State<_SurahTile> createState() => _SurahTileState();
+}
+
+class _SurahTileState extends State<_SurahTile> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final surfaceColor = widget.isDark ? const Color(0xff1C1C1E) : Colors.white;
+    final shadowColor = widget.isDark ? Colors.black45 : Colors.black.withOpacity(0.04);
+    final borderColor = widget.isDark ? Colors.white.withOpacity(0.05) : Colors.transparent;
+    final delayMs = (widget.listIndex % 10) * 50;
+
+    return GestureDetector(
+      onTap: widget.onTap,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      onLongPress: () {
+        HapticFeedback.mediumImpact();
+        final verseText = widget.surah.fadluha.toString().isNotEmpty
+            ? widget.surah.fadluha.toString()
+            : 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ';
+        ShareVerseGenerator.show(
+          context,
+          verseText: verseText.length > 200 ? '${verseText.substring(0, 200)}...' : verseText,
+          shareText: verseText.length > 200 ? '${verseText.substring(0, 200)}...' : verseText,
+          surahName: widget.surah.surah,
+          verseNumber: 1,
+        );
+      },
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1.0,
+        duration: 200.ms,
+        child: AnimatedContainer(
+          duration: 300.ms,
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: surfaceColor,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: borderColor),
+            boxShadow: [
+              BoxShadow(
+                color: shadowColor,
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              )
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Elegant Typography Badge
+                Hero(
+                  tag: 'surah_${widget.surah.surah}_badge',
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryColor.withOpacity(widget.isDark ? 0.15 : 0.08),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppColors.primaryColor.withOpacity(widget.isDark ? 0.3 : 0.15),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Text(
+                      '${widget.surahNumber}',
+                      style: TextStyle(
+                        fontFamily: 'Cairo', // Or 'Amiri'
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primaryColor,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+
+                // Surah Information
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Hero(
+                        tag: 'surah_${widget.surah.surah}',
+                        child: Material(
+                          color: Colors.transparent,
+                          child: Text(
+                            widget.surah.surah,
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: widget.isDark ? Colors.white : AppColors.primaryColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.surah.ayaatiha,
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 13,
+                          color: widget.isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Chevron icon
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: widget.isDark ? Colors.grey[600] : Colors.grey[300],
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ).animate().fadeIn(delay: Duration(milliseconds: delayMs)).slideY(begin: 0.1, end: 0),
+    );
+  }
+}
+
+// ─── Details Bottom Sheet ─────────────────────────────────────────────────────
+
+class _SurahDetailsSheet extends StatelessWidget {
+  final SurahModel surah;
+
+  const _SurahDetailsSheet({required this.surah});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final size = MediaQuery.of(context).size;
+
+    return Container(
+      height: size.height * 0.85,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xff1C1C1E) : const Color(0xffF8F9FA),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      child: Column(
+        children: [
+          // Handle
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(top: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey[400],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Elegant Header inside Sheet
+          Container(
+            margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? [const Color(0xff2F2F2F), const Color(0xff252525)]
+                    : [AppColors.primaryColor.withOpacity(0.9), AppColors.primaryColor],
+              ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: isDark ? Colors.black.withOpacity(0.3) : AppColors.primaryColor.withOpacity(0.25),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                )
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Hero(
                         tag: 'surah_${surah.surah}',
-                        child: Text(
-                          surah.surah,
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: _getTextColor(context),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: Text(
+                            surah.surah,
+                            style: const TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 26,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      _buildDetailSection('عدد الآيات', surah.ayaatiha),
-                      _buildDetailSection(
-                          'معنى اسم السورة', surah.maeniAsamuha),
-                      _buildDetailSection('سبب التسمية', surah.sababTasmiatiha),
-                      _buildDetailSection('أسماء السورة', surah.asmawuha),
-                      _buildDetailSection(
-                          'مقصدها العام', surah.maqsiduhaAleamu),
-                      _buildDetailSection('سبب نزولها', surah.sababNuzuliha),
-                      _buildDetailSection('فضلها', surah.fadluha),
-                      _buildDetailSection('مناسباتها', surah.munasabatiha),
+                      const SizedBox(height: 8),
+                      Text(
+                        surah.ayaatiha,
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.8),
+                        ),
+                      ),
                     ],
+                  ),
+                ),
+                // Circular icon representation
+                Hero(
+                  tag: 'surah_${surah.surah}_badge',
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 28),
+                  ),
+                )
+              ],
+            ),
+          ).animate().fadeIn().slideY(begin: 0.1, end: 0),
+          
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
+              physics: const BouncingScrollPhysics(),
+              children: [
+                _buildSection(context, 'معنى اسم السورة', surah.maeniAsamuha, isDark),
+                _buildSection(context, 'سبب التسمية', surah.sababTasmiatiha, isDark),
+                _buildSection(context, 'أسماء السورة', surah.asmawuha, isDark),
+                _buildSection(context, 'المقصد العام', surah.maqsiduhaAleamu, isDark),
+                _buildSection(context, 'سبب النزول', surah.sababNuzuliha, isDark),
+                _buildSection(context, 'فضل السورة', surah.fadluha, isDark),
+                _buildSection(context, 'المناسبات', surah.munasabatiha, isDark),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection(BuildContext context, String title, dynamic content, bool isDark) {
+    if (content == null || content.toString().trim().isEmpty || content.toString() == '[]') {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 4,
+                height: 18,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryColor,
+                ),
+              ),
+            ],
+          ).animate().fadeIn(),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withOpacity(0.03) : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+              ),
+            ),
+            child: _buildContent(content, isDark),
+          ).animate().fadeIn().slideY(begin: 0.1, end: 0),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(dynamic content, bool isDark) {
+    final textColor = isDark ? Colors.grey[300] : Colors.grey[800];
+    
+    if (content is List && content.isNotEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: content.map((item) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('• ', style: TextStyle(color: AppColors.primaryColor, fontSize: 18)),
+              Expanded(
+                child: Text(
+                  item.toString(),
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 14,
+                    color: textColor,
+                    height: 1.8,
                   ),
                 ),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailSection(String title, dynamic content) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[800] : Colors.grey[50],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).primaryColor,
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (content is List)
-            ...content.map((item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '• ',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          item,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: _getTextColor(context),
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ))
-          else
-            Text(
-              content.toString(),
-              style: TextStyle(
-                fontSize: 16,
-                color: _getTextColor(context),
-                height: 1.5,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FullScreenImageView extends StatefulWidget {
-  final String imageUrl;
-  final String heroTag;
-  final int index;
-
-  const _FullScreenImageView({
-    required this.imageUrl,
-    required this.heroTag,
-    required this.index,
-  });
-
-  @override
-  State<_FullScreenImageView> createState() => _FullScreenImageViewState();
-}
-
-class _FullScreenImageViewState extends State<_FullScreenImageView> {
-  final TransformationController _transformationController =
-      TransformationController();
-  TapDownDetails? _doubleTapDetails;
-  double _scale = 1.0;
-  bool _isZoomed = false;
-
-  @override
-  void dispose() {
-    _transformationController.dispose();
-    super.dispose();
-  }
-
-  void _handleDoubleTapDown(TapDownDetails details) {
-    _doubleTapDetails = details;
-  }
-
-  void _handleDoubleTap() {
-    if (_doubleTapDetails == null) return;
-
-    if (_isZoomed) {
-      _transformationController.value = Matrix4.identity();
-      setState(() => _isZoomed = false);
-    } else {
-      final position = _doubleTapDetails!.localPosition;
-      final double scale = 2.0;
-      final x = -position.dx * (scale - 1);
-      final y = -position.dy * (scale - 1);
-
-      final Matrix4 zoomedMatrix = Matrix4.identity()
-        ..translate(x, y)
-        ..scale(scale);
-
-      _transformationController.value = zoomedMatrix;
-      setState(() => _isZoomed = true);
+        )).toList(),
+      );
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black.withOpacity(0.9),
-      body: Stack(
-        children: [
-          InteractiveViewer(
-            transformationController: _transformationController,
-            minScale: 1.0,
-            maxScale: 4.0,
-            onInteractionUpdate: (details) {
-              setState(() {
-                _scale = details.scale;
-                _isZoomed = _scale > 1.0;
-              });
-            },
-            child: Center(
-              child: GestureDetector(
-                onDoubleTapDown: _handleDoubleTapDown,
-                onDoubleTap: _handleDoubleTap,
-                child: Hero(
-                  tag: widget.heroTag,
-                  child: CachedNetworkImage(
-                    imageUrl: widget.imageUrl,
-                    fit: BoxFit.contain,
-                    placeholder: (context, url) => Center(
-                      child: CircularProgressIndicator(
-                        color: Theme.of(context).primaryColor,
-                      ),
-                    ),
-                    errorWidget: (context, url, error) => const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            color: Colors.white,
-                            size: 48,
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            'فشل تحميل الصورة',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            right: 16,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.5),
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.close,
-                  color: Colors.white,
-                ),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ),
-          ),
-          if (_isZoomed)
-            Positioned(
-              bottom: MediaQuery.of(context).padding.bottom + 16,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'مكبّر ${(_scale * 100).toInt()}%',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
+    
+    return Text(
+      content.toString(),
+      style: TextStyle(
+        fontFamily: 'Cairo',
+        fontSize: 14,
+        color: textColor,
+        height: 1.8,
       ),
     );
   }

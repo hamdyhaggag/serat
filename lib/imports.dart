@@ -17,6 +17,7 @@ export 'dart:async';
 export 'package:font_awesome_flutter/font_awesome_flutter.dart';
 export 'package:intl/intl.dart';
 export 'package:vibration/vibration.dart';
+export 'package:fluttertoast/fluttertoast.dart';
 
 export 'package:share_plus/share_plus.dart';
 export 'package:url_launcher/url_launcher.dart';

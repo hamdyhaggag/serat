@@ -25,7 +25,7 @@ class PropheticDayScreen extends StatelessWidget {
   final List<PropheticPeriod> schedule = [
     PropheticPeriod(
       title: 'قبل الفجر',
-      time: '00:00 - 05:00',
+      time: '12:00 ص - 05:00 ص',
       activities: [
         'يتهجد ويصلي قيام الليل في المنزل أو في المسجد',
         'يأخذ قيلولة قصيرة بعد التهجد',
@@ -35,7 +35,7 @@ class PropheticDayScreen extends StatelessWidget {
     ),
     PropheticPeriod(
       title: 'الفجر',
-      time: '05:00 - 07:00',
+      time: '05:00 ص - 07:00 ص',
       activities: [
         'يستيقظ، يتطهر فمه بالسواك',
         'يحمد الله ويثني عليه',
@@ -48,7 +48,7 @@ class PropheticDayScreen extends StatelessWidget {
     ),
     PropheticPeriod(
       title: 'بعد شروق الشمس',
-      time: '07:00 - 09:00',
+      time: '07:00 ص - 09:00 ص',
       activities: [
         'يصلي ركعتين',
         'يذهب إلى المنزل، ويحدث أهله',
@@ -59,7 +59,7 @@ class PropheticDayScreen extends StatelessWidget {
     ),
     PropheticPeriod(
       title: 'بداية اليوم',
-      time: '09:00 - 12:00',
+      time: '09:00 ص - 12:00 م',
       activities: [
         'يعود إلى المسجد، ويصلي ركعتين',
         'يعلم أصحابه ويعظهم',
@@ -71,7 +71,7 @@ class PropheticDayScreen extends StatelessWidget {
     ),
     PropheticPeriod(
       title: 'الظهر',
-      time: '12:00 - 15:00',
+      time: '12:00 م - 03:00 م',
       activities: [
         'يؤم المصلين بصلاة الظهر',
         'في بعض الأحيان يعظهم ويوجههم',
@@ -82,7 +82,7 @@ class PropheticDayScreen extends StatelessWidget {
     ),
     PropheticPeriod(
       title: 'العصر',
-      time: '15:00 - 18:00',
+      time: '03:00 م - 06:00 م',
       activities: [
         'يؤم المصلين بصلاة العصر',
         'يعود إلى بيته ويمضي فترة مع أهله',
@@ -93,7 +93,7 @@ class PropheticDayScreen extends StatelessWidget {
     ),
     PropheticPeriod(
       title: 'المغرب',
-      time: '18:00 - 20:00',
+      time: '06:00 م - 08:00 م',
       activities: [
         'يؤم المصلين بصلاة المغرب',
         'يصلي ركعتين بعد المغرب',
@@ -105,7 +105,7 @@ class PropheticDayScreen extends StatelessWidget {
     ),
     PropheticPeriod(
       title: 'العشاء',
-      time: '20:00 - 23:00',
+      time: '08:00 م - 11:00 م',
       activities: [
         'يؤم المصلين بصلاة العشاء',
         'يذكر الله ويثني عليه',

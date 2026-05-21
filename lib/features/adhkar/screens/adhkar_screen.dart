@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:serat/features/adhkar/models/adhkar_category.dart';
@@ -7,6 +8,7 @@ import 'package:serat/features/adhkar/widgets/adhkar_category_card.dart';
 import 'package:serat/features/adhkar/widgets/adhkar_search_widget.dart';
 import 'package:serat/features/adhkar/screens/adhkar_detail_screen.dart';
 import 'package:serat/shared/constants/app_colors.dart';
+import 'package:serat/features/spiritual_progress/cubit/spiritual_cubit.dart';
 
 class AdhkarScreen extends StatefulWidget {
   const AdhkarScreen({super.key});
@@ -28,6 +30,8 @@ class _AdhkarScreenState extends State<AdhkarScreen>
   double _lastOpenedProgress = 0.0;
 
   late AnimationController _animationController;
+  final Stopwatch _sessionStopwatch = Stopwatch();
+  Timer? _sessionTimer;
 
   @override
   void initState() {
@@ -39,10 +43,30 @@ class _AdhkarScreenState extends State<AdhkarScreen>
     );
     _loadAllProgress();
     _loadLastOpenedCategory();
+    _sessionStopwatch.start();
+    // Report every full minute to SpiritualCubit
+    _sessionTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) {
+        SpiritualCubit.get(context).updateStats(
+          adhkarCount: 1,
+          totalWorshipMinutes: 1,
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
+    _sessionTimer?.cancel();
+    _sessionStopwatch.stop();
+    // Flush remaining partial minutes (>= 30 seconds counts as 1 minute)
+    final remainingSecs = _sessionStopwatch.elapsed.inSeconds % 60;
+    if (remainingSecs >= 30 && mounted) {
+      SpiritualCubit.get(context).updateStats(
+        adhkarCount: 1,
+        totalWorshipMinutes: 1,
+      );
+    }
     _animationController.dispose();
     super.dispose();
   }

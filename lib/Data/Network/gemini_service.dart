@@ -1,5 +1,5 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:serat/Data/Shared/cache_helper.dart';
+import 'package:serat/Data/utils/cache_helper.dart';
 
 class GeminiService {
   // Try to use a saved key, otherwise fallback to empty (handling empty internally or prompting)

@@ -86,7 +86,7 @@ class NotificationService {
       channelDescription: channelDescription,
       importance: Importance.high,
       priority: Priority.high,
-      ongoing: true,
+      ongoing: false,
       autoCancel: true,
       playSound: false,
       enableVibration: false,

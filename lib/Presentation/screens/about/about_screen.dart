@@ -9,170 +9,235 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:serat/Presentation/screens/about/models/developer_info.dart';
 
 class AboutScreen extends StatelessWidget {
-  const AboutScreen({Key? key}) : super(key: key);
+  const AboutScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
+    final primaryColor = AppColors.primaryColor;
+    final subtextColor = isDarkMode ? Colors.white60 : Colors.black54;
 
     return Scaffold(
-      appBar: const CustomAppBar(title: 'عن التطبيق'),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // App Logo
-              Center(
-                child: CircleAvatar(
-                  radius: 44,
-                  backgroundColor: isDarkMode
-                      ? Colors.white.withOpacity(0.08)
-                      : Colors.black.withOpacity(0.05),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Image.asset(
-                      'assets/logo.webp',
-                      fit: BoxFit.contain,
-                      height: 64,
-                      width: 64,
+      backgroundColor: isDarkMode ? const Color(0xff121212) : const Color(0xffF8FAF9),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          // Premium Header with Backdrop Blur
+          SliverAppBar(
+            expandedHeight: 220,
+            pinned: true,
+            stretch: true,
+            backgroundColor: isDarkMode ? const Color(0xff1A2B25) : primaryColor,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+              onPressed: () => Navigator.pop(context),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              centerTitle: true,
+              title: const AppText(
+                'عن تطبيـق صـراط',
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                fontFamily: 'Cairo',
+              ),
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Abstract Islamic Pattern
+                  Positioned.fill(
+                    child: Opacity(
+                      opacity: 0.1,
+                      child: Image.asset(
+                        'assets/logo.webp', // Using logo as a pattern background
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              _buildAppInfoCard(isDarkMode),
-              const SizedBox(height: 30),
-              _buildSectionHeader('المميزات', isDarkMode),
-              const SizedBox(height: 10),
-              _buildFeaturesHorizontalList(isDarkMode, size),
-              const SizedBox(height: 30),
-              _buildSectionHeader('المطور', isDarkMode),
-              const SizedBox(height: 10),
-              _buildDeveloperCardModern(
-                  context, AboutScreenConstants.developers.first, isDarkMode),
-              const SizedBox(height: 30),
-              _buildSectionHeader('روابط سريعة', isDarkMode),
-              const SizedBox(height: 10),
-              _buildActionButtonsRow(context, isDarkMode),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAppInfoCard(bool isDarkMode) {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      color:
-          isDarkMode ? const Color.fromRGBO(255, 255, 255, 0.05) : Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 18),
-        child: Column(
-          children: [
-            AppText(
-              AboutScreenConstants.appName,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: isDarkMode
-                  ? const Color.fromRGBO(255, 255, 255, 0.9)
-                  : Colors.black87,
-              align: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            AppText(
-              AboutScreenConstants.appVersion,
-              fontSize: 16,
-              color: isDarkMode
-                  ? const Color.fromRGBO(255, 255, 255, 0.7)
-                  : Colors.black54,
-              align: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            AppText(
-              AboutScreenConstants.appDescription,
-              fontSize: 16,
-              color: isDarkMode
-                  ? const Color.fromRGBO(255, 255, 255, 0.7)
-                  : Colors.black54,
-              align: TextAlign.center,
-              maxLines: null,
-              overflow: TextOverflow.visible,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title, bool isDarkMode) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: AppText(
-        title,
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: isDarkMode
-            ? const Color.fromRGBO(255, 255, 255, 0.9)
-            : Colors.black87,
-      ),
-    );
-  }
-
-  Widget _buildFeaturesHorizontalList(bool isDarkMode, Size size) {
-    return SizedBox(
-      height: 110,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: AboutScreenConstants.features.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 14),
-        itemBuilder: (context, index) {
-          final feature = AboutScreenConstants.features[index];
-          return Card(
-            elevation: 2,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            color: isDarkMode
-                ? const Color.fromRGBO(255, 255, 255, 0.07)
-                : Colors.white,
-            child: Container(
-              width: size.width * 0.38,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    feature.icon,
-                    size: 32,
-                    color: isDarkMode ? Colors.tealAccent : Colors.teal,
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          isDarkMode ? const Color(0xff121212) : const Color(0xffF8FAF9),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 10),
-                  AppText(
-                    feature.title,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode
-                        ? const Color.fromRGBO(255, 255, 255, 0.9)
-                        : Colors.black87,
-                    align: TextAlign.center,
+                  Center(
+                    child: Hero(
+                      tag: 'app_logo',
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white.withOpacity(0.2)),
+                        ),
+                        child: Image.asset(
+                          'assets/logo.webp',
+                          height: 70,
+                          width: 70,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-          );
-        },
+          ),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // App Info Card
+                  _buildGlassCard(
+                    isDarkMode,
+                    child: Column(
+                      children: [
+                        const AppText(
+                          AboutScreenConstants.appName,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Cairo',
+                        ),
+                        const SizedBox(height: 4),
+                        AppText(
+                          'الإصدار ${AboutScreenConstants.appVersion}',
+                          fontSize: 12,
+                          color: subtextColor,
+                          fontFamily: 'DIN',
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Divider(height: 1, thickness: 0.5),
+                        ),
+                        AppText(
+                          AboutScreenConstants.appDescription,
+                          fontSize: 13,
+                          color: subtextColor,
+                          align: TextAlign.center,
+                          fontFamily: 'Cairo',
+                          height: 1.6,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+                  _buildSectionLabel('المميزات الرئيسية', isDarkMode),
+                  const SizedBox(height: 12),
+                  _buildFeaturesGrid(isDarkMode),
+
+                  const SizedBox(height: 24),
+                  _buildSectionLabel('المطور', isDarkMode),
+                  const SizedBox(height: 12),
+                  _buildDeveloperCard(context, AboutScreenConstants.developers.first, isDarkMode),
+
+                  const SizedBox(height: 24),
+                  _buildSectionLabel('روابط ومشاركة', isDarkMode),
+                  const SizedBox(height: 12),
+                  _buildQuickActions(context, isDarkMode),
+                  
+                  const SizedBox(height: 40),
+                  Center(
+                    child: AppText(
+                      'صنع بكل حب ليخدم المسلمين',
+                      fontSize: 11,
+                      color: subtextColor.withOpacity(0.5),
+                      fontFamily: 'Cairo',
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildDeveloperCardModern(
-      BuildContext context, DeveloperInfo developer, bool isDarkMode) {
+  Widget _buildSectionLabel(String text, bool isDarkMode) {
+    return AppText(
+      text,
+      fontSize: 14,
+      fontWeight: FontWeight.bold,
+      color: AppColors.primaryColor,
+      fontFamily: 'Cairo',
+    );
+  }
+
+  Widget _buildGlassCard(bool isDarkMode, {required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDarkMode ? const Color(0xff1C1C1E) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildFeaturesGrid(bool isDarkMode) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: AboutScreenConstants.features.length >= 4 ? 4 : AboutScreenConstants.features.length,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 1.6,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+      ),
+      itemBuilder: (context, index) {
+        final feature = AboutScreenConstants.features[index];
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isDarkMode ? const Color(0xff1C1C1E) : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(feature.icon, size: 20, color: AppColors.primaryColor),
+              const SizedBox(height: 6),
+              AppText(
+                feature.title,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Cairo',
+                align: TextAlign.center,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDeveloperCard(BuildContext context, DeveloperInfo developer, bool isDarkMode) {
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
       onTap: () {
         showDialog(
           context: context,
@@ -182,114 +247,90 @@ class AboutScreen extends StatelessWidget {
           ),
         );
       },
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: isDarkMode
-            ? const Color.fromRGBO(255, 255, 255, 0.07)
-            : Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: isDarkMode
-                    ? Colors.tealAccent.withOpacity(0.2)
-                    : Colors.teal.withOpacity(0.2),
-                child: Icon(Icons.person,
-                    size: 32,
-                    color: isDarkMode ? Colors.tealAccent : Colors.teal),
-              ),
-              const SizedBox(width: 18),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppText(
-                      developer.name,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isDarkMode
-                          ? const Color.fromRGBO(255, 255, 255, 0.9)
-                          : Colors.black87,
-                    ),
-                    const SizedBox(height: 4),
-                    AppText(
-                      developer.role,
-                      fontSize: 14,
-                      color: isDarkMode
-                          ? const Color.fromRGBO(255, 255, 255, 0.7)
-                          : Colors.black54,
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: developer.socialLinks.entries.map((entry) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: InkWell(
-                            onTap: () => _launchURL(Uri.parse(entry.value)),
-                            child: Icon(
-                              _getSocialIcon(entry.key),
-                              size: 22,
-                              color:
-                                  isDarkMode ? Colors.tealAccent : Colors.teal,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDarkMode ? const Color(0xff1C1C1E) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
           ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primaryColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.person_rounded, size: 24, color: AppColors.primaryColor),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppText(
+                    developer.name,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Cairo',
+                  ),
+                  AppText(
+                    developer.role,
+                    fontSize: 12,
+                    color: isDarkMode ? Colors.white60 : Colors.black54,
+                    fontFamily: 'Cairo',
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey.withOpacity(0.5)),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildActionButtonsRow(BuildContext context, bool isDarkMode) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: AboutScreenConstants.actionButtons.map((button) {
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-                backgroundColor: isDarkMode
-                    ? Colors.tealAccent.withOpacity(0.15)
-                    : Colors.teal.withOpacity(0.15),
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-              onPressed: () => _handleActionButtonTap(context, button),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    button.icon,
-                    color: isDarkMode ? Colors.tealAccent : Colors.teal,
-                    size: 24,
+  Widget _buildQuickActions(BuildContext context, bool isDarkMode) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Row(
+          children: AboutScreenConstants.actionButtons.map((button) {
+            return Expanded(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                child: InkWell(
+                  onTap: () => _handleActionButtonTap(context, button),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryColor.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.primaryColor.withOpacity(0.1)),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(button.icon, size: 20, color: AppColors.primaryColor),
+                        const SizedBox(height: 6),
+                        AppText(
+                          button.title,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryColor,
+                          fontFamily: 'Cairo',
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 6),
-                  AppText(
-                    button.title,
-                    fontSize: 13,
-                    color: isDarkMode
-                        ? const Color.fromRGBO(255, 255, 255, 0.9)
-                        : Colors.black87,
-                    align: TextAlign.center,
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          }).toList(),
         );
-      }).toList(),
+      }
     );
   }
 
@@ -306,7 +347,6 @@ class AboutScreen extends StatelessWidget {
       case ActionButtonType.rate:
         final packageInfo = await PackageInfo.fromPlatform();
         final appId = packageInfo.packageName;
-        // TODO: Add your iOS app ID here
         final uri = Uri.parse(
           Platform.isAndroid
               ? 'market://details?id=$appId'
@@ -315,59 +355,17 @@ class AboutScreen extends StatelessWidget {
         _launchURL(uri);
         break;
       case ActionButtonType.share:
-        final packageInfo = await PackageInfo.fromPlatform();
-        final appId = packageInfo.packageName;
-        // TODO: Add your iOS app ID here
-        final storeUrl = Platform.isAndroid
-            ? 'https://play.google.com/store/apps/details?id=$appId'
-            : 'https://apps.apple.com/app/id/YOUR_IOS_APP_ID';
-        Share.share(''''
-تطبيق صراط هو تطبيق إسلامي شامل يحتوي على العديد من المميزات مثل:
-
-• مواقيت الصلاة
-• اتجاه القبلة
-• الأذكار الصباحية والمسائية
-• الأربعين النووية
-• السبحة الإلكترونية
-• القرآن الكريم مع التفسير
-• القراء المشهورين
-• الراديو الإسلامي
-• فيديوهات القرآن الكريم
-• التقويم الهجري
-• حاسبة الزكاة
-• الهدف اليومي
-• التنبيهات والإشعارات
-• الوضع الليلي
-• دعم اللغة العربية
-
-تحميل التطبيق من هنا:
-https://play.google.com/store/apps/details?id=com.serat.app.serat''');
+        Share.share(AboutScreenConstants.shareMessage);
         break;
       case ActionButtonType.feedback:
         final String email = 'arabianatech@gmail.com';
-        final String subject = 'ملاحظات حول تطبيق صراط';
-        final String body = 'هذه ملاحظاتي:\n';
         final Uri emailUri = Uri(
           scheme: 'mailto',
           path: email,
-          query:
-              'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
+          query: 'subject=${Uri.encodeComponent('ملاحظات حول تطبيق صراط')}',
         );
         _launchURL(emailUri);
         break;
-    }
-  }
-
-  IconData _getSocialIcon(String social) {
-    switch (social) {
-      case 'GitHub':
-        return Icons.code;
-      case 'LinkedIn':
-        return Icons.work;
-      case 'Facebook':
-        return Icons.facebook;
-      default:
-        return Icons.link;
     }
   }
 }

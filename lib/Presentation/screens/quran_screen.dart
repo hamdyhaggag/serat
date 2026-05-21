@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:serat/features/quran_reader/screens/professional_quran_screen.dart';
 
 class QuranScreen extends StatelessWidget {
-  const QuranScreen({super.key});
+  final int? initialPage;
+  
+  const QuranScreen({super.key, this.initialPage});
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +17,6 @@ class QuranScreen extends StatelessWidget {
     //
     // By returning this directly, we replace the custom list with the
     // professional, built-in tools provided by the library.
-    return const ProfessionalQuranScreen();
+    return ProfessionalQuranScreen(initialPage: initialPage);
   }
 }

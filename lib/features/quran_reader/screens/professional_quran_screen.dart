@@ -25,13 +25,15 @@ class ProfessionalQuranScreen extends StatelessWidget {
     // Attempting to navigate after build
     // Note: If jumpTo methods are static or accessible via instance, functionality will work.
     // Commented out to prevent build errors until API is confirmed.
-    /*
-    if (initialSurah != null) {
+    if (initialPage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // QuranLibrary.jumpToSurah(initialSurah!); 
+        QuranLibrary().jumpToPage(initialPage!);
+      });
+    } else if (initialSurah != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        QuranLibrary().jumpToSurah(initialSurah!);
       });
     }
-    */
 
     return QuranLibraryScreen(
       parentContext: context,
