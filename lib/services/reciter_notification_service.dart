@@ -43,15 +43,13 @@ class ReciterNotificationService {
               'reciter_channel',
               'Reciter Notifications',
               description: 'Notifications for Quran recitations',
-              importance: Importance.high,
+              importance: Importance.low,
               playSound: false,
               enableVibration: false,
-              showBadge: true,
+              showBadge: false,
             ),
           );
 
-      developer.log('Notification service initialized successfully',
-          name: 'ReciterNotificationService');
     } catch (e) {
       developer.log('Error initializing notification service: $e',
           name: 'ReciterNotificationService', error: e);
@@ -64,17 +62,15 @@ class ReciterNotificationService {
     required bool isPlaying,
   }) async {
     try {
-      developer.log('Showing reciter notification: $reciterName - $surahName',
-          name: 'ReciterNotificationService');
 
-      const androidDetails = AndroidNotificationDetails(
+      final androidDetails = AndroidNotificationDetails(
         'reciter_channel',
         'Reciter Notifications',
         channelDescription: 'Notifications for Quran recitations',
-        importance: Importance.high,
-        priority: Priority.high,
-        ongoing: true,
-        autoCancel: false,
+        importance: Importance.low,
+        priority: Priority.low,
+        ongoing: isPlaying,
+        autoCancel: !isPlaying,
         category: AndroidNotificationCategory.transport,
         showWhen: false,
         visibility: NotificationVisibility.public,
@@ -87,7 +83,7 @@ class ReciterNotificationService {
         interruptionLevel: InterruptionLevel.active,
       );
 
-      const details = NotificationDetails(
+      final details = NotificationDetails(
         android: androidDetails,
         iOS: iosDetails,
       );
@@ -100,8 +96,6 @@ class ReciterNotificationService {
         payload: isPlaying ? 'playing' : 'paused',
       );
 
-      developer.log('Reciter notification shown successfully',
-          name: 'ReciterNotificationService');
     } catch (e) {
       developer.log('Error showing reciter notification: $e',
           name: 'ReciterNotificationService', error: e);

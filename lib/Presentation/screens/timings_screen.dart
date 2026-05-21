@@ -10,7 +10,6 @@ import 'package:serat/Presentation/screens/reciters_screen.dart';
 import 'package:serat/Presentation/screens/islamic_quiz_screen.dart';
 import 'package:serat/Presentation/screens/history_screen.dart';
 import 'package:serat/imports.dart';
-import 'package:serat/Presentation/screens/adhan/adhan_settings_screen.dart';
 import 'package:serat/features/badges/screens/badges_screen.dart';
 import 'package:serat/features/prophetic_day/screens/prophetic_day_screen.dart';
 
@@ -670,145 +669,131 @@ class _TimingsScreenState extends State<TimingsScreen> {
                         
 
                         EmotionalStateWidget(isDarkMode: isDarkMode),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 28),
+
+                        // ── Featured Card: الهدف اليومي ──────────────────────────
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: GestureDetector(
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DailyGoalNavigationScreen())),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(24),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topRight,
+                                  end: Alignment.bottomLeft,
+                                  colors: [
+                                    shared_colors.AppColors.primaryColor,
+                                    shared_colors.AppColors.primaryColor.withOpacity(0.75),
+                                  ],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: shared_colors.AppColors.primaryColor.withOpacity(0.35),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.flag_rounded, color: Colors.white, size: 30),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text('الهدف اليومي', style: TextStyle(color: Colors.white, fontFamily: 'Cairo', fontWeight: FontWeight.bold, fontSize: 18)),
+                                        const SizedBox(height: 4),
+                                        Text('تابع إنجازاتك اليومية', style: TextStyle(color: Colors.white.withOpacity(0.8), fontFamily: 'Cairo', fontSize: 13)),
+                                      ],
+                                    ),
+                                  ),
+                                  Icon(Icons.arrow_back_ios_rounded, color: Colors.white.withOpacity(0.7), size: 18),
+                                ],
+                              ),
+                            ),
+                          ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1, end: 0),
+                        ),
+                        const SizedBox(height: 32),
+
+                        // ── Section: القرآن والذكر ────────────────────────────────
+                        _buildSectionHeader('القرآن والذكر', Icons.menu_book_rounded, isDarkMode),
+                        const SizedBox(height: 14),
+                        SizedBox(
+                          height: 130,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            children: [
+                              _buildHorizontalCard('القرآن الكريم', Icons.menu_book_rounded, const Color(0xff1E6B4A), isDarkMode,
+                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuranScreen()))),
+                              _buildHorizontalCard('بطاقات القرآن', Icons.style_rounded, const Color(0xff4A28A0), isDarkMode,
+                                  onTap: () => Navigator.pushNamed(context, QuranRoutes.surahList)),
+                              _buildHorizontalCard('أسماء الله الحسنى', Icons.verified_rounded, const Color(0xffB8860B), isDarkMode,
+                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NamesOfAllahScreen()))),
+                              _buildHorizontalCard('القراء', Icons.record_voice_over_rounded, const Color(0xff2980B9), isDarkMode,
+                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RecitersScreen()))),
+                              _buildHorizontalCard('الراديو', Icons.radio_rounded, const Color(0xffC0392B), isDarkMode,
+                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RadioScreen()))),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+
+                        // ── Section: التطور الإيماني ──────────────────────────────
+                        _buildSectionHeader('التطور الإيماني', Icons.military_tech_rounded, isDarkMode),
+                        const SizedBox(height: 14),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: GridView.count(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             crossAxisCount: 2,
-                            mainAxisSpacing: 16,
-                            crossAxisSpacing: 16,
-                            childAspectRatio: 1.1,
+                            mainAxisSpacing: 14,
+                            crossAxisSpacing: 14,
+                            childAspectRatio: 1.15,
                             children: [
-                              _buildFeatureCard(
-                                'الهدف اليومي',
-                                Icons.flag_rounded,
-                                isDarkMode,
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) =>
-                                          const DailyGoalNavigationScreen()),
-                                ),
-                              ),
-                              _buildFeatureCard(
-                                'القرآن الكريم',
-                                Icons.menu_book_rounded,
-                                isDarkMode,
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => const QuranScreen()),
-                                ),
-                              ),
-                              _buildFeatureCard(
-                                'بطاقات القرآن',
-                                Icons.style_rounded,
-                                isDarkMode,
-                                onTap: () => Navigator.pushNamed(
-                                    context, QuranRoutes.surahList),
-                              ),
-                              _buildFeatureCard(
-                                'أسماء الله الحسنى',
-                                Icons.verified_rounded,
-                                isDarkMode,
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) =>
-                                          const NamesOfAllahScreen()),
-                                ),
-                              ),
-                              _buildFeatureCard(
-                                'القراء',
-                                Icons.record_voice_over_rounded,
-                                isDarkMode,
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => const RecitersScreen()),
-                                ),
-                              ),
-                              _buildFeatureCard(
-                                'الراديو',
-                                Icons.radio_rounded,
-                                isDarkMode,
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => const RadioScreen()),
-                                ),
-                              ),
-                              _buildFeatureCard(
-                                'روائع القصص',
-                                Icons.auto_stories_rounded,
-                                isDarkMode,
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => const QasasScreen()),
-                                ),
-                              ),
-                              _buildFeatureCard(
-                                'حاسبة الزكاة',
-                                Icons.calculate_rounded,
-                                isDarkMode,
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) =>
-                                          const ZakahCalculatorScreen()),
-                                ),
-                              ),
-                              _buildFeatureCard(
-                                'اختبار إسلامي',
-                                Icons.quiz_rounded,
-                                isDarkMode,
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) =>
-                                          const IslamicQuizScreen()),
-                                ),
-                              ),
-                              _buildFeatureCard(
-                                'التاريخ الإسلامي',
-                                Icons.history_rounded,
-                                isDarkMode,
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => const HistoryScreen()),
-                                ),
-                              ),
-                              _buildFeatureCard(
-                                'الأوسمة النبوية',
-                                Icons.military_tech_rounded,
-                                isDarkMode,
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => const BadgesScreen()),
-                                ),
-                              ),
-                              _buildFeatureCard(
-                                'اليوم النبوي',
-                                Icons.av_timer_rounded,
-                                isDarkMode,
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => PropheticDayScreen(isDarkMode: isDarkMode)),
-                                ),
-                              ),
+                              _buildFeatureCard('الأوسمة النبوية', Icons.military_tech_rounded, isDarkMode,
+                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BadgesScreen()))),
+                              _buildFeatureCard('اليوم النبوي', Icons.av_timer_rounded, isDarkMode,
+                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PropheticDayScreen(isDarkMode: isDarkMode)))),
+                              _buildFeatureCard('اختبار إسلامي', Icons.quiz_rounded, isDarkMode,
+                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IslamicQuizScreen()))),
+                              _buildFeatureCard('روائع القصص', Icons.auto_stories_rounded, isDarkMode,
+                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QasasScreen()))),
                             ],
-                          )
-                              .animate()
-                              .fadeIn(delay: 600.ms)
-                              .slideY(begin: 0.1, end: 0),
+                          ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.1, end: 0),
                         ),
-                        const SizedBox(height: 100), // Bottom padding
+                        const SizedBox(height: 32),
+
+                        // ── Section: المعرفة الإسلامية ────────────────────────────
+                        _buildSectionHeader('المعرفة الإسلامية', Icons.history_edu_rounded, isDarkMode),
+                        const SizedBox(height: 14),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            children: [
+                              _buildListTileCard('التاريخ الإسلامي', 'استكشف الحضارة الإسلامية عبر القرون', Icons.history_rounded, const Color(0xff8B4513), isDarkMode,
+                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryScreen()))),
+                              const SizedBox(height: 12),
+                              _buildListTileCard('حاسبة الزكاة', 'احسب زكاتك بسهولة واحترافية', Icons.calculate_rounded, const Color(0xff1E6B4A), isDarkMode,
+                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ZakahCalculatorScreen()))),
+                            ],
+                          ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.1, end: 0),
+                        ),
+
+                        const SizedBox(height: 100),
                       ],
                     ),
                   ),
@@ -938,6 +923,165 @@ class _TimingsScreenState extends State<TimingsScreen> {
         begin: const Offset(1, 1),
         end: const Offset(1.1, 1.1),
         duration: 300.ms);
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon, bool isDarkMode) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: shared_colors.AppColors.primaryColor.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: shared_colors.AppColors.primaryColor, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            title,
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontWeight: FontWeight.bold,
+              fontSize: 17,
+              color: isDarkMode ? Colors.white : const Color(0xff1B1B2F),
+            ),
+          ),
+          const Spacer(),
+          Container(
+            width: 40,
+            height: 2,
+            decoration: BoxDecoration(
+              color: shared_colors.AppColors.primaryColor.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHorizontalCard(
+    String title,
+    IconData icon,
+    Color color,
+    bool isDarkMode, {
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 110,
+        margin: const EdgeInsets.only(left: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: isDarkMode ? const Color(0xff2A2A2A) : Colors.white,
+          boxShadow: isDarkMode
+              ? []
+              : [BoxShadow(color: color.withOpacity(0.12), blurRadius: 12, offset: const Offset(0, 4))],
+          border: Border.all(
+            color: isDarkMode ? Colors.white.withOpacity(0.07) : color.withOpacity(0.15),
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.white : const Color(0xff2d3436),
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ).animate().fadeIn(duration: 350.ms).scale(begin: const Offset(0.95, 0.95), curve: Curves.easeOut),
+    );
+  }
+
+  Widget _buildListTileCard(
+    String title,
+    String subtitle,
+    IconData icon,
+    Color color,
+    bool isDarkMode, {
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            color: isDarkMode ? const Color(0xff2A2A2A) : Colors.white,
+            boxShadow: isDarkMode
+                ? []
+                : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 3))],
+            border: Border.all(
+              color: isDarkMode ? Colors.white.withOpacity(0.07) : color.withOpacity(0.2),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: isDarkMode ? Colors.white : const Color(0xff1B1B2F),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 12,
+                        color: isDarkMode ? Colors.white38 : Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.arrow_back_ios_rounded, size: 15, color: isDarkMode ? Colors.white30 : Colors.grey[400]),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildFeatureCard(

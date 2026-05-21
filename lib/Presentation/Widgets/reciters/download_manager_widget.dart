@@ -184,89 +184,86 @@ class _DownloadManagerWidgetState extends State<DownloadManagerWidget> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Container(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
       decoration: BoxDecoration(
-        color: AppColors.primaryColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        color: isDarkMode ? const Color(0xff1A2B25) : AppColors.primaryColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryColor.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildTopHandle(),
+          const SizedBox(height: 12),
+          Row(
             children: [
-              _buildTopHandle(),
-              Row(
-                children: [
-                  const Icon(Icons.download, color: Colors.white, size: 22),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const AppText(
-                          'مدير التحميلات',
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                        AppText(
-                          _selectionMode
-                              ? 'تم تحديد ${_selected.length} عنصر'
-                              : 'إدارة التحميلات والذاكرة',
-                          fontSize: 12,
-                          color: Colors.white70,
-                        ),
-                      ],
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.download_rounded, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const AppText(
+                      'مركز التحميلات',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontFamily: 'Cairo',
                     ),
-                  ),
-                  if (_selectionMode) ...[
-                    Tooltip(
-                      message: 'إيقاف المؤقت للمحدد',
-                      child: IconButton(
-                        icon: const Icon(Icons.pause_circle_filled,
-                            color: Colors.white),
-                        onPressed: _onPauseSelected,
-                      ),
-                    ),
-                    Tooltip(
-                      message: 'استئناف المحدد',
-                      child: IconButton(
-                        icon: const Icon(Icons.play_circle_fill,
-                            color: Colors.white),
-                        onPressed: _onResumeSelected,
-                      ),
-                    ),
-                    Tooltip(
-                      message: 'حذف المحدد',
-                      child: IconButton(
-                        icon: const Icon(Icons.delete_forever,
-                            color: Colors.white),
-                        onPressed: _onDeleteSelected,
-                      ),
-                    ),
-                    Tooltip(
-                      message: 'إلغاء التحديد',
-                      child: IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white),
-                        onPressed: () => setState(_selected.clear),
-                      ),
-                    ),
-                  ] else ...[
-                    IconButton(
-                      tooltip: 'إغلاق',
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
+                    AppText(
+                      _selectionMode
+                          ? 'تم تحديد ${_selected.length} عنصر'
+                          : 'إدارة ملفاتك الصوتية والمساحة',
+                      fontSize: 13,
+                      color: Colors.white.withOpacity(0.7),
+                      fontFamily: 'Cairo',
                     ),
                   ],
-                ],
+                ),
               ),
-              const SizedBox(height: 12),
-              _buildFilters(),
+              if (_selectionMode) ...[
+                _buildActionIconButton(Icons.pause_rounded, _onPauseSelected, 'إيقاف'),
+                _buildActionIconButton(Icons.play_arrow_rounded, _onResumeSelected, 'استئناف'),
+                _buildActionIconButton(Icons.delete_rounded, _onDeleteSelected, 'حذف'),
+                _buildActionIconButton(Icons.close_rounded, () => setState(_selected.clear), 'إلغاء'),
+              ] else ...[
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Colors.white, size: 28),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
             ],
           ),
-        ),
+          const SizedBox(height: 20),
+          _buildFilters(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionIconButton(IconData icon, VoidCallback onPressed, String label) {
+    return IconButton(
+      tooltip: label,
+      icon: Icon(icon, color: Colors.white, size: 24),
+      onPressed: onPressed,
+      style: IconButton.styleFrom(
+        backgroundColor: Colors.white.withOpacity(0.1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -290,50 +287,57 @@ class _DownloadManagerWidgetState extends State<DownloadManagerWidget> {
   }
 
   Widget _buildStorageInfo(Map<String, dynamic> storageInfo) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Container(
-        // Decorated info tile
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceVariant,
-          borderRadius: BorderRadius.circular(12),
+          color: isDarkMode ? const Color(0xff1E1E1E) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
           border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: isDarkMode ? Colors.white.withOpacity(0.05) : AppColors.primaryColor.withOpacity(0.05),
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: AppColors.primaryColor.withOpacity(0.12),
-                child: Icon(Icons.storage, color: AppColors.primaryColor),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(15),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const AppText(
-                      'المساحة المستخدمة',
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    const SizedBox(height: 4),
-                    AppText(
-                      '${storageInfo['totalSizeMB']} ميجابايت • ${storageInfo['totalFiles']} ملف',
-                      fontSize: 12,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.7),
-                    ),
-                  ],
-                ),
+              child: Icon(Icons.storage_rounded, color: AppColors.primaryColor, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const AppText(
+                    'المساحة المستهلكة',
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Cairo',
+                  ),
+                  const SizedBox(height: 4),
+                  AppText(
+                    '${storageInfo['totalSizeMB']} ميجابايت • ${storageInfo['totalFiles']} سورة محملة',
+                    fontSize: 12,
+                    color: Colors.grey[500],
+                    fontFamily: 'Cairo',
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -409,136 +413,125 @@ class _DownloadManagerWidgetState extends State<DownloadManagerWidget> {
     bool selected,
     VoidCallback onToggleSelect,
   ) {
-    return InkWell(
-      onLongPress: onToggleSelect,
-      borderRadius: BorderRadius.circular(12),
-      child: Card(
-        elevation: 1.5,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(
-            color: selected ? AppColors.primaryColor : Colors.transparent,
-            width: selected ? 1 : 0.5,
-          ),
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
+      decoration: BoxDecoration(
+        color: isDarkMode ? const Color(0xff1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: selected 
+              ? AppColors.primaryColor.withOpacity(0.5) 
+              : isDarkMode ? Colors.white.withOpacity(0.05) : AppColors.primaryColor.withOpacity(0.05),
+          width: selected ? 2 : 1,
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Checkbox(
-                    value: selected,
-                    onChanged: (_) => onToggleSelect(),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    visualDensity:
-                        const VisualDensity(horizontal: -4, vertical: -4),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    activeColor: AppColors.primaryColor,
-                  ),
-                  const SizedBox(width: 4),
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: AppColors.primaryColor.withOpacity(0.1),
-                    child: const Icon(Icons.person, color: Colors.black54),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        AppText(
-                          batch.reciterName,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            AppText(
-                              batch.moshafName,
-                              fontSize: 13,
-                              color: Colors.grey[600],
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            _buildStatusChip(batch.overallStatus),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox.shrink(),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: batch.overallProgress.clamp(0.0, 1.0),
-                        minHeight: 8,
-                        backgroundColor: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withOpacity(0.12),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          batch.overallStatus == DownloadStatus.completed
-                              ? Colors.green
-                              : AppColors.primaryColor,
-                        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onLongPress: onToggleSelect,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Checkbox(
+                        value: selected,
+                        onChanged: (_) => onToggleSelect(),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                        activeColor: AppColors.primaryColor,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  AppText(
-                    '${batch.completedCount}/${batch.totalCount}',
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  AppText(
-                    'تم التحميل: ${batch.completedCount} سورة',
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                  Row(
-                    children: [
-                      _buildPrimaryAction(batch),
-                      const SizedBox(width: 6),
-                      Tooltip(
-                        message: 'حذف',
-                        child: TextButton.icon(
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.red,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AppText(
+                            batch.reciterName,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Cairo',
                           ),
-                          icon: const Icon(Icons.delete_outline,
-                              size: 20, color: Colors.red),
-                          label: const AppText('حذف',
-                              fontSize: 12, color: Colors.red),
-                          onPressed: () => _deleteBatch(context, batch),
-                        ),
+                          AppText(
+                            batch.moshafName,
+                            fontSize: 12,
+                            color: Colors.grey[500],
+                            fontFamily: 'Cairo',
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
+                    ),
+                    _buildStatusChip(batch.overallStatus),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              AppText(
+                                '${(batch.overallProgress * 100).toInt()}%',
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primaryColor,
+                              ),
+                              AppText(
+                                '${batch.completedCount}/${batch.totalCount} سورة',
+                                fontSize: 11,
+                                color: Colors.grey[500],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: batch.overallProgress.clamp(0.0, 1.0),
+                              minHeight: 6,
+                              backgroundColor: AppColors.primaryColor.withOpacity(0.1),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                batch.overallStatus == DownloadStatus.completed
+                                    ? Colors.green
+                                    : AppColors.primaryColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    _buildPrimaryAction(batch),
+                    const SizedBox(width: 4),
+                    _buildDeleteAction(context, batch),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDeleteAction(BuildContext context, DownloadBatch batch) {
+    return IconButton(
+      onPressed: () => _deleteBatch(context, batch),
+      icon: const Icon(Icons.delete_outline_rounded, color: Colors.red, size: 22),
+      style: IconButton.styleFrom(
+        backgroundColor: Colors.red.withOpacity(0.1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

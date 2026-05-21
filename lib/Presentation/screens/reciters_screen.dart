@@ -9,6 +9,7 @@ import 'package:serat/Data/services/audio_player_service.dart';
 import 'package:serat/imports.dart';
 import 'package:flutter/foundation.dart';
 import 'package:serat/Presentation/Widgets/reciters/download_manager_widget.dart';
+import 'package:serat/Presentation/Widgets/reciters/quran_audio_player_widget.dart';
 import '../../services/reciter_notification_service.dart';
 
 class RecitersScreen extends StatefulWidget {
@@ -22,7 +23,6 @@ class _RecitersScreenState extends State<RecitersScreen>
     with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
   List<Reciter> _filteredReciters = [];
   final AudioPlayer _audioPlayer = AudioPlayer();
   final ReciterNotificationService _notificationService =
@@ -62,12 +62,8 @@ class _RecitersScreenState extends State<RecitersScreen>
   void _setupAnimation() {
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 500),
     );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(_animationController);
     _animationController.forward();
   }
 
@@ -284,180 +280,155 @@ class _RecitersScreenState extends State<RecitersScreen>
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDarkMode ? const Color(0xff1F1F1F) : Colors.white,
-      appBar: _buildAppBar(isDarkMode),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Column(
-          children: [
-            _buildSearchBar(isDarkMode),
-            Expanded(child: _buildRecitersList(isDarkMode)),
-          ],
-        ),
+      backgroundColor: isDarkMode ? const Color(0xff121212) : const Color(0xffF8FAF9),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          _buildSliverAppBar(isDarkMode),
+          _buildSliverSearch(isDarkMode),
+          _buildSliverList(isDarkMode),
+        ],
       ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar(bool isDarkMode) {
-    return AppBar(
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const AppText(
-            'القراء',
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-          if (_isOfflineMode) ...[
-            const SizedBox(width: 8),
+  Widget _buildSliverAppBar(bool isDarkMode) {
+    return SliverAppBar(
+      expandedHeight: 120,
+      pinned: true,
+      stretch: true,
+      backgroundColor: isDarkMode ? const Color(0xff1A2B25) : AppColors.primaryColor,
+      flexibleSpace: FlexibleSpaceBar(
+        stretchModes: const [StretchMode.blurBackground, StretchMode.zoomBackground],
+        centerTitle: true,
+        title: const AppText(
+          'القراء والمصاحف',
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+          fontFamily: 'Cairo',
+        ),
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDarkMode 
+                    ? [const Color(0xff1A2B25), const Color(0xff121212)]
+                    : [AppColors.primaryColor, const Color(0xff138A70)],
+                ),
               ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.cloud_off, color: Colors.orange, size: 16),
-                  SizedBox(width: 4),
-                  AppText(
-                    'وضع عدم الاتصال',
-                    fontSize: 12,
-                    color: Colors.orange,
-                  ),
-                ],
+            ),
+            Positioned(
+              right: -50,
+              top: -50,
+              child: Icon(
+                Icons.mosque,
+                size: 200,
+                color: Colors.white.withOpacity(0.05),
               ),
             ),
           ],
-        ],
-      ),
-      centerTitle: true,
-      backgroundColor:
-          isDarkMode ? const Color(0xff2F2F2F) : AppColors.primaryColor,
-      elevation: 0,
-      shape: const Border(),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDarkMode
-                ? [const Color(0xff2F2F2F), const Color(0xff1F1F1F)]
-                : [
-                    AppColors.primaryColor,
-                    const Color.fromRGBO(0, 150, 136, 0.8),
-                  ],
-          ),
         ),
       ),
       leading: IconButton(
-        icon: Icon(
-          Icons.arrow_back_ios_new_rounded,
-          color: isDarkMode
-              ? const Color.fromRGBO(255, 255, 255, 0.7)
-              : Colors.white,
-        ),
+        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
         onPressed: () => Navigator.pop(context),
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.download, color: Colors.white),
+          icon: const Icon(Icons.cloud_download_outlined, color: Colors.white),
           onPressed: () => _showDownloadManager(),
         ),
-        IconButton(
-          icon: const Icon(Icons.refresh, color: Colors.white),
-          onPressed: () {
-            setState(() => _isOfflineMode = false);
-            RecitersCubit.get(context).getReciters(forceRefresh: true);
-          },
-        ),
+        _buildOfflineBadge(),
+        const SizedBox(width: 8),
       ],
     );
   }
 
-  Widget _buildSearchBar(bool isDarkMode) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
-      decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xff2F2F2F) : AppColors.primaryColor,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
+  Widget _buildOfflineBadge() {
+    if (!_isOfflineMode) return const SizedBox.shrink();
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        margin: const EdgeInsets.only(right: 8),
+        decoration: BoxDecoration(
+          color: Colors.orange.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.orange.withOpacity(0.5)),
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.1),
-            blurRadius: 10,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: _SearchBar(
-        controller: _searchController,
-        isDarkMode: isDarkMode,
-        onChanged: _filterReciters,
+        child: const Icon(Icons.cloud_off, color: Colors.orange, size: 16),
       ),
     );
   }
 
-  Widget _buildRecitersList(bool isDarkMode) {
+  Widget _buildSliverSearch(bool isDarkMode) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+        child: _SearchBar(
+          controller: _searchController,
+          isDarkMode: isDarkMode,
+          onChanged: _filterReciters,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSliverList(bool isDarkMode) {
     return BlocBuilder<RecitersCubit, RecitersState>(
       builder: (context, state) {
         if (state is RecitersLoading && !_isOfflineMode) {
-          return const Center(child: CircularProgressIndicator());
+          return const SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
+          );
         }
 
         if (state is RecitersError && !_isOfflineMode) {
-          return _ErrorView(
-            error: RecitersCubit.get(context).error ?? 'حدث خطأ غير معروف',
-            onRetry: () {
-              setState(() => _isOfflineMode = false);
-              _loadReciters();
-            },
+          return SliverFillRemaining(
+            child: _ErrorView(
+              error: RecitersCubit.get(context).error ?? 'حدث خطأ غير معروف',
+              onRetry: () {
+                setState(() => _isOfflineMode = false);
+                _loadReciters();
+              },
+            ),
           );
         }
 
         final cubit = RecitersCubit.get(context);
         if (cubit.recitersModel?.reciters.isEmpty ?? true) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const AppText('لا يوجد قراء', fontSize: 16),
-                if (_isOfflineMode) ...[
+          return SliverFillRemaining(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.withOpacity(0.5)),
                   const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      setState(() => _isOfflineMode = false);
-                      RecitersCubit.get(
-                        context,
-                      ).getReciters(forceRefresh: true);
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const AppText('إعادة المحاولة'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryColor,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
+                  const AppText('لا يوجد قراء يطابقون بحثك', fontSize: 16, color: Colors.grey),
                 ],
-              ],
+              ),
             ),
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: _filteredReciters.length,
-          itemBuilder: (context, index) {
-            return _ReciterCard(
-              reciter: _filteredReciters[index],
-              isDarkMode: isDarkMode,
-              onTap: () => _showReciterDetails(_filteredReciters[index]),
-            );
-          },
+        return SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                return _ReciterCard(
+                  reciter: _filteredReciters[index],
+                  isDarkMode: isDarkMode,
+                  onTap: () => _showReciterDetails(_filteredReciters[index]),
+                );
+              },
+              childCount: _filteredReciters.length,
+            ),
+          ),
         );
       },
     );
@@ -742,7 +713,18 @@ class _RecitersScreenState extends State<RecitersScreen>
   }
 
   Future<int?> _showSurahSelectionDialog() async {
-    final surahs = {
+    return showModalBottomSheet<int>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _SurahSelectionSheet(
+        surahs: _getSurahsMap(),
+      ),
+    );
+  }
+
+  Map<int, String> _getSurahsMap() {
+    return {
       1: 'الفاتحة',
       2: 'البقرة',
       3: 'آل عمران',
@@ -858,384 +840,122 @@ class _RecitersScreenState extends State<RecitersScreen>
       113: 'الفلق',
       114: 'الناس',
     };
-
-    return showDialog<int>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: const AppText(
-          'اختر السورة',
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: MediaQuery.of(context).size.height * 0.6,
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              childAspectRatio: 1.8,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-            ),
-            itemCount: surahs.length,
-            itemBuilder: (context, index) {
-              final surahNumber = index + 1;
-              final surahName = surahs[surahNumber]!;
-              return InkWell(
-                onTap: () => Navigator.pop(context, surahNumber),
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AppText(
-                        surahNumber.toString(),
-                        fontSize: 12,
-                        color: AppColors.primaryColor,
-                      ),
-                      const SizedBox(height: 1),
-                      AppText(
-                        surahName,
-                        fontSize: 10,
-                        color: AppColors.primaryColor,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
   }
 
   void _showAudioPlayer(Reciter reciter, Moshaf moshaf, int selectedSurah) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      enableDrag: true,
-      isDismissible: true,
-      builder: (context) => WillPopScope(
-        onWillPop: () async {
-          // Don't stop audio when closing the player UI
-          return true;
-        },
-        child: NotificationListener<DraggableScrollableNotification>(
-          onNotification: (notification) {
-            // Don't stop audio when dragging down
-            return true;
-          },
-          child: StatefulBuilder(
-            builder: (context, setSheetState) {
-              return Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xff2F2F2F)
-                      : Colors.white,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(20),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, -5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_currentSurahNotifier != null)
-                      ValueListenableBuilder<int>(
-                        valueListenable: _currentSurahNotifier!,
-                        builder: (context, surahNumber, _) {
-                          return _buildPlayerHeader(
-                              reciter, moshaf, surahNumber);
-                        },
-                      )
-                    else
-                      _buildPlayerHeader(reciter, moshaf, selectedSurah),
-                    const SizedBox(height: 24),
-                    _buildPlayerControls(),
-                    const SizedBox(height: 24),
-                    _buildProgressBar(),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Row(
-                            children: [
-                              Icon(Icons.queue_music, color: Colors.teal),
-                              SizedBox(width: 8),
-                              Text('تشغيل السورة التالية تلقائياً',
-                                  style: TextStyle(fontSize: 16)),
-                            ],
-                          ),
-                          Switch(
-                            value: _autoPlayNextSura,
-                            onChanged: (val) {
-                              setSheetState(() {
-                                _autoPlayNextSura = val;
-                              });
-                              setState(() {
-                                _autoPlayNextSura = val;
-                              });
-                            },
-                            activeColor: AppColors.primaryColor,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          return QuranAudioPlayerWidget(
+            reciter: reciter,
+            moshaf: moshaf,
+            surahNumber: _currentSurahNumber ?? selectedSurah,
+            surahName: _currentSurahName,
+            autoPlayNext: _autoPlayNextSura,
+            onAutoPlayChanged: (val) {
+              setSheetState(() => _autoPlayNextSura = val);
+              setState(() => _autoPlayNextSura = val);
             },
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPlayerHeader(Reciter reciter, Moshaf moshaf, int selectedSurah) {
-    return Row(
-      children: [
-        Container(
-          width: 60,
-          height: 60,
-          decoration: const BoxDecoration(
-            color: Color.fromRGBO(0, 150, 136, 0.1),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Color.fromRGBO(0, 150, 136, 0.2),
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Center(
-            child: AppText(
-              reciter.letter,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primaryColor,
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppText(reciter.name, fontSize: 20, fontWeight: FontWeight.bold),
-              const SizedBox(height: 4),
-              AppText(
-                '${moshaf.name} - ${_getSurahName(selectedSurah)}',
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            ],
-          ),
-        ),
-        IconButton(
-          tooltip: 'حذف السورة المحمّلة',
-          icon: const Icon(Icons.delete, color: Colors.red),
-          onPressed: () async {
-            await DownloadCubit.get(context).deleteDownloadedSurah(
-              reciter.id.toString(),
-              moshaf.id.toString(),
-              selectedSurah,
-            );
-            // Refresh storage info silently
-            await DownloadCubit.get(context).loadStorageInfo();
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () {
-            Navigator.pop(context);
-            // Don't stop audio when closing the player UI
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPlayerControls() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildControlButton(
-          icon: Icons.replay_10,
-          onPressed: () => _seekBackward(),
-        ),
-        const SizedBox(width: 16),
-        _buildPlayPauseButton(),
-        const SizedBox(width: 16),
-        _buildControlButton(
-          icon: Icons.forward_10,
-          onPressed: () => _seekForward(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPlayPauseButton() {
-    return ValueListenableBuilder<PlayerState>(
-      valueListenable: _playerStateNotifier,
-      builder: (context, state, _) {
-        final isPlaying = state == PlayerState.playing;
-
-        return Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            color: AppColors.primaryColor,
-            shape: BoxShape.circle,
-            boxShadow: const [
-              BoxShadow(
-                color: Color.fromRGBO(0, 150, 136, 0.3),
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: IconButton(
-            icon: Icon(
-              isPlaying ? Icons.pause : Icons.play_arrow,
-              color: Colors.white,
-              size: 32,
-            ),
-            onPressed: () {
-              if (isPlaying) {
+            onPlayPause: () {
+              if (_isPlaying) {
                 _pauseAudio();
               } else {
                 _resumeAudio();
               }
             },
-          ),
-        );
-      },
+            onPrevious: _playPreviousSurah,
+            onNext: _playNextSurah,
+            onSeekForward: _seekForward,
+            onSeekBackward: _seekBackward,
+            onSeek: _seekTo,
+            positionNotifier: _positionNotifier,
+            durationNotifier: _durationNotifier,
+            playerStateNotifier: _playerStateNotifier,
+            onDownload: () => _downloadSurah(
+              reciter,
+              moshaf,
+              _currentSurahNumber ?? selectedSurah,
+            ),
+            onClose: () => Navigator.pop(context),
+            onDelete: () async {
+              await DownloadCubit.get(context).deleteDownloadedSurah(
+                reciter.id.toString(),
+                moshaf.id.toString(),
+                _currentSurahNumber ?? selectedSurah,
+              );
+              await DownloadCubit.get(context).loadStorageInfo();
+            },
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildProgressBar() {
-    return ValueListenableBuilder<Duration>(
-      valueListenable: _positionNotifier,
-      builder: (context, position, _) {
-        return ValueListenableBuilder<Duration>(
-          valueListenable: _durationNotifier,
-          builder: (context, duration, _) {
-            final hasDuration = duration.inSeconds > 0;
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (hasDuration) ...[
-                  SliderTheme(
-                    data: SliderThemeData(
-                      trackHeight: 4,
-                      thumbShape: const RoundSliderThumbShape(
-                        enabledThumbRadius: 6,
-                      ),
-                      overlayShape: const RoundSliderOverlayShape(
-                        overlayRadius: 12,
-                      ),
-                      activeTrackColor: AppColors.primaryColor,
-                      inactiveTrackColor: Colors.grey[300],
-                      thumbColor: AppColors.primaryColor,
-                      overlayColor: const Color.fromRGBO(0, 150, 136, 0.2),
-                    ),
-                    child: Slider(
-                      value: position.inSeconds.toDouble().clamp(
-                            0.0,
-                            duration.inSeconds.toDouble(),
-                          ),
-                      max: duration.inSeconds.toDouble(),
-                      onChanged: (value) => _seekTo(value.toInt()),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        AppText(
-                          _formatDuration(position),
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                        AppText(
-                          _formatDuration(duration),
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ],
-                    ),
-                  ),
-                ] else ...[
-                  const SizedBox(height: 20),
-                  ValueListenableBuilder<PlayerState>(
-                    valueListenable: _playerStateNotifier,
-                    builder: (context, state, _) {
-                      if (state == PlayerState.playing ||
-                          state == PlayerState.completed ||
-                          state == PlayerState.paused) {
-                        return const SizedBox(
-                          height: 40,
-                          child: Center(
-                            child: SizedBox(
-                              width: 150,
-                              child: LinearProgressIndicator(
-                                color: Colors.teal,
-                                backgroundColor: Color(0x20009688),
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-                      return Column(
-                        children: [
-                          const CircularProgressIndicator(),
-                          const SizedBox(height: 16),
-                          AppText(
-                            'جاري تحميل التلاوة...',
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ],
-              ],
-            );
-          },
-        );
-      },
-    );
+  void _playNextSurah() async {
+    if (_currentSurahNumber == null || _currentMoshaf == null || _currentReciter == null) return;
+    
+    final surahList = _currentMoshaf!.surahList
+        .split(',')
+        .map((e) => int.tryParse(e.trim()))
+        .whereType<int>()
+        .toList();
+    final idx = surahList.indexOf(_currentSurahNumber!);
+    
+    if (idx != -1 && idx + 1 < surahList.length) {
+      final nextSurah = surahList[idx + 1];
+      final audioUrl = _buildAudioUrl(_currentMoshaf!.server, nextSurah);
+      final surahName = _getSurahName(nextSurah);
+      
+      setState(() {
+        _currentSurahNumber = nextSurah;
+        _currentSurahName = surahName;
+      });
+      _currentSurahNotifier?.value = nextSurah;
+      
+      try {
+        await _playAudio(audioUrl, _currentReciter!.name, surahName);
+      } catch (e) {
+        _showErrorSnackBar('حدث خطأ أثناء تشغيل السورة التالية');
+      }
+    } else {
+      _showErrorSnackBar('لا توجد سورة تالية في هذا المصحف');
+    }
   }
 
-  String _formatDuration(Duration duration) {
-    return '${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
+  void _playPreviousSurah() async {
+    if (_currentSurahNumber == null || _currentMoshaf == null || _currentReciter == null) return;
+    
+    final surahList = _currentMoshaf!.surahList
+        .split(',')
+        .map((e) => int.tryParse(e.trim()))
+        .whereType<int>()
+        .toList();
+    final idx = surahList.indexOf(_currentSurahNumber!);
+    
+    if (idx != -1 && idx - 1 >= 0) {
+      final prevSurah = surahList[idx - 1];
+      final audioUrl = _buildAudioUrl(_currentMoshaf!.server, prevSurah);
+      final surahName = _getSurahName(prevSurah);
+      
+      setState(() {
+        _currentSurahNumber = prevSurah;
+        _currentSurahName = surahName;
+      });
+      _currentSurahNotifier?.value = prevSurah;
+      
+      try {
+        await _playAudio(audioUrl, _currentReciter!.name, surahName);
+      } catch (e) {
+        _showErrorSnackBar('حدث خطأ أثناء تشغيل السورة السابقة');
+      }
+    } else {
+      _showErrorSnackBar('لا توجد سورة سابقة في هذا المصحف');
+    }
   }
+
 
   String _getSurahName(int surahNumber) {
     final surahs = {
@@ -1394,23 +1114,6 @@ class _RecitersScreenState extends State<RecitersScreen>
     }
   }
 
-  Widget _buildControlButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: const BoxDecoration(
-        color: Color.fromRGBO(0, 150, 136, 0.1),
-        shape: BoxShape.circle,
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: AppColors.primaryColor, size: 24),
-        onPressed: onPressed,
-      ),
-    );
-  }
 }
 
 class _SearchBar extends StatelessWidget {
@@ -1441,15 +1144,15 @@ class _SearchBar extends StatelessWidget {
       child: TextField(
         controller: controller,
         style: TextStyle(
-          fontFamily: 'DIN',
-          fontSize: 16,
+          fontFamily: 'Cairo',
+          fontSize: 14,
           color: isDarkMode ? Colors.white : Colors.black87,
         ),
         decoration: InputDecoration(
           hintText: 'ابحث عن قارئ...',
           hintStyle: TextStyle(
-            fontFamily: 'DIN',
-            fontSize: 16,
+            fontFamily: 'Cairo',
+            fontSize: 14,
             color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
           ),
           prefixIcon: Icon(
@@ -1516,61 +1219,79 @@ class _ReciterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shadowColor: Colors.black.withValues(alpha: 0.4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      color: isDarkMode ? const Color(0xff2F2F2F) : Colors.white,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              if (reciter.moshaf.isNotEmpty) ...[
-                const SizedBox(height: 20),
-                const Divider(height: 1),
-                const SizedBox(height: 16),
-                ...reciter.moshaf.map((moshaf) => _buildMoshafItem(moshaf)),
+      decoration: BoxDecoration(
+        color: isDarkMode ? const Color(0xff1E2923) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+        border: Border.all(
+          color: isDarkMode 
+            ? Colors.white.withOpacity(0.05) 
+            : AppColors.primaryColor.withOpacity(0.05),
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                _buildAvatar(),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppText(
+                        reciter.name,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : const Color(0xff1A1A1A),
+                        fontFamily: 'Cairo',
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.library_books_outlined, size: 12, color: Colors.grey[500]),
+                          const SizedBox(width: 4),
+                          AppText(
+                            '${reciter.moshaf.length} مصاحف متوفرة',
+                            fontSize: 12,
+                            color: Colors.grey[500],
+                            fontFamily: 'Cairo',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.play_arrow_rounded,
+                    color: AppColors.primaryColor,
+                    size: 24,
+                  ),
+                ),
               ],
-            ],
+            ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Row(
-      children: [
-        _buildAvatar(),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppText(
-                reciter.name,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isDarkMode ? Colors.white : AppColors.primaryColor,
-              ),
-              if (reciter.moshaf.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                AppText(
-                  'عدد المصاحف: ${reciter.moshaf.length}',
-                  fontSize: 14,
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
     );
   }
 
@@ -1581,15 +1302,8 @@ class _ReciterCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDarkMode
             ? Colors.grey[800]
-            : AppColors.primaryColor.withValues(alpha: 0.1),
+            : AppColors.primaryColor.withOpacity(0.1),
         shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Center(
         child: AppText(
@@ -1601,92 +1315,137 @@ class _ReciterCard extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildMoshafItem(Moshaf moshaf) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: isDarkMode
-                  ? Colors.grey[800]
-                  : AppColors.primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.book,
-              size: 18,
-              color: isDarkMode ? Colors.grey[400] : AppColors.primaryColor,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: AppText(
-              moshaf.name,
-              fontSize: 15,
-              color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
-class _DownloadManagerSheet extends StatelessWidget {
-  const _DownloadManagerSheet();
+class _SurahSelectionSheet extends StatefulWidget {
+  final Map<int, String> surahs;
+
+  const _SurahSelectionSheet({required this.surahs});
+
+  @override
+  State<_SurahSelectionSheet> createState() => _SurahSelectionSheetState();
+}
+
+class _SurahSelectionSheetState extends State<_SurahSelectionSheet> {
+  late List<MapEntry<int, String>> _filteredSurahs;
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredSurahs = widget.surahs.entries.toList();
+  }
+
+  void _filterSurahs(String query) {
+    setState(() {
+      _filteredSurahs = widget.surahs.entries
+          .where((entry) => 
+              entry.value.contains(query) || 
+              entry.key.toString().contains(query))
+          .toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: isDarkMode ? const Color(0xff121212) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: Column(
         children: [
+          const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.all(20),
+            width: 40,
+            height: 4,
             decoration: BoxDecoration(
-              color: AppColors.primaryColor,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(20)),
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
             ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(24),
             child: Row(
               children: [
-                const Icon(Icons.download, color: Colors.white, size: 24),
-                const SizedBox(width: 12),
                 const AppText(
-                  'مدير التحميلات',
-                  fontSize: 20,
+                  'اختر السورة',
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  fontFamily: 'Cairo',
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close_rounded),
                 ),
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: TextField(
+              onChanged: _filterSurahs,
+              decoration: InputDecoration(
+                hintText: 'ابحث عن سورة...',
+                prefixIcon: const Icon(Icons.search_rounded),
+                filled: true,
+                fillColor: Colors.grey[isDarkMode ? 900 : 100],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           Expanded(
-            child: BlocBuilder<DownloadCubit, DownloadState>(
-              builder: (context, state) {
-                if (state is DownloadStorageInfoLoaded) {
-                  return _buildContent(context, state);
-                }
-                // Trigger load when empty state arrives
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  // In stateless sheet; ensure safe call
-                  try {
-                    DownloadCubit.get(context).loadStorageInfo();
-                  } catch (_) {}
-                });
-                return const Center(child: CircularProgressIndicator());
+            child: GridView.builder(
+              padding: const EdgeInsets.all(24),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                childAspectRatio: 1.2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemCount: _filteredSurahs.length,
+              itemBuilder: (context, index) {
+                final surah = _filteredSurahs[index];
+                return InkWell(
+                  onTap: () => Navigator.pop(context, surah.key),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryColor.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.primaryColor.withOpacity(0.1),
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AppText(
+                          surah.key.toString(),
+                          fontSize: 12,
+                          color: AppColors.primaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        const SizedBox(height: 4),
+                        AppText(
+                          surah.value,
+                          fontSize: 12,
+                          color: isDarkMode ? Colors.white : Colors.black87,
+                          fontFamily: 'Cairo',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
               },
             ),
           ),
@@ -1694,258 +1453,8 @@ class _DownloadManagerSheet extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildContent(BuildContext context, DownloadStorageInfoLoaded state) {
-    return Column(
-      children: [
-        _buildStorageInfo(state.storageInfo),
-        const Divider(),
-        Expanded(
-          child: state.batches.isEmpty
-              ? _buildEmptyState()
-              : _buildBatchesList(context, state.batches),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStorageInfo(Map<String, dynamic> storageInfo) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Icon(Icons.storage, color: AppColors.primaryColor),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const AppText(
-                  'المساحة المستخدمة',
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                AppText(
-                  '${storageInfo['totalSizeMB']} ميجابايت',
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ],
-            ),
-          ),
-          AppText(
-            '${storageInfo['totalFiles']} ملف',
-            fontSize: 14,
-            color: Colors.grey[600],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.download_done,
-            size: 64,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          const AppText(
-            'لا توجد تحميلات',
-            fontSize: 18,
-            color: Colors.grey,
-          ),
-          const SizedBox(height: 8),
-          const AppText(
-            'قم بتحميل التلاوات للاستماع بدون إنترنت',
-            fontSize: 14,
-            color: Colors.grey,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBatchesList(BuildContext context, List<DownloadBatch> batches) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: batches.length,
-      itemBuilder: (context, index) {
-        final batch = batches[index];
-        return _buildBatchCard(context, batch);
-      },
-    );
-  }
-
-  Widget _buildBatchCard(BuildContext context, DownloadBatch batch) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppText(
-                        batch.reciterName,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      AppText(
-                        batch.moshafName,
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ],
-                  ),
-                ),
-                _buildStatusChip(batch.overallStatus),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: LinearProgressIndicator(
-                    value: batch.overallProgress,
-                    backgroundColor: Colors.grey[300],
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      batch.overallStatus == DownloadStatus.completed
-                          ? Colors.green
-                          : AppColors.primaryColor,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                AppText(
-                  '${batch.completedCount}/${batch.totalCount}',
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  tooltip: 'حذف جميع التحميلات لهذا المصحف',
-                  icon: const Icon(Icons.delete_forever, color: Colors.red),
-                  onPressed: () async {
-                    await DownloadCubit.get(context).deleteBatch(
-                      batch.reciterId,
-                      batch.moshafId,
-                    );
-                    await DownloadCubit.get(context).loadStorageInfo();
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            // Per-surah rows
-            ...batch.progressList.map(
-              (p) => ListTile(
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                  p.status == DownloadStatus.completed
-                      ? Icons.check_circle
-                      : Icons.downloading,
-                  color: p.status == DownloadStatus.completed
-                      ? Colors.green
-                      : AppColors.primaryColor,
-                ),
-                title: AppText('سورة ${p.surahNumber}'),
-                subtitle: p.status == DownloadStatus.completed
-                    ? const AppText('مكتمل', color: Colors.grey)
-                    : LinearProgressIndicator(value: p.progress),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (p.status == DownloadStatus.completed)
-                      IconButton(
-                        tooltip: 'حذف السورة',
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () async {
-                          await DownloadCubit.get(context)
-                              .deleteDownloadedSurah(
-                            p.reciterId,
-                            p.moshafId,
-                            p.surahNumber,
-                          );
-                          await DownloadCubit.get(context).loadStorageInfo();
-                        },
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusChip(DownloadStatus status) {
-    Color color;
-    String text;
-    IconData icon;
-
-    switch (status) {
-      case DownloadStatus.completed:
-        color = Colors.green;
-        text = 'مكتمل';
-        icon = Icons.check_circle;
-        break;
-      case DownloadStatus.downloading:
-        color = AppColors.primaryColor;
-        text = 'جاري التحميل';
-        icon = Icons.downloading;
-        break;
-      case DownloadStatus.paused:
-        color = Colors.orange;
-        text = 'متوقف مؤقتاً';
-        icon = Icons.pause_circle;
-        break;
-      case DownloadStatus.failed:
-        color = Colors.red;
-        text = 'فشل';
-        icon = Icons.error;
-        break;
-      default:
-        color = Colors.grey;
-        text = 'غير محمل';
-        icon = Icons.download;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 16),
-          const SizedBox(width: 4),
-          AppText(
-            text,
-            fontSize: 12,
-            color: color,
-            fontWeight: FontWeight.bold,
-          ),
-        ],
-      ),
-    );
-  }
 }
+
 
 class _DownloadOptionsSheet extends StatelessWidget {
   final Reciter reciter;
@@ -2287,25 +1796,35 @@ class _ReciterDetailsSheet extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.7,
+      height: MediaQuery.of(context).size.height * 0.75,
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xff2F2F2F) : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        color: isDarkMode ? const Color(0xff121212) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: Column(
         children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[isDarkMode ? 800 : 300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
           _buildHeader(isDarkMode),
+          const Divider(height: 1),
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               itemCount: reciter.moshaf.length,
               itemBuilder: (context, index) {
                 final moshaf = reciter.moshaf[index];
                 return _MoshafListItem(
                   moshaf: moshaf,
+                  isDarkMode: isDarkMode,
                   onPlay: () => onPlay(moshaf),
-                  onDownload:
-                      onDownload != null ? () => onDownload!(moshaf) : null,
+                  onDownload: onDownload != null ? () => onDownload!(moshaf) : null,
                 );
               },
             ),
@@ -2316,12 +1835,8 @@ class _ReciterDetailsSheet extends StatelessWidget {
   }
 
   Widget _buildHeader(bool isDarkMode) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xff1F1F1F) : AppColors.primaryColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.all(24),
       child: Row(
         children: [
           _buildAvatar(isDarkMode),
@@ -2334,15 +1849,30 @@ class _ReciterDetailsSheet extends StatelessWidget {
                   reciter.name,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: isDarkMode ? Colors.white : Colors.black87,
+                  fontFamily: 'Cairo',
                 ),
                 const SizedBox(height: 4),
                 AppText(
-                  'عدد المصاحف: ${reciter.moshaf.length}',
+                  'اختر نوع المصحف للبدء',
                   fontSize: 14,
-                  color: Colors.white.withValues(alpha: 0.8),
+                  color: Colors.grey[500],
+                  fontFamily: 'Cairo',
                 ),
               ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: AppText(
+              '${reciter.moshaf.length} نوع',
+              fontSize: 12,
+              color: AppColors.primaryColor,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
@@ -2352,19 +1882,22 @@ class _ReciterDetailsSheet extends StatelessWidget {
 
   Widget _buildAvatar(bool isDarkMode) {
     return Container(
-      width: 50,
-      height: 50,
+      width: 56,
+      height: 56,
       decoration: BoxDecoration(
-        color:
-            isDarkMode ? Colors.grey[800] : Colors.white.withValues(alpha: 0.2),
+        color: AppColors.primaryColor.withOpacity(0.1),
         shape: BoxShape.circle,
+        border: Border.all(
+          color: AppColors.primaryColor.withOpacity(0.2),
+          width: 2,
+        ),
       ),
       child: Center(
         child: AppText(
           reciter.letter,
-          fontSize: 22,
+          fontSize: 24,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: AppColors.primaryColor,
         ),
       ),
     );
@@ -2373,50 +1906,93 @@ class _ReciterDetailsSheet extends StatelessWidget {
 
 class _MoshafListItem extends StatelessWidget {
   final Moshaf moshaf;
+  final bool isDarkMode;
   final VoidCallback onPlay;
   final VoidCallback? onDownload;
 
   const _MoshafListItem({
     required this.moshaf,
+    required this.isDarkMode,
     required this.onPlay,
     this.onDownload,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.primaryColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(Icons.book, color: AppColors.primaryColor),
+      decoration: BoxDecoration(
+        color: isDarkMode ? const Color(0xff1A231F) : const Color(0xffF0F4F2),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: AppColors.primaryColor.withOpacity(0.1),
         ),
-        title: AppText(moshaf.name, fontSize: 16, fontWeight: FontWeight.bold),
-        subtitle: AppText(
-          'عدد السور: ${moshaf.surahTotal}',
-          fontSize: 14,
-          color: Colors.grey[600],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (onDownload != null)
-              IconButton(
-                icon: const Icon(Icons.download),
-                onPressed: onDownload,
-              ),
-            IconButton(
-              icon: const Icon(Icons.play_circle_outline),
-              onPressed: onPlay,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPlay,
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(isDarkMode ? 0.05 : 0.5),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Icon(
+                    Icons.library_music_rounded,
+                    color: AppColors.primaryColor,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppText(
+                        moshaf.name,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : Colors.black87,
+                        fontFamily: 'Cairo',
+                      ),
+                      const SizedBox(height: 2),
+                      AppText(
+                        'عرض مفصل للسور المتاحة',
+                        fontSize: 12,
+                        color: Colors.grey[500],
+                        fontFamily: 'Cairo',
+                      ),
+                    ],
+                  ),
+                ),
+                if (onDownload != null)
+                  IconButton(
+                    onPressed: onDownload,
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppColors.primaryColor.withOpacity(0.1),
+                      padding: const EdgeInsets.all(8),
+                    ),
+                    icon: Icon(
+                      Icons.cloud_download_outlined,
+                      color: AppColors.primaryColor,
+                      size: 20,
+                    ),
+                  ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: Colors.grey[400],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

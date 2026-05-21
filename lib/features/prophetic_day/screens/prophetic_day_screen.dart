@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:serat/Presentation/Config/constants/colors.dart';
 
 class PropheticPeriod {
   final String title;
