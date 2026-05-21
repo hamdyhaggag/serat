@@ -11,6 +11,8 @@ import 'package:serat/Presentation/screens/islamic_quiz_screen.dart';
 import 'package:serat/Presentation/screens/history_screen.dart';
 import 'package:serat/imports.dart';
 import 'package:serat/Presentation/screens/adhan/adhan_settings_screen.dart';
+import 'package:serat/features/badges/screens/badges_screen.dart';
+import 'package:serat/features/prophetic_day/screens/prophetic_day_screen.dart';
 
 import 'package:serat/Business_Logic/Cubit/navigation_cubit.dart' as navigation;
 import 'package:serat/Presentation/screens/dailygoal_screens/daily_goal_navigation_screen.dart';
@@ -21,7 +23,6 @@ import 'dart:math';
 import 'package:serat/Features/NamesOfAllah/Presentation/Screens/names_of_allah_screen.dart';
 import 'package:serat/shared/constants/app_colors.dart' as shared_colors;
 import 'package:serat/Presentation/Widgets/emotional_state_widget.dart';
-
 import 'package:serat/Presentation/screens/about/constants/about_constants.dart';
 import 'dart:ui' show ImageFilter;
 import 'package:flutter_animate/flutter_animate.dart';
@@ -666,6 +667,8 @@ class _TimingsScreenState extends State<TimingsScreen> {
                           ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
                           const SizedBox(height: 24),
                         ],
+                        
+
                         EmotionalStateWidget(isDarkMode: isDarkMode),
                         const SizedBox(height: 20),
                         Padding(
@@ -777,6 +780,26 @@ class _TimingsScreenState extends State<TimingsScreen> {
                                   context,
                                   MaterialPageRoute(
                                       builder: (_) => const HistoryScreen()),
+                                ),
+                              ),
+                              _buildFeatureCard(
+                                'الأوسمة النبوية',
+                                Icons.military_tech_rounded,
+                                isDarkMode,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const BadgesScreen()),
+                                ),
+                              ),
+                              _buildFeatureCard(
+                                'اليوم النبوي',
+                                Icons.av_timer_rounded,
+                                isDarkMode,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => PropheticDayScreen(isDarkMode: isDarkMode)),
                                 ),
                               ),
                             ],
